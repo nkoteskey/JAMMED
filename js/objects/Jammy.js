@@ -35,6 +35,9 @@ class Jammy {
     this.seedCooldownMs = 320;
     this.bassCooldownMs = 900;
     this.lastBassTime = 0;
+    this.muted = false;          // Static Wasp interruption
+    this.trappedInJar = false;   // Canner Drone seal
+    this._jarEscapeHits = 0;
     this.lastSeedTime = 0;
     this.seedAmmo = 1;
     this.seedAmmoMax = 12;
@@ -318,6 +321,14 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
 
   update() {
     if (this.alive) {
+      // Sealed in a canner jar — frozen in place until mashed free
+      if (this.trappedInJar) {
+        this.sprite.body.setVelocityX(0);
+        if (this._jarOverlay) {
+          this._jarOverlay.setPosition(this.sprite.x, this.sprite.y - 2);
+        }
+        return;
+      }
       // Skip left/right walk override while the Rocket Axe is firing so
       // the boost's 300px/s horizontal impulse isn't clamped back down
       // to walkSpeed on the very next frame when Jammy is running.
@@ -378,6 +389,19 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
 
   }
   shoot() {
+    if (this.trappedInJar) {
+      this._jarMash();
+      return;
+    }
+    if (this.muted) {
+      // Static-wasp interference — the guitar fizzles
+      const now = scene.time.now;
+      if (now - this.lastDryClickTime > 180) {
+        this.lastDryClickTime = now;
+        scene.sound.play("enemyHitSound", { volume: 0.08, rate: 0.3 });
+      }
+      return;
+    }
     if (this.currentWeapon === "seed") {
       this.fireSeed();
     } else if (this.currentWeapon === "bass") {
@@ -534,6 +558,10 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
   }
 
   jump() {
+    if (this.trappedInJar) {
+      this._jarMash();
+      return;
+    }
     if (
       (this.sprite.body.touching.down || this.sprite.body.blocked.down) &&
       !this.canDoubleJump
@@ -610,6 +638,80 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
       this.sprite.setFlipX(false);
       if (this.facing === "right") this.sprite.play("resting-right", true);
       else this.sprite.play("resting-left", true);
+    });
+  }
+
+  // --- Canner Drone seal: trapped in a glass jar, mash to break out ---
+  trapInJar() {
+    if (this.trappedInJar || !this.alive || this.invincible) return;
+    this.trappedInJar = true;
+    this._jarEscapeHits = 0;
+    this.sprite.body.setVelocityX(0);
+    if (scene.textures.exists("seal-jar-overlay")) {
+      this._jarOverlay = scene.add.image(this.sprite.x, this.sprite.y - 2, "seal-jar-overlay");
+      this._jarOverlay.setDepth(101);
+    }
+    scene.sound.play("enemyHitSound", { rate: 0.5, volume: 0.5 });
+    // Auto-break after 2s if the player doesn't mash out
+    this._jarTimer = scene.time.delayedCall(2000, () => this._breakJar());
+  }
+
+  _jarMash() {
+    this._jarEscapeHits += 1;
+    if (this._jarOverlay) {
+      this._jarOverlay.setAngle(this._jarEscapeHits % 2 === 0 ? -6 : 6);
+    }
+    scene.sound.play("enemyHitSound", { rate: 1.6, volume: 0.25 });
+    if (this._jarEscapeHits >= 4) this._breakJar();
+  }
+
+  _breakJar() {
+    if (!this.trappedInJar) return;
+    this.trappedInJar = false;
+    if (this._jarTimer) this._jarTimer.remove(false);
+    if (this._jarOverlay) {
+      // Glass burst
+      for (let i = 0; i < 6; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const shard = scene.add.triangle(
+          this.sprite.x, this.sprite.y, 0, 3, 2, 0, 4, 3, 0xcfeefb, 0.9
+        );
+        shard.setDepth(102);
+        scene.tweens.add({
+          targets: shard,
+          x: this.sprite.x + Math.cos(ang) * 24,
+          y: this.sprite.y + Math.sin(ang) * 16 + 10,
+          angle: 200, alpha: 0,
+          duration: 340,
+          onComplete: () => shard.destroy(),
+        });
+      }
+      this._jarOverlay.destroy();
+      this._jarOverlay = null;
+    }
+    scene.sound.play("enemyDeathSound", { rate: 1.5, volume: 0.4 });
+    // Mercy window so the dropping drone can't chain-seal
+    this.invincible = true;
+    scene.time.addEvent({
+      delay: 800,
+      callback: this.restoreVulnerability,
+      callbackScope: this,
+    });
+  }
+
+  // --- Static Wasp interference: guitar muted for a beat ---
+  setMuted(ms = 2500) {
+    if (this.muted) return;
+    this.muted = true;
+    const ui = scene.scene.get("UIScene");
+    if (ui && ui.weaponLabel) {
+      ui.weaponLabel.setText("MUTED");
+      ui.weaponLabel.setTintFill(0xff4444);
+    }
+    scene.sound.play("shortWave", { rate: 2.6, volume: 0.3 });
+    scene.time.delayedCall(ms, () => {
+      this.muted = false;
+      if (ui && ui.setWeapon) ui.setWeapon(this.currentWeapon);
     });
   }
 

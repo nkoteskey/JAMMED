@@ -197,6 +197,15 @@ class Stage1_3 extends Phaser.Scene {
     this._buildExitPortal();
     this._showTitleCard();
 
+    // The murmur — x0x rumor lines and etched glyphs
+    ensureX0XTexture(this);
+    this.add.image(700, 208, "x0x-glyph").setDepth(2);
+    this.add.image(2462, 208, "x0x-glyph").setDepth(2);
+    this.murmur = new Murmur(this);
+    this.murmur.addTrigger(420, "there were orchards here before they drained the river for the plant");
+    this.murmur.addTrigger(1500, "the runoff flows uphill to the works. follow the drip");
+    this.murmur.addTrigger(2300, "heard from 3 nodes: the press runs day and night past the works");
+
     // Sync UI weapon indicator
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
@@ -204,6 +213,7 @@ class Stage1_3 extends Phaser.Scene {
 
   update() {
     this.jammy.update();
+    if (this.murmur) this.murmur.update(this.jammy.sprite.x);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((enemy) => {
       if (enemy.update) enemy.update();

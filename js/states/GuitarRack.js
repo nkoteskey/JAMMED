@@ -49,8 +49,24 @@ class GuitarRack extends Phaser.Scene {
       }
       const equippedTag = this.add.bitmapText(x, y - 44, "tempFont", "EQUIPPED", 8)
         .setOrigin(0.5).setTintFill(0x8ce070).setVisible(false);
+
+      // Touch: tap to select, tap again to equip
+      frame.setInteractive();
+      frame.on("pointerdown", () => {
+        if (this.cursor === i) this._equip();
+        else { this.cursor = i; this._refresh(); }
+      });
       return { id, x, y, frame, img, label, equippedTag, owned };
     });
+
+    // Touch close button
+    const closeBtn = this.add.bitmapText(cx + 178, cy - 88, "tempFont", "X", 12)
+      .setOrigin(0.5).setTintFill(0xff8888);
+    closeBtn.setInteractive(
+      new Phaser.Geom.Rectangle(-10, -10, 20, 20),
+      Phaser.Geom.Rectangle.Contains
+    );
+    closeBtn.on("pointerdown", () => this._close());
 
     // Description lines under the rack
     this.descText1 = this.add.bitmapText(cx, cy + 56, "tempFont", "", 8)

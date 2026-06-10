@@ -168,6 +168,33 @@ class Level1 extends Phaser.Scene {
       this.time.delayedCall(10, () => this.scene.start("Stage1_4"));
     });
 
+    // Dev portals for Act 2/3 testing
+    const mkDevPortal = (x, tint, label, sceneKey) => {
+      const p = this.physics.add.sprite(x, 168, "dev-portal", "portal1");
+      p.body.setAllowGravity(false);
+      p.body.setImmovable(true);
+      p.setDepth(50);
+      p.setTint(tint);
+      p.play("dev-portal-swirl");
+      this.add.bitmapText(x - 24, 146, "tempFont", label, 8).setTintFill(tint);
+      this.physics.add.overlap(this.jammy.sprite, p, () => {
+        if (this._teleporting) return;
+        this._teleporting = true;
+        p.destroy();
+        this.time.delayedCall(10, () => this.scene.start(sceneKey));
+      });
+    };
+    mkDevPortal(36, 0x7fe8e0, "DEV->2-1", "Stage2_1");
+    mkDevPortal(320, 0xb08cff, "DEV->2-2", "Stage2_2");
+    mkDevPortal(380, 0xff8888, "DEV->3-1", "Stage3_1");
+
+    // Concentrate, Inc. is already in the city — Drip billboards over
+    // the skyline, and the murmur's glyph if you know where to look.
+    addDripBillboard(this, 620, 60);
+    addDripBillboard(this, 1500, 56);
+    ensureX0XTexture(this);
+    this.add.image(330, 150, "x0x-glyph").setDepth(1);
+
     // Sync UI weapon indicator with Jammy's starting weapon
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);

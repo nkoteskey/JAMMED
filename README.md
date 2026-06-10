@@ -3,9 +3,14 @@ An 8-bit platformer inspired by Jams Player, featuring retro-style gameplay and 
 
 CONTROLS: 
 * Move - A, D
-* Jump - Spacebar
-* Shoot - N, Shift
+* Jump - Spacebar (press again mid-air for the Rocket Axe boost)
+* Shoot - Q, N
+* Swap Guitar - C
+* Guitar Rack - G
 * Pause - E
+
+On touch devices: joystick + jump/shoot buttons, with on-screen
+SWAP and RACK buttons in the top-right HUD.
 
 Leave feedback or suggestions in issues. Enjoy! 
 https://jamsplayer.github.io/JAMMED/

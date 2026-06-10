@@ -210,7 +210,10 @@ class NeedleCactus extends Phaser.Physics.Arcade.Sprite {
 
   _fireNeedle(ang) {
     const speed = 170;
-    const n = this.scene.physics.add.sprite(
+    // Needles outlive the cactus — capture the scene so the callbacks
+    // never read this.scene off a destroyed sprite.
+    const scn = this.scene;
+    const n = scn.physics.add.sprite(
       this.x + Math.cos(ang) * 10,
       this.y - 4 + Math.sin(ang) * 10,
       "cactus-needle"
@@ -219,19 +222,19 @@ class NeedleCactus extends Phaser.Physics.Arcade.Sprite {
     n.setDepth(58);
     // Group membership FIRST — physics groups stomp velocity/gravity
     // with their defaults when a child is added.
-    if (this.scene.enemyProjectiles) this.scene.enemyProjectiles.add(n);
+    if (scn.enemyProjectiles) scn.enemyProjectiles.add(n);
     n.body.setAllowGravity(false);
     n.body.setSize(6, 3);
     n.body.setVelocity(Math.cos(ang) * speed, Math.sin(ang) * speed);
 
-    const jOverlap = this.scene.physics.add.overlap(n, this.scene.jammy.sprite, () => {
-      if (this.scene.jammy.alive) this.scene.jammy.takeDamage();
+    const jOverlap = scn.physics.add.overlap(n, scn.jammy.sprite, () => {
+      if (scn.jammy.alive) scn.jammy.takeDamage();
       n.destroy();
     });
-    if (this.scene.groundLayer) {
-      this.scene.physics.add.collider(n, this.scene.groundLayer, () => n.destroy());
+    if (scn.groundLayer) {
+      scn.physics.add.collider(n, scn.groundLayer, () => n.destroy());
     }
-    this.scene.time.delayedCall(1300, () => {
+    scn.time.delayedCall(1300, () => {
       if (jOverlap) jOverlap.destroy();
       if (n.active) n.destroy();
     });

@@ -34,7 +34,11 @@ class UIScene extends Phaser.Scene {
       .setTintFill(0xffffff);
 
     // HUD only shown during gameplay scenes — hidden over title/cutscenes/credits
-    this.gameplaySceneKeys = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_4"];
+    this.gameplaySceneKeys = [
+      "Level1", "Level1BossFight",
+      "Stage1_3", "Stage1_4",
+      "Stage2_1", "Stage2_2", "Stage3_1",
+    ];
     this.scene.setVisible(false);
 
     this.input.keyboard.on(
@@ -64,6 +68,42 @@ class UIScene extends Phaser.Scene {
       },
       this
     );
+
+    this._buildTouchButtons();
+  }
+
+  // Touch devices get on-screen buttons for the keyboard-only
+  // shortcuts: RACK (G) and SWAP (C).
+  _buildTouchButtons() {
+    if (!this.sys.game.device.input.touch) return;
+    const mkBtn = (x, label, cb) => {
+      const bg = this.add.rectangle(x, 38, 44, 16, 0x101820, 0.65);
+      bg.setStrokeStyle(1, 0x8a7a92, 0.8);
+      this.add.bitmapText(x, 38, "tempFont", label, 8)
+        .setOrigin(0.5).setTintFill(0xd8d4ca);
+      bg.setInteractive();
+      bg.on("pointerdown", cb);
+    };
+    mkBtn(352, "SWAP", () => {
+      const key = this._activeGameplayKey();
+      if (!key) return;
+      const level = this.scene.get(key);
+      if (!level || !level.jammy || !level.jammy.alive) return;
+      if (typeof getGuitarCollection !== "function") return;
+      const coll = getGuitarCollection();
+      if (coll.owned.length <= 1) return;
+      const i = coll.owned.indexOf(coll.equipped);
+      coll.equipped = coll.owned[(i + 1) % coll.owned.length];
+      level.jammy.currentWeapon = GUITAR_CATALOG[coll.equipped].weapon;
+      this.setWeapon(level.jammy.currentWeapon);
+    });
+    mkBtn(404, "RACK", () => {
+      const key = this._activeGameplayKey();
+      if (!key || this.scene.isActive("GuitarRack")) return;
+      this.scene.pause("UIScene");
+      this.scene.pause(key);
+      this.scene.launch("GuitarRack", { key });
+    });
   }
 
   // The gameplay scene actually running right now — init data goes

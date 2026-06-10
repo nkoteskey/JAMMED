@@ -145,6 +145,31 @@ class Stage1_4 extends Phaser.Scene {
     this._buildExitDoor();
     this._showTitleCard();
 
+    // Concentrate dressing: the Jam Works is an acquisition now.
+    // Stamped signage at the entry, royalty scraps deeper in, the
+    // murmur whispering what this place really is.
+    ensureConcentrateTextures(this);
+    ensureX0XTexture(this);
+    const sign = this.add.container(150, 84);
+    sign.setDepth(1);
+    sign.add(this.add.rectangle(0, 0, 132, 26, 0xeef8f6));
+    sign.add(this.add.rectangle(0, -11, 132, 4, 0x2ab8b0));
+    sign.add(this.add.image(-54, 1, "drip-droplet").setScale(0.8));
+    sign.add(this.add.bitmapText(6, -5, "tempFont", "CONCENTRATE", 8)
+      .setOrigin(0.5).setTintFill(0x118a84));
+    sign.add(this.add.bitmapText(6, 5, "tempFont", "PRESERVES DIV.", 8)
+      .setOrigin(0.5).setTintFill(0x4a6a68));
+    this.add.image(540, 150, "x0x-glyph").setDepth(1);
+    this.add.image(3320, 150, "x0x-glyph").setDepth(1);
+
+    new RoyaltyScrap(this, 1330, 156);
+    new RoyaltyScrap(this, 2700, 156, "RECEIPT: EXPOSURE BONUS = 0 ANT");
+
+    this.murmur = new Murmur(this);
+    this.murmur.addTrigger(260, "preserves division. names on the labels. their name on the keys");
+    this.murmur.addTrigger(1650, "the presses answer to the tower. so does something flying closer to you");
+    this.murmur.addTrigger(3000, "duke is in the archive past the orchards. bring his bass");
+
     // Sync UI weapon indicator
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
@@ -152,6 +177,7 @@ class Stage1_4 extends Phaser.Scene {
 
   update() {
     this.jammy.update();
+    if (this.murmur) this.murmur.update(this.jammy.sprite.x);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((enemy) => {
       if (enemy.update) enemy.update();
@@ -566,7 +592,8 @@ class Stage1_4 extends Phaser.Scene {
     this.jammy.controlsEnabled = false;
     this.cameras.main.fadeOut(500, 0, 0, 0);
     this.cameras.main.once("camerafadeoutcomplete", () => {
-      this.scene.start("EndCredits");
+      // Upstream — to Concentrate's plantation
+      this.scene.start("Stage2_1");
     });
   }
 }

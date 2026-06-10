@@ -32,10 +32,11 @@ class Stage1_3 extends Phaser.Scene {
     this.sceneChangeLayer = this.map.createLayer("SceneChangeLayer", tileset);
 
     // The Tiled ground row is collision-only; all visuals are painted
-    // fresh below (sky, skyline, meadow tiles).
+    // fresh below (sky, skyline, desert tiles).
     this.groundLayer.setAlpha(0);
     this._paintSky();
-    this._buildMeadowTiles();
+    this._buildDesertTiles();
+    this._scatterDesertDecor();
 
     this.enemyStopBlocksLayer.setAlpha(0);
     this.deathBlocksLayer.setAlpha(0);
@@ -133,6 +134,17 @@ class Stage1_3 extends Phaser.Scene {
       new Bush(this, 1360, 176),
       new Bush(this, 1900, 176),
       new Bush(this, 2280, 176),
+    ];
+
+    // Needle cactuses — goofy-eyed sentries that blast needles in
+    // every direction if Jammy lingers too close. Shoot them out or
+    // Rocket-Axe over the top; the last one guards the exit portal.
+    this.cactuses = [
+      new NeedleCactus(this, 460, 158),
+      new NeedleCactus(this, 1000, 158),
+      new NeedleCactus(this, 1700, 158),
+      new NeedleCactus(this, 2120, 158),
+      new NeedleCactus(this, 2430, 158),
     ];
 
     // Sky clouds — some pure decoys, some hiding blueberry drones that
@@ -331,16 +343,15 @@ class Stage1_3 extends Phaser.Scene {
         .setDepth(-40);
     });
 
-    // Sun — half-sunk behind the skyline, with sunset stripe cuts
-    const sun = this.add.container(330, 132);
-    sun.setScrollFactor(0.12, 1);
-    sun.setDepth(-37);
-    sun.add(this.add.circle(0, 0, 36, 0xffe2a8, 0.4));
-    sun.add(this.add.circle(0, 0, 30, 0xffd877));
-    sun.add(this.add.circle(0, -4, 24, 0xfff0b0));
-    for (let i = 0; i < 3; i++) {
-      sun.add(this.add.rectangle(0, 10 + i * 8, 64, 3 - i * 0.5, 0xf5a8b8));
-    }
+    // Sun — gritty dithered pixel disc with stripe cuts, half-sunk
+    // behind the skyline
+    this._ensureSunTexture();
+    this.add.circle(330, 132, 38, 0xffe2a8, 0.30)
+      .setScrollFactor(0.12, 1)
+      .setDepth(-38);
+    this.add.image(330, 132, "mesa-sun")
+      .setScrollFactor(0.12, 1)
+      .setDepth(-37);
 
     // Far skyline — a second, paler row of towers behind the near one
     for (let x = 20; x < 980; x += 64) {
@@ -389,80 +400,205 @@ class Stage1_3 extends Phaser.Scene {
     }
   }
 
-  // Grass-topped meadow strip rendered over the invisible collision
-  // floor: grass lip on row 11, packed soil below.
-  _buildMeadowTiles() {
-    if (!this.textures.exists("meadow-tiles")) {
+  // Dithered pixel sun, drawn as stepped 2px rows with a lighter core,
+  // dither flecks along the rim, and transparent stripe cuts across
+  // the lower half (the sky shows through the gaps).
+  _ensureSunTexture() {
+    if (this.textures.exists("mesa-sun")) return;
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+    const R = 27, C = 32; // radius, center
+    const cutRows = new Set([8, 9, 14, 15, 20, 21]); // dy bands to skip
+    for (let dy = -R + 1; dy < R; dy += 2) {
+      if (cutRows.has(dy) || cutRows.has(dy + 1)) continue;
+      // stepped half-width, quantized to chunky 2px
+      const hw = Math.floor(Math.sqrt(R * R - dy * dy) / 2) * 2;
+      if (hw <= 0) continue;
+      g.fillStyle(0xffb850, 1);
+      g.fillRect(C - hw, C + dy, hw * 2, 2);
+      // rim dither flecks just outside the edge, alternating rows
+      if ((dy & 2) === 0 && hw < R - 2) {
+        g.fillStyle(0xe89048, 1);
+        g.fillRect(C - hw - 2, C + dy, 2, 2);
+        g.fillRect(C + hw, C + dy, 2, 2);
+      }
+    }
+    // hotter core, offset up-left
+    for (let dy = -19; dy < 1; dy += 2) {
+      const hw = Math.floor(Math.sqrt(361 - dy * dy) / 2) * 2 - 2;
+      if (hw <= 0) continue;
+      g.fillStyle(0xffd877, 1);
+      g.fillRect(C - 3 - hw, C - 5 + dy, hw * 2, 2);
+    }
+    for (let dy = -11; dy < -1; dy += 2) {
+      const hw = Math.floor(Math.sqrt(121 - dy * dy) / 2) * 2 - 2;
+      if (hw <= 0) continue;
+      g.fillStyle(0xfff0b0, 1);
+      g.fillRect(C - 6 - hw, C - 8 + dy, hw * 2, 2);
+    }
+    g.generateTexture("mesa-sun", 64, 64);
+    g.destroy();
+  }
+
+  // Sandy desert strip rendered over the invisible collision floor:
+  // rippled sand lip on row 11, loose sand, then banded sandstone.
+  // Several variants per row, mixed by position hash, keep it from
+  // reading as a repeated single tile.
+  _buildDesertTiles() {
+    if (!this.textures.exists("desert-tiles")) {
       const g = this.make.graphics({ x: 0, y: 0, add: false });
       const o = (i) => i * 16;
+      const SAND = 0xe8c878, SANDLT = 0xf8e0a0, SANDDK = 0xc89850,
+            SANDMD = 0xe0bc70, PEB = 0xa88858, PEBLT = 0xd8c098,
+            STONE = 0xc87848, STONEDK = 0xb05c34, STONELT = 0xd88858;
 
-      const grass = (x) => {
-        // Soil body
-        g.fillStyle(0x8c5a34, 1);
-        g.fillRect(x, 5, 16, 11);
-        g.fillStyle(0x6e4527, 1);
-        g.fillRect(x + 2, 8, 3, 2);
-        g.fillRect(x + 10, 12, 4, 2);
-        g.fillRect(x + 6, 10, 2, 2);
-        // Grass cap with a ragged blade edge
-        g.fillStyle(0x58c04a, 1);
-        g.fillRect(x, 0, 16, 5);
-        g.fillStyle(0x8ce070, 1);
-        g.fillRect(x, 0, 16, 1);
-        g.fillStyle(0x3a9838, 1);
-        g.fillRect(x + 2, 4, 2, 3);
-        g.fillRect(x + 7, 4, 2, 2);
-        g.fillRect(x + 12, 4, 2, 3);
+      const sandTop = (x, seed) => {
+        g.fillStyle(SAND, 1);
+        g.fillRect(x, 0, 16, 16);
+        // bright wind-blown lip with notches
+        g.fillStyle(SANDLT, 1);
+        g.fillRect(x, 0, 16, 2);
+        g.fillRect(x + ((seed * 5) % 9), 2, 4, 1);
+        g.fillRect(x + ((seed * 11) % 11), 2, 2, 2);
+        // ripple dashes at staggered heights
+        g.fillStyle(SANDDK, 1);
+        g.fillRect(x + ((seed * 7) % 6), 5 + (seed % 3), 6, 1);
+        g.fillRect(x + 8 + ((seed * 3) % 5), 9 + ((seed * 2) % 3), 5, 1);
+        g.fillRect(x + ((seed * 13) % 8), 13, 4, 1);
+        // speckles
+        g.fillStyle(SANDMD, 1);
+        g.fillRect(x + ((seed * 17) % 14), 7, 1, 1);
+        g.fillRect(x + ((seed * 23) % 14), 11, 1, 1);
       };
 
-      // 1: grass
-      grass(o(1));
-      // 2: grass with flowers
-      grass(o(2));
-      g.fillStyle(0xf06898, 1);
-      g.fillRect(o(2) + 4, 0, 3, 3);
-      g.fillStyle(0xfff0b0, 1);
-      g.fillRect(o(2) + 5, 1, 1, 1);
-      g.fillRect(o(2) + 11, 1, 2, 2);
-      // 3: packed soil
-      g.fillStyle(0x8c5a34, 1);
-      g.fillRect(o(3), 0, 16, 16);
-      g.fillStyle(0x6e4527, 1);
-      g.fillRect(o(3) + 3, 3, 4, 3);
-      g.fillRect(o(3) + 11, 9, 4, 3);
-      g.fillRect(o(3) + 5, 12, 3, 2);
-      g.fillStyle(0xaa7748, 1);
-      g.fillRect(o(3) + 9, 5, 2, 2);
-      g.fillRect(o(3) + 2, 10, 2, 1);
-      // 4: deep soil
-      g.fillStyle(0x74462a, 1);
-      g.fillRect(o(4), 0, 16, 16);
-      g.fillStyle(0x5c3620, 1);
-      g.fillRect(o(4) + 4, 4, 5, 4);
-      g.fillRect(o(4) + 12, 10, 3, 3);
-      g.fillStyle(0x8c5a34, 1);
-      g.fillRect(o(4) + 10, 2, 2, 2);
+      // 1-3: sand surface variants
+      sandTop(o(1), 1);
+      sandTop(o(2), 2);
+      g.fillStyle(PEB, 1);            // half-buried pebbles on variant 2
+      g.fillRect(o(2) + 10, 1, 4, 3);
+      g.fillStyle(PEBLT, 1);
+      g.fillRect(o(2) + 11, 1, 2, 1);
+      sandTop(o(3), 3);
+      g.fillStyle(0xb89c50, 1);       // dry grass wisps on variant 3
+      g.fillRect(o(3) + 3, 0, 1, 3);
+      g.fillRect(o(3) + 5, 0, 1, 2);
+      g.fillRect(o(3) + 7, 1, 1, 2);
 
-      g.generateTexture("meadow-tiles", 5 * 16, 16);
+      // 4-5: loose sand body
+      const sandBody = (x, seed) => {
+        g.fillStyle(SANDMD, 1);
+        g.fillRect(x, 0, 16, 16);
+        g.fillStyle(SANDDK, 1);
+        g.fillRect(x + ((seed * 7) % 7), 3 + (seed % 4), 5, 1);
+        g.fillRect(x + 7 + ((seed * 5) % 6), 10 + (seed % 3), 5, 1);
+        g.fillStyle(SAND, 1);
+        g.fillRect(x + ((seed * 11) % 12), 6, 2, 2);
+        g.fillRect(x + ((seed * 13) % 12), 13, 2, 1);
+      };
+      sandBody(o(4), 1);
+      sandBody(o(5), 4);
+      g.fillStyle(PEB, 1);            // pebble cluster on variant 5
+      g.fillRect(o(5) + 4, 7, 5, 4);
+      g.fillRect(o(5) + 10, 9, 3, 3);
+      g.fillStyle(PEBLT, 1);
+      g.fillRect(o(5) + 5, 8, 2, 1);
+
+      // 6-7: banded sandstone bedrock
+      const stone = (x, seed) => {
+        g.fillStyle(STONE, 1);
+        g.fillRect(x, 0, 16, 16);
+        g.fillStyle(STONEDK, 1);
+        g.fillRect(x, 3 + (seed % 2), 16, 2);
+        g.fillRect(x, 11 - (seed % 2), 16, 2);
+        g.fillStyle(STONELT, 1);
+        g.fillRect(x, 0, 16, 1);
+        g.fillRect(x + ((seed * 7) % 9), 7, 6, 1);
+      };
+      stone(o(6), 1);
+      stone(o(7), 2);
+      g.fillStyle(0x8c4828, 1);       // crack on variant 7
+      g.fillRect(o(7) + 6, 5, 1, 3);
+      g.fillRect(o(7) + 7, 8, 1, 3);
+      g.fillRect(o(7) + 6, 11, 1, 2);
+
+      g.generateTexture("desert-tiles", 8 * 16, 16);
       g.destroy();
     }
 
     const W = this.map.width;
+    const pick = (c, opts, salt) => opts[(c * 31 + salt * 17 + ((c * 13) >> 2)) % opts.length];
     const data = [];
     for (let r = 0; r < this.map.height; r++) {
       const row = [];
       for (let c = 0; c < W; c++) {
-        if (r === 11) row.push((c * 13) % 7 === 0 ? 2 : 1);
-        else if (r === 12) row.push((c * 11) % 9 === 0 ? 4 : 3);
-        else if (r > 12) row.push((c * 7 + r) % 5 === 0 ? 3 : 4);
+        if (r === 11) row.push(pick(c, [1, 1, 2, 1, 3, 1, 2, 1, 1, 3], 1));
+        else if (r === 12) row.push(pick(c, [4, 4, 5, 4, 4, 5, 4], 2));
+        else if (r > 12) row.push(pick(c, [6, 6, 7, 6, 7, 6], r));
         else row.push(-1);
       }
       data.push(row);
     }
     const vmap = this.make.tilemap({ data, tileWidth: 16, tileHeight: 16 });
-    const ts = vmap.addTilesetImage("meadow-tiles");
-    this.meadowLayer = vmap.createLayer(0, ts, 0, 0);
-    this.meadowLayer.setDepth(1);
+    const ts = vmap.addTilesetImage("desert-tiles");
+    this.desertLayer = vmap.createLayer(0, ts, 0, 0);
+    this.desertLayer.setDepth(1);
+  }
+
+  // Surface dressing: low dune mounds, rock piles, and one bleached
+  // longhorn skull, spaced irregularly so the strip never tiles visibly.
+  _scatterDesertDecor() {
+    const g1 = this.make.graphics({ x: 0, y: 0, add: false });
+    if (!this.textures.exists("desert-dune")) {
+      g1.fillStyle(0xf0d490, 1);
+      g1.fillRect(8, 4, 26, 4);
+      g1.fillRect(2, 8, 38, 2);
+      g1.fillStyle(0xf8e0a0, 1);
+      g1.fillRect(10, 4, 12, 2);
+      g1.fillStyle(0xc89850, 1);
+      g1.fillRect(4, 9, 10, 1);
+      g1.generateTexture("desert-dune", 42, 10);
+    }
+    g1.destroy();
+
+    const g2 = this.make.graphics({ x: 0, y: 0, add: false });
+    if (!this.textures.exists("desert-rocks")) {
+      g2.fillStyle(0x8c6a48, 1);
+      g2.fillRect(2, 4, 8, 6);
+      g2.fillRect(9, 6, 7, 4);
+      g2.fillStyle(0xb08c60, 1);
+      g2.fillRect(3, 4, 4, 2);
+      g2.fillRect(10, 6, 3, 2);
+      g2.fillStyle(0x6a4e34, 1);
+      g2.fillRect(2, 9, 14, 1);
+      g2.generateTexture("desert-rocks", 18, 10);
+    }
+    g2.destroy();
+
+    const g3 = this.make.graphics({ x: 0, y: 0, add: false });
+    if (!this.textures.exists("desert-skull")) {
+      g3.fillStyle(0xe8e0c8, 1);
+      g3.fillRect(4, 2, 8, 6);
+      g3.fillRect(0, 0, 4, 3);  // horns
+      g3.fillRect(12, 0, 4, 3);
+      g3.fillRect(6, 8, 4, 2);  // snout
+      g3.fillStyle(0x3a2818, 1);
+      g3.fillRect(5, 4, 2, 2);  // sockets
+      g3.fillRect(9, 4, 2, 2);
+      g3.generateTexture("desert-skull", 16, 10);
+    }
+    g3.destroy();
+
+    // Irregular spacing via a stride that drifts each step
+    let x = 90;
+    let i = 0;
+    while (x < this.map.widthInPixels - 80) {
+      const kind = i % 3;
+      if (kind === 0) this.add.image(x, 172, "desert-dune").setDepth(2);
+      else if (kind === 1) this.add.image(x, 172, "desert-rocks").setDepth(2);
+      else this.add.image(x, 172, "desert-dune").setDepth(2).setFlipX(true);
+      x += 210 + ((i * 73) % 160);
+      i++;
+    }
+    this.add.image(1234, 172, "desert-skull").setDepth(2);
   }
 
   _ensurePlankTexture() {
@@ -516,8 +652,8 @@ class Stage1_3 extends Phaser.Scene {
   _showTitleCard() {
     const t1 = this.add.bitmapText(213, 92, "tempFont", "STAGE 1-3", 16)
       .setOrigin(0.5).setScrollFactor(0).setDepth(300).setTintFill(0xffffff);
-    const t2 = this.add.bitmapText(213, 114, "tempFont", "SKYLINE MEADOWS", 12)
-      .setOrigin(0.5).setScrollFactor(0).setDepth(300).setTintFill(0xc84890);
+    const t2 = this.add.bitmapText(213, 114, "tempFont", "SUNSET MESA", 12)
+      .setOrigin(0.5).setScrollFactor(0).setDepth(300).setTintFill(0xffc9a0);
     this.tweens.add({
       targets: [t1, t2],
       alpha: 0,

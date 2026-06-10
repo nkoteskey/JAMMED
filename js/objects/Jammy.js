@@ -19,9 +19,22 @@ class Jammy {
     this.jumpVelocity = -300;
     this.facing = facing ? facing : "right";
     this.antTokens = 0;
-    this.currentWeapon = "sonic";
-    this.availableWeapons = ["sonic", "seed"];
+    // Weapons come from the guitar collection — each owned guitar
+    // model is a weapon. Equipped guitar decides the current weapon.
+    const guitarColl =
+      typeof getGuitarCollection === "function" ? getGuitarCollection() : null;
+    if (guitarColl && typeof GUITAR_CATALOG !== "undefined") {
+      this.availableWeapons = guitarColl.owned.map(
+        (id) => GUITAR_CATALOG[id].weapon
+      );
+      this.currentWeapon = GUITAR_CATALOG[guitarColl.equipped].weapon;
+    } else {
+      this.currentWeapon = "sonic";
+      this.availableWeapons = ["sonic"];
+    }
     this.seedCooldownMs = 320;
+    this.bassCooldownMs = 900;
+    this.lastBassTime = 0;
     this.lastSeedTime = 0;
     this.seedAmmo = 1;
     this.seedAmmoMax = 12;
@@ -72,9 +85,18 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
       "down",
       function () {
         if (!this.alive || !this.controlsEnabled) return;
-        if (this.availableWeapons.length <= 1) return;
-        const i = this.availableWeapons.indexOf(this.currentWeapon);
-        this.currentWeapon = this.availableWeapons[(i + 1) % this.availableWeapons.length];
+        // Cycle through the owned guitars in the collection
+        if (typeof getGuitarCollection === "function" && typeof GUITAR_CATALOG !== "undefined") {
+          const coll = getGuitarCollection();
+          if (coll.owned.length <= 1) return;
+          const i = coll.owned.indexOf(coll.equipped);
+          coll.equipped = coll.owned[(i + 1) % coll.owned.length];
+          this.currentWeapon = GUITAR_CATALOG[coll.equipped].weapon;
+        } else {
+          if (this.availableWeapons.length <= 1) return;
+          const i = this.availableWeapons.indexOf(this.currentWeapon);
+          this.currentWeapon = this.availableWeapons[(i + 1) % this.availableWeapons.length];
+        }
         const ui = scene.scene.get("UIScene");
         if (ui && ui.setWeapon) ui.setWeapon(this.currentWeapon);
       },
@@ -358,10 +380,27 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
   shoot() {
     if (this.currentWeapon === "seed") {
       this.fireSeed();
+    } else if (this.currentWeapon === "bass") {
+      this.fireBass();
     } else {
       this.fireSonic();
     }
     this.playShootingPose();
+  }
+
+  fireBass() {
+    const now = scene.time.now;
+    if (now - this.lastBassTime < this.bassCooldownMs) return;
+    this.lastBassTime = now;
+    new BassWave(scene, this.sprite.x, this.sprite.y + 8, this.facing);
+    // Low rumble: pitched-down laser + a soft thump
+    if (scene.cache.audio.exists("laserSound")) {
+      scene.sound.play("laserSound", { volume: 0.9, rate: 0.45 });
+    }
+    if (scene.cache.audio.exists("shortWave")) {
+      scene.time.delayedCall(60, () => scene.sound.play("shortWave", { rate: 0.5, volume: 0.6 }));
+    }
+    scene.cameras.main.shake(90, 0.0028);
   }
 
   playShootingPose() {

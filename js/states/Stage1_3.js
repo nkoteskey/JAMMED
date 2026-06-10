@@ -152,6 +152,10 @@ class Stage1_3 extends Phaser.Scene {
     ];
     this.cloudBlueberries.forEach(b => this.enemies.add(b));
 
+    // The Seedcaster guitar — unlocks the seed weapon. Right on the
+    // main path before the first bush so nobody misses it.
+    new GuitarPickup(this, 240, 152, "desert-seedcaster");
+
     // Seed-ammo pickups — scarce on purpose so the player budgets shots.
     // One pre-first-bush, one mid-run, one late.
     this.seedPickups = [

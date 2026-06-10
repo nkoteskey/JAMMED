@@ -134,6 +134,10 @@ class Stage1_4 extends Phaser.Scene {
       p.val = 2;
     });
 
+    // The Royal Bass guitar waits atop the staircase plateau —
+    // ground-quake wave that pierces a whole row of enemies.
+    new GuitarPickup(this, 1764, 102, "royal-bass");
+
     // Blubert companion, one revive like 1-3
     this.blubert = new Blubert(this, this.jammy);
     this.blubertRevivesLeft = 1;

@@ -34,20 +34,45 @@ class UIScene extends Phaser.Scene {
       .setTintFill(0xffffff);
 
     // HUD only shown during gameplay scenes — hidden over title/cutscenes/credits
-    this.gameplaySceneKeys = ["Level1", "Level1BossFight", "Stage1_3"];
+    this.gameplaySceneKeys = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_4"];
     this.scene.setVisible(false);
 
     this.input.keyboard.on(
       "keydown-E",
       () => {
-        let level = this.scene.get(this.gameScene);
+        const key = this._activeGameplayKey();
+        if (!key) return;
+        let level = this.scene.get(key);
         level.cameras.main.setAlpha(0.5);
         this.scene.pause("UIScene");
-        this.scene.pause(this.gameScene);
-        this.scene.launch("PauseScene", { key: this.gameScene });
+        this.scene.pause(key);
+        this.scene.launch("PauseScene", { key });
       },
       this
     );
+
+    // Guitar Rack — collection/equip overlay
+    this.input.keyboard.on(
+      "keydown-G",
+      () => {
+        const key = this._activeGameplayKey();
+        if (!key) return;
+        if (this.scene.isActive("GuitarRack")) return;
+        this.scene.pause("UIScene");
+        this.scene.pause(key);
+        this.scene.launch("GuitarRack", { key });
+      },
+      this
+    );
+  }
+
+  // The gameplay scene actually running right now — init data goes
+  // stale once warps/portals change scenes, so always look it up.
+  _activeGameplayKey() {
+    const active = this.scene.manager
+      .getScenes(true)
+      .map((s) => s.sys.settings.key);
+    return active.find((k) => this.gameplaySceneKeys.includes(k));
   }
 
   update() {
@@ -81,6 +106,16 @@ class UIScene extends Phaser.Scene {
       this.weaponIcon.setRotation(0);
       this.weaponLabel.setText("SEEDS");
       this.weaponLabel.setTintFill(0xff9966);
+    } else if (weapon === "bass") {
+      if (!this.textures.exists("bass-wave") &&
+          typeof BassWave !== "undefined" && BassWave.ensureTexture) {
+        BassWave.ensureTexture(this);
+      }
+      this.weaponIcon.setTexture("bass-wave");
+      this.weaponIcon.setDisplaySize(12, 20);
+      this.weaponIcon.setRotation(0);
+      this.weaponLabel.setText("BASS");
+      this.weaponLabel.setTintFill(0xb08cff);
     } else {
       this.weaponIcon.setTexture("audio-wave");
       this.weaponIcon.setDisplaySize(20, 16);

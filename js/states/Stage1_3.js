@@ -322,6 +322,7 @@ class Stage1_3 extends Phaser.Scene {
   }
 
   changeScene() {
-    this.scene.start("EndCredits");
+    // Onward to the fortress stage — The Jam Works
+    this.scene.start("Stage1_4");
   }
 }

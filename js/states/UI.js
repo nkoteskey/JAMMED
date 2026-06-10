@@ -34,7 +34,7 @@ class UIScene extends Phaser.Scene {
       .setTintFill(0xffffff);
 
     // HUD only shown during gameplay scenes — hidden over title/cutscenes/credits
-    this.gameplaySceneKeys = ["Level1", "Level1BossFight", "Stage1_3"];
+    this.gameplaySceneKeys = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_4"];
     this.scene.setVisible(false);
 
     this.input.keyboard.on(

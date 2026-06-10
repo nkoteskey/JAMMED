@@ -150,6 +150,24 @@ class Level1 extends Phaser.Scene {
       this.time.delayedCall(10, () => this.scene.start("Stage1_3"));
     });
 
+    // Second dev portal — warp straight to Stage 1-4 (The Jam Works).
+    // Left of Jammy's spawn so walking right still reaches the 1-3
+    // portal without crossing this one.
+    this.devPortal2 = this.physics.add.sprite(84, 168, "dev-portal", "portal1");
+    this.devPortal2.body.setAllowGravity(false);
+    this.devPortal2.body.setImmovable(true);
+    this.devPortal2.setDepth(50);
+    this.devPortal2.setTint(0xffb86b);
+    this.devPortal2.play("dev-portal-swirl");
+    this.add.bitmapText(this.devPortal2.x - 24, this.devPortal2.y - 22, "tempFont", "DEV->1-4", 8)
+      .setTintFill(0xffd9a0);
+    this.physics.add.overlap(this.jammy.sprite, this.devPortal2, () => {
+      if (this._teleporting) return;
+      this._teleporting = true;
+      this.devPortal2.destroy();
+      this.time.delayedCall(10, () => this.scene.start("Stage1_4"));
+    });
+
     // Sync UI weapon indicator with Jammy's starting weapon
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);

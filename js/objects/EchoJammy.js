@@ -10,6 +10,7 @@ class EchoJammy extends Phaser.Physics.Arcade.Sprite {
 
     this.arena = arena; // { left, right, floorY }
     this.score = 5000;
+    this.targetable = true; // Blubert lock-on
     this.maxHp = 14;
     this.hp = this.maxHp;
     this.dead = false;

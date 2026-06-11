@@ -112,15 +112,15 @@ class SeedOfDestruction extends Phaser.Physics.Arcade.Sprite {
       const e = blu.trackedEnemy;
       const tvx = (e.body && e.body.velocity && e.body.velocity.x) || 0;
       const tvy = (e.body && e.body.velocity && e.body.velocity.y) || 0;
-      const tx = e.x + tvx * 0.15;
-      const ty = e.y + tvy * 0.15;
+      const tx = e.x + tvx * 0.22;
+      const ty = e.y + tvy * 0.22;
       const dx = tx - this.x;
       const dy = ty - this.y;
       const dist = Math.hypot(dx, dy);
-      if (dist > 4 && dist < 420) {
-        const pull = Phaser.Math.Clamp(640 - dist, 260, 560);
+      if (dist > 4 && dist < 460) {
+        const pull = Phaser.Math.Clamp(760 - dist, 340, 680);
         let ay = (dy / dist) * pull;
-        if (dy < -20) ay -= 360; // counter-gravity boost toward elevated targets
+        if (dy < -20) ay -= 460; // counter-gravity boost toward elevated targets
         this.body.setAccelerationX((dx / dist) * pull);
         this.body.setAccelerationY(ay);
         return;

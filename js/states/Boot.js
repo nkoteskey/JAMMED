@@ -11,6 +11,10 @@ class Boot extends Phaser.Scene{
 		this.load.image('jammyLoader', 'assets/img/sprites/jammy/resting/jammy-still.png');
 	}
 	create() {
+		// Register the crisp runtime retro font before any scene
+		// renders text — replaces the blurry downscaled bitmap font.
+		installRetroFont(this);
+
 		let centerX=this.cameras.main.centerX;
 		let centerY=this.cameras.main.centerY;
 		// Add jammy image

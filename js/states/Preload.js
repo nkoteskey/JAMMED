@@ -15,16 +15,14 @@ class Preload extends Phaser.Scene {
       loadingBar.setCrop(0, 0, value * loadingBar.width, loadingBar.height);
     });
 
-    // Load fonts
+    // Load fonts. "tempFont" is NOT loaded here anymore — Boot
+    // registers a crisp runtime-generated retro font under that key
+    // (see js/helpers/retrofont.js); loading the old 72px bitmap
+    // font would overwrite it with the blurry downscaled version.
     this.load.bitmapFont(
       "8-bit-mono",
       "assets/fonts/8-bit-mono.png",
       "assets/fonts/8-bit-mono.fnt"
-    );
-    this.load.bitmapFont(
-      "tempFont",
-      "assets/fonts/tempFont.png",
-      "assets/fonts/tempFont.fnt"
     );
 
     // Backgrounds and storyboards

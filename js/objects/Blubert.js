@@ -84,8 +84,13 @@ class Blubert {
     // which can miss the next drone that's already in play.
     if (this.trackedEnemy) {
       const e = this.trackedEnemy;
-      if (e.dead || !e.active ||
-          !this.scene.cameras.main.worldView.contains(e.x, e.y)) {
+      if (e.dead || !e.active) {
+        // Kill confirmed — short re-acquire cooldown so lock-on can't
+        // be chained into spam; the player has to fight unassisted
+        // for a beat between locks.
+        this.trackedEnemy = null;
+        this._nextLockTime = this.scene.time.now + 2200;
+      } else if (!this.scene.cameras.main.worldView.contains(e.x, e.y)) {
         this.trackedEnemy = null;
       }
     }
@@ -171,15 +176,20 @@ class Blubert {
       if (e.hidden && typeof e.detect === "function") {
         e.detect();
       }
-      // Track the nearest detected zomberry threatening Jammy
-      if (e.detected || e.inPursuit) {
+      // Track the nearest active threat: revealed zomberries, chasers,
+      // and anything flagged targetable (drones, wasps, bats, cactuses,
+      // soldiers, Echo) — but never armored hazards.
+      if (e.detected || e.inPursuit || (e.targetable && !e.invincible)) {
         if (d < nearestDist) {
           nearestDist = d;
           nearest = e;
         }
       }
     }
-    this.trackedEnemy = nearest;
+    // Detection always runs; ACQUIRING a new lock honors the cooldown.
+    if (this.scene.time.now >= (this._nextLockTime || 0)) {
+      this.trackedEnemy = nearest;
+    }
   }
 
   stun() {

@@ -109,6 +109,7 @@ class NeedleCactus extends Phaser.Physics.Arcade.Sprite {
     scn.physics.add.existing(this);
 
     this.score = 650;
+    this.targetable = true; // Blubert lock-on
     this.hp = 3;
     this.dead = false;
     this.state = "idle"; // idle -> puff -> cooldown -> idle

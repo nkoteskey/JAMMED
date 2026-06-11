@@ -62,6 +62,7 @@ class TinSoldier extends Phaser.Physics.Arcade.Sprite {
     scn.physics.add.existing(this);
 
     this.score = 500;
+    this.targetable = true; // Blubert lock-on
     this.hp = 2;
     this.dead = false;
     this.dir = -1;

@@ -95,7 +95,8 @@ class Stage2_1 extends Phaser.Scene {
     this.add.image(2210, 218, "x0x-glyph").setDepth(2);
     this.murmur = new Murmur(this);
     this.murmur.addTrigger(180, "concentrate row. fruit aint meant to grow in ranks");
-    this.murmur.addTrigger(560, "drones can you. mash attack to break the glass");
+    this.murmur.addTrigger(520, "drones overhead. aim up and let your scout guide the seeds");
+    this.murmur.addTrigger(640, "if they can you, mash attack to break the glass");
     this.murmur.addTrigger(880, "soldiers armor up front. flank them or hit heavy");
     this.murmur.addTrigger(1980, "the wasps dont bite. they interrupt. swat the ads");
     this.murmur.addTrigger(2820, "heard from 3 nodes: the archive gate is ahead. duke is inside");

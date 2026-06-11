@@ -82,17 +82,36 @@ class Stage3_1 extends Phaser.Scene {
       this.murmur.say("jump, then jump again. ride the axe up");
     }
 
-    // Beam hazards
+    // Beam hazards: off -> warn (blinking amber) -> on (hot red)
     if (this.beams) {
       for (const b of this.beams) {
         b.t -= this.game.loop.delta;
         if (b.t <= 0) {
-          b.on = !b.on;
-          b.t = b.on ? b.onMs : b.offMs;
-          b.rect.setAlpha(b.on ? 0.85 : 0.12);
+          if (b.state === "off") {
+            b.state = "warn";
+            b.t = b.warnMs;
+          } else if (b.state === "warn") {
+            b.state = "on";
+            b.t = b.onMs;
+            b.outer.setFillStyle(0xff4d6a, 0.95);
+            b.core.setFillStyle(0xffffff, 1);
+            b.lamps.forEach((l) => l.setFillStyle(0xff4d6a, 1));
+          } else {
+            b.state = "off";
+            b.t = b.offMs;
+            b.outer.setFillStyle(0xff4d6a, 0.06);
+            b.core.setFillStyle(0xffffff, 0);
+            b.lamps.forEach((l) => l.setFillStyle(0x553333, 1));
+          }
         }
-        if (b.on && this.jammy.alive &&
-            Phaser.Geom.Rectangle.Overlaps(b.rect.getBounds(), this.jammy.sprite.getBounds())) {
+        if (b.state === "warn") {
+          // Fast amber blink while charging
+          const blink = Math.floor(this.time.now / 90) % 2 === 0;
+          b.outer.setFillStyle(0xffd877, blink ? 0.35 : 0.1);
+          b.lamps.forEach((l) => l.setFillStyle(blink ? 0xffd877 : 0x553333, 1));
+        }
+        if (b.state === "on" && this.jammy.alive &&
+            Phaser.Geom.Rectangle.Overlaps(b.outer.getBounds(), this.jammy.sprite.getBounds())) {
           this.jammy.takeDamage();
         }
       }
@@ -235,22 +254,35 @@ class Stage3_1 extends Phaser.Scene {
   }
 
   _buildBeams() {
-    // Pulsing signal beams across the shaft at chosen heights
+    // Signal beams across the shaft. Three readable states:
+    //   off  — barely-there guide line so the lane is predictable
+    //   warn — blinking amber charge-up (your cue to commit or wait)
+    //   on   — hot red bar with a white core; this is the only state
+    //          that damages
     this.beams = [];
     const mk = (x, y, w, onMs, offMs, phase) => {
-      const rect = this.add.rectangle(x, y, w, 5, 0x7fe8e0, 0.12);
-      rect.setDepth(50);
-      const emitterL = this.add.rectangle(x - w / 2 - 4, y, 8, 12, 0x14383a).setDepth(51);
-      const emitterR = this.add.rectangle(x + w / 2 + 4, y, 8, 12, 0x14383a).setDepth(51);
-      this.beams.push({ rect, on: false, t: phase, onMs, offMs });
+      const outer = this.add.rectangle(x, y, w, 9, 0xff4d6a, 0.06);
+      outer.setDepth(50);
+      const core = this.add.rectangle(x, y, w, 3, 0xffffff, 0);
+      core.setDepth(51);
+      // Emitter housings with a status lamp at both ends
+      [-1, 1].forEach((s) => {
+        this.add.rectangle(x + s * (w / 2 + 5), y, 10, 16, 0x14383a).setDepth(52);
+      });
+      const lampL = this.add.rectangle(x - w / 2 - 5, y, 4, 4, 0x553333).setDepth(53);
+      const lampR = this.add.rectangle(x + w / 2 + 5, y, 4, 4, 0x553333).setDepth(53);
+      this.beams.push({
+        outer, core, lamps: [lampL, lampR],
+        state: "off", t: phase, onMs, offMs, warnMs: 550,
+      });
     };
-    mk(213, 2210, 330, 900, 1100, 300);
-    mk(213, 1920, 330, 800, 1000, 800);
-    mk(213, 1630, 330, 900, 900, 100);
-    mk(213, 1340, 330, 700, 900, 500);
-    mk(213, 1050, 330, 800, 800, 200);
-    mk(213, 700, 330, 700, 700, 650);
-    mk(213, 540, 330, 600, 700, 50);
+    mk(213, 2210, 330, 800, 1500, 300);
+    mk(213, 1920, 330, 750, 1400, 800);
+    mk(213, 1630, 330, 800, 1300, 100);
+    mk(213, 1340, 330, 700, 1300, 500);
+    mk(213, 1050, 330, 750, 1200, 200);
+    mk(213, 700, 330, 700, 1200, 650);
+    mk(213, 540, 330, 650, 1100, 50);
   }
 
   _buildClimbEnemies() {

@@ -42,6 +42,7 @@ class StaticWasp extends Phaser.Physics.Arcade.Sprite {
     scn.physics.add.existing(this);
 
     this.score = 200;
+    this.targetable = true; // Blubert lock-on
     this.hp = 1;
     this.dead = false;
     this.homeX = x;

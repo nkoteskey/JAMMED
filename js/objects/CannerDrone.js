@@ -78,6 +78,7 @@ class CannerDrone extends Phaser.Physics.Arcade.Sprite {
     scn.physics.add.existing(this);
 
     this.score = 550;
+    this.targetable = true; // Blubert lock-on
     this.hp = 2;
     this.dead = false;
     this.dropCooldownMs = 2400;
@@ -158,6 +159,13 @@ class CannerDrone extends Phaser.Physics.Arcade.Sprite {
       if (overlap) overlap.destroy();
       if (jar.active) jar.destroy();
     });
+    // Sonic waves can break a falling jar out of the air
+    if (scn.bullets) {
+      scn.physics.add.overlap(jar, scn.bullets, (j2, bullet) => {
+        if (bullet && bullet.destroy) bullet.destroy();
+        shatter();
+      });
+    }
     if (scn.groundLayer) {
       scn.physics.add.collider(jar, scn.groundLayer, () => shatter());
     }

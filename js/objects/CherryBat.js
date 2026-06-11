@@ -67,6 +67,7 @@ class CherryBat extends Phaser.Physics.Arcade.Sprite {
     scn.physics.add.existing(this);
 
     this.score = 300;
+    this.targetable = true; // Blubert lock-on
     this.hp = 1;
     this.dead = false;
     this.hangY = hangY;

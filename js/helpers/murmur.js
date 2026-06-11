@@ -102,16 +102,16 @@ function ensureConcentrateTextures(scn) {
   // Billboard: white panel, teal border, droplet + "THE DRIP / ALWAYS ON"
   g = scn.make.graphics({ x: 0, y: 0, add: false });
   g.fillStyle(0x14383a, 1);
-  g.fillRect(0, 0, 78, 36);
+  g.fillRect(0, 0, 88, 36);
   g.fillStyle(0xeef8f6, 1);
-  g.fillRect(2, 2, 74, 32);
+  g.fillRect(2, 2, 84, 32);
   g.fillStyle(0x2ab8b0, 1);
-  g.fillRect(2, 2, 74, 3);
+  g.fillRect(2, 2, 84, 3);
   // posts
   g.fillStyle(0x14383a, 1);
-  g.fillRect(8, 36, 4, 10);
-  g.fillRect(66, 36, 4, 10);
-  g.generateTexture("drip-billboard", 78, 46);
+  g.fillRect(10, 36, 4, 10);
+  g.fillRect(74, 36, 4, 10);
+  g.generateTexture("drip-billboard", 88, 46);
   g.destroy();
 }
 
@@ -122,10 +122,10 @@ function addDripBillboard(scn, x, y, opts = {}) {
   c.setDepth(opts.depth !== undefined ? opts.depth : 3);
   if (opts.scrollFactor !== undefined) c.setScrollFactor(opts.scrollFactor, 1);
   c.add(scn.add.image(0, 0, "drip-billboard"));
-  c.add(scn.add.image(-24, -3, "drip-droplet"));
-  const t1 = scn.add.bitmapText(8, -10, "tempFont", "THE DRIP", 8)
+  c.add(scn.add.image(-28, -3, "drip-droplet"));
+  const t1 = scn.add.bitmapText(10, -10, "tempFont", "THE DRIP", 8)
     .setOrigin(0.5).setTintFill(0x118a84);
-  const t2 = scn.add.bitmapText(8, 2, "tempFont", "ALWAYS ON", 8)
+  const t2 = scn.add.bitmapText(10, 2, "tempFont", "ALWAYS ON", 8)
     .setOrigin(0.5).setTintFill(0x4a6a68);
   c.add([t1, t2]);
   return c;

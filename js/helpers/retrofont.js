@@ -106,16 +106,19 @@ function installRetroFont(scene) {
   // bleed into their neighbors at non-integer scales.
   scene.textures.get("retro-font-tex").setFilter(Phaser.Textures.FilterMode.NEAREST);
 
-  scene.cache.bitmapFont.add(
-    "tempFont",
-    Phaser.GameObjects.RetroFont.Parse(scene, {
-      image: "retro-font-tex",
-      width: CW,
-      height: CH,
-      chars: CHARS,
-      charsPerRow: PER_ROW,
-      "spacing.x": 0,
-      "spacing.y": 0,
-    })
-  );
+  const parsed = Phaser.GameObjects.RetroFont.Parse(scene, {
+    image: "retro-font-tex",
+    width: CW,
+    height: CH,
+    chars: CHARS,
+    charsPerRow: PER_ROW,
+    "spacing.x": 0,
+    "spacing.y": 0,
+  });
+  // Phaser's RetroFont parser reports the glyph WIDTH as the font's
+  // native size, so size-8 text renders at 8/6 scale and overflows
+  // its layouts. Normalize to the cell height: size 8 = exact 1:1,
+  // size 16 = clean integer 2x.
+  parsed.data.size = CH;
+  scene.cache.bitmapFont.add("tempFont", parsed);
 }

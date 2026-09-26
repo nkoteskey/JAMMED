@@ -81,8 +81,12 @@ class CannerDrone extends Phaser.Physics.Arcade.Sprite {
     this.targetable = true; // Blubert lock-on
     this.hp = 2;
     this.dead = false;
-    this.dropCooldownMs = 2400;
+    this.dropCooldownMs = 2600;
     this._lastDrop = 0;
+    this.state = "stalk";       // stalk -> commit -> recover
+    this._stateUntil = 0;
+    this.hoverH = 78;           // cruising height above Jammy
+    this.strikeH = 34;          // height it drops to while committing
     this._nextFlap = 0;
     this._flap = false;
     this.homeY = y;
@@ -110,17 +114,41 @@ class CannerDrone extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
-    // Stalk a spot directly above Jammy
     const dx = j.sprite.x - this.x;
-    const dy = (j.sprite.y - 86) - this.y;
-    this.body.setVelocityX(Phaser.Math.Clamp(dx * 2.2, -110, 110));
-    this.body.setVelocityY(Phaser.Math.Clamp(dy * 2.0, -80, 80));
+
+    // Height depends on what it's doing. Cruising it stays out of
+    // reach; to actually drop a jar it has to come down into your
+    // swing — that dive is the window to shoot it.
+    let targetH = this.hoverH;
+    if (this.state === "commit") targetH = this.strikeH;
+
+    const dy = (j.sprite.y - targetH) - this.y;
+    const chase = this.state === "commit" ? 1.1 : 2.2;
+    this.body.setVelocityX(Phaser.Math.Clamp(dx * chase, -110, 110));
+    this.body.setVelocityY(Phaser.Math.Clamp(dy * 2.4, -90, 110));
     this.setFlipX(dx < 0);
 
-    // Release a sealing jar when lined up overhead
-    if (Math.abs(dx) < 26 && now - this._lastDrop > this.dropCooldownMs) {
-      this._lastDrop = now;
-      this._dropJar();
+    if (this.state === "stalk") {
+      this.clearTint();
+      if (Math.abs(dx) < 30 && now - this._lastDrop > this.dropCooldownMs) {
+        this.state = "commit";
+        this._stateUntil = now + 1500;  // dive + hang, telegraphed
+        if (this.scene.cache.audio.exists("shortWave")) {
+          this.scene.sound.play("shortWave", { rate: 1.6, volume: 0.2 });
+        }
+      }
+    } else if (this.state === "commit") {
+      // Flash amber while committed so the window is unmistakable
+      this.setTint(Math.floor(now / 90) % 2 === 0 ? 0xffd877 : 0xffffff);
+      if (now >= this._stateUntil) {
+        this._dropJar();
+        this._lastDrop = now;
+        this.state = "recover";
+        this._stateUntil = now + 1200;
+        this.clearTint();
+      }
+    } else if (this.state === "recover") {
+      if (now >= this._stateUntil) this.state = "stalk";
     }
   }
 

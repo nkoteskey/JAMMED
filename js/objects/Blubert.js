@@ -131,12 +131,15 @@ class Blubert {
       this.reticle.clear();
       if (this.trackedEnemy && this.trackedEnemy.active && !this.trackedEnemy.dead) {
         const e = this.trackedEnemy;
-        this.reticle.lineStyle(1, 0xff7070, 0.85);
-        this.reticle.strokeCircle(e.x, e.y, 10);
-        this.reticle.lineBetween(e.x - 14, e.y, e.x - 5, e.y);
-        this.reticle.lineBetween(e.x + 5,  e.y, e.x + 14, e.y);
-        this.reticle.lineBetween(e.x, e.y - 14, e.x, e.y - 5);
-        this.reticle.lineBetween(e.x, e.y + 5,  e.x, e.y + 14);
+        const pulse = 1 + Math.sin(this.scene.time.now / 140) * 0.12;
+        const r = 13 * pulse;
+        this.reticle.lineStyle(2, 0xffd877, 0.95);
+        this.reticle.strokeCircle(e.x, e.y, r);
+        this.reticle.lineStyle(2, 0xff7070, 0.95);
+        this.reticle.lineBetween(e.x - r - 6, e.y, e.x - r + 2, e.y);
+        this.reticle.lineBetween(e.x + r - 2, e.y, e.x + r + 6, e.y);
+        this.reticle.lineBetween(e.x, e.y - r - 6, e.x, e.y - r + 2);
+        this.reticle.lineBetween(e.x, e.y + r - 2, e.x, e.y + r + 6);
         this.reticle.setVisible(true);
       } else {
         this.reticle.setVisible(false);
@@ -180,8 +183,12 @@ class Blubert {
       // and anything flagged targetable (drones, wasps, bats, cactuses,
       // soldiers, Echo) — but never armored hazards.
       if (e.detected || e.inPursuit || (e.targetable && !e.invincible)) {
-        if (d < nearestDist) {
-          nearestDist = d;
+        // Score, not raw distance: a flying enemy is what the player
+        // actually struggles to hit, so it wins ties within ~130px.
+        const flying = e.body && e.body.allowGravity === false;
+        const score = d - (flying ? 130 : 0);
+        if (score < nearestDist) {
+          nearestDist = score;
           nearest = e;
         }
       }

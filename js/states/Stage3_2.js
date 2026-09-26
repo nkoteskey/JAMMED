@@ -28,6 +28,7 @@ class Stage3_2 extends Phaser.Scene {
 
     this.bullets = this.physics.add.group();
     this.collectibles = this.physics.add.group();
+    this._breadTotal = 0; // scene instances persist across restart()
     this.enemies = this.add.group();
     this.enemyProjectiles = this.physics.add.group();
 
@@ -71,6 +72,7 @@ class Stage3_2 extends Phaser.Scene {
 
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
+    if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
   }
 
   update() {
@@ -299,12 +301,8 @@ class Stage3_2 extends Phaser.Scene {
   }
 
   _buildPickups() {
-    [
-      [80, 2330], [120, 2330],
-      [213, 1880], [213, 1590],
-      [340, 1300], [90, 1010],
-      [213, 660], [213, 470],
-    ].forEach(([x, y]) => new AntToken(this, x, y));
+    [[88, 2376], [216, 2056], [344, 1736], [88, 1416], [216, 856]]
+      .forEach(([x, y]) => new BreadToken(this, x, y));
     new RoyaltyScrap(this, 213, 2100, "TOP OF THE CHARTS. NOTHING GROWS UP HERE");
     new SeedAmmoPickup(this, 340, 1740);
     const heal = new PowerUp(this, 100, 700);

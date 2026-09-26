@@ -88,6 +88,19 @@ class Preload extends Phaser.Scene {
       "assets/img/sprites/power-up/power-up.json"
     );
     this.load.atlas(
+      "bread-token",
+      "assets/img/sprites/bread-token/bread-token.png",
+      "assets/img/sprites/bread-token/bread-token.json"
+    );
+    this.load.image(
+      "bread-token-hud",
+      "assets/img/sprites/bread-token/hud/bread-token-hud.png"
+    );
+    this.load.image(
+      "bread-token-outline-hud",
+      "assets/img/sprites/bread-token/hud/bread-token-outline-hud.png"
+    );
+    this.load.atlas(
       "ant-token",
       "assets/img/sprites/ant-token/ant-token.png",
       "assets/img/sprites/ant-token/ant-token.json"

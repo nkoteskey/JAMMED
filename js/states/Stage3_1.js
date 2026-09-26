@@ -37,6 +37,7 @@ class Stage3_1 extends Phaser.Scene {
 
     this.bullets = this.physics.add.group();
     this.collectibles = this.physics.add.group();
+    this._breadTotal = 0; // scene instances persist across restart()
     this.enemies = this.add.group();
     this.enemyProjectiles = this.physics.add.group();
 
@@ -70,9 +71,8 @@ class Stage3_1 extends Phaser.Scene {
     [880, 1700, 2320].forEach((x) => new TinSoldier(this, x, 170));
     [[1150, 110], [1980, 110]].forEach(([x, y]) => new StaticWasp(this, x, y));
 
-    [[130, 172], [158, 172], [186, 172], [520, 120], [548, 120],
-     [1000, 172], [1290, 120], [1860, 172], [2260, 128], [2600, 172]]
-      .forEach(([x, y]) => new AntToken(this, x, y));
+    [[336, 118], [820, 110], [1290, 116], [1900, 108], [2500, 166]]
+      .forEach(([x, y]) => new BreadToken(this, x, y));
     new RoyaltyScrap(this, 980, 168, "NO RECEIPTS DOWN HERE. NOBODY IS SELLING ANYTHING");
     new SeedAmmoPickup(this, 1600, 150);
     const heal = new PowerUp(this, 2000, 150);
@@ -99,6 +99,7 @@ class Stage3_1 extends Phaser.Scene {
 
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
+    if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
   }
 
   update() {

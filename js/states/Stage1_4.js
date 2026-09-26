@@ -34,6 +34,7 @@ class Stage1_4 extends Phaser.Scene {
     // Groups
     this.bullets = this.physics.add.group();
     this.collectibles = this.physics.add.group();
+    this._breadTotal = 0; // scene instances persist across restart()
     this.enemies = this.add.group();
     this.enemyProjectiles = this.physics.add.group();
 
@@ -116,18 +117,8 @@ class Stage1_4 extends Phaser.Scene {
 
     // --- Pickups ---
 
-    [
-      [130, 172], [150, 172], [170, 172], [190, 172],
-      [432, 148], [464, 148],
-      [760, 140], [856, 136], [944, 124], [1040, 124],
-      [1296, 172], [1440, 172],
-      [1735, 108], [1760, 108],
-      [1800, 124],
-      [2080, 138], [2160, 132], [2240, 138],
-      [2560, 172], [2640, 172],
-      [2960, 148], [2992, 148],
-      [3260, 172], [3290, 172], [3320, 172],
-    ].forEach(([x, y]) => new AntToken(this, x, y));
+    [[152, 172], [1735, 100], [2080, 132], [3040, 148], [3290, 172]]
+      .forEach(([x, y]) => new BreadToken(this, x, y));
 
     [[530, 150], [1180, 150], [1944, 150], [2400, 150]].forEach(
       ([x, y]) => new SeedAmmoPickup(this, x, y)
@@ -178,6 +169,7 @@ class Stage1_4 extends Phaser.Scene {
     // Sync UI weapon indicator
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
+    if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
   }
 
   update() {

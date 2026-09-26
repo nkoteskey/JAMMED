@@ -49,6 +49,7 @@ class Level1 extends Phaser.Scene {
     // Create groups for bullets, enemies, collectibles, and enemy projectiles
     this.bullets = this.physics.add.group();
     this.collectibles = this.physics.add.group();
+    this._breadTotal = 0; // scene instances persist across restart()
     this.enemies = this.add.group();
     this.enemyProjectiles = this.physics.add.group();
 
@@ -158,6 +159,7 @@ class Level1 extends Phaser.Scene {
     // Sync UI weapon indicator with Jammy's starting weapon
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
+    if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
   }
 
   update() {

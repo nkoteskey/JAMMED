@@ -24,6 +24,11 @@ class UIScene extends Phaser.Scene {
       12
     ).setTintFill(0xffffff);
 
+    // Bread counter — the stage's five collectibles
+    this.breadIcon = this.add.image(14, 30, "bread-token-hud");
+    this.breadText = this.add.bitmapText(26, 25, "tempFont", "0/5", 10)
+      .setTintFill(0xffd877);
+
     // Weapon indicator (top-right)
     this.currentWeapon = "sonic";
     this.weaponIcon = this.add.sprite(410, 14, "audio-wave");
@@ -123,6 +128,13 @@ class UIScene extends Phaser.Scene {
     if (this.scene.isVisible() !== active) {
       this.scene.setVisible(active);
     }
+  }
+
+  // Called by BreadToken; also refreshed on stage entry.
+  setBread(got, total) {
+    if (!this.breadText) return;
+    this.breadText.setText(`${got}/${total || 5}`);
+    this.breadText.setTintFill(got >= (total || 5) ? 0x8ce070 : 0xffd877);
   }
 
   setSeedAmmo(n) {

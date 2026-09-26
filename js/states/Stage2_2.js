@@ -31,6 +31,7 @@ class Stage2_2 extends Phaser.Scene {
 
     this.bullets = this.physics.add.group();
     this.collectibles = this.physics.add.group();
+    this._breadTotal = 0; // scene instances persist across restart()
     this.enemies = this.add.group();
     this.enemyProjectiles = this.physics.add.group();
 
@@ -67,7 +68,8 @@ class Stage2_2 extends Phaser.Scene {
     [700, 1300].forEach((x) => new CannerDrone(this, x, 70));
     [1090, 1240].forEach((x) => new TinSoldier(this, x, 170));
 
-    [[300, 168], [840, 168], [1180, 168]].forEach(([x, y]) => new AntToken(this, x, y));
+    [[300, 168], [620, 120], [840, 168], [1180, 118], [1760, 168]]
+      .forEach(([x, y]) => new BreadToken(this, x, y));
     new RoyaltyScrap(this, 980, 164, "INDEX: 11,408 MASTERS. 0 RELEASED");
 
     this.blubert = new Blubert(this, this.jammy);
@@ -93,6 +95,7 @@ class Stage2_2 extends Phaser.Scene {
 
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
+    if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
   }
 
   update() {

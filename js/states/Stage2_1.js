@@ -32,6 +32,7 @@ class Stage2_1 extends Phaser.Scene {
 
     this.bullets = this.physics.add.group();
     this.collectibles = this.physics.add.group();
+    this._breadTotal = 0; // scene instances persist across restart()
     this.enemies = this.add.group();
     this.enemyProjectiles = this.physics.add.group();
 
@@ -72,15 +73,8 @@ class Stage2_1 extends Phaser.Scene {
     [[1100, 120], [2030, 105], [2750, 125]].forEach(([x, y]) => new StaticWasp(this, x, y));
 
     // --- Pickups ---
-    [
-      [140, 168], [165, 168], [190, 168],
-      [664, 130], [680, 110], [696, 130],
-      [1180, 168], [1205, 168],
-      [1352, 120], [1376, 120],
-      [1980, 168], [2005, 168],
-      [2480, 130], [2505, 130],
-      [2980, 168], [3005, 168],
-    ].forEach(([x, y]) => new AntToken(this, x, y));
+    [[620, 138], [1352, 116], [1980, 164], [2480, 124], [2980, 164]]
+      .forEach(([x, y]) => new BreadToken(this, x, y));
 
     new RoyaltyScrap(this, 760, 168, "RECEIPT: 2,400,000 SQUEEZES = 7 ANT");
     new RoyaltyScrap(this, 1620, 150, "NOTICE: YOUR MASTERS REMAIN OUR PROPERTY");
@@ -111,6 +105,7 @@ class Stage2_1 extends Phaser.Scene {
 
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
+    if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
   }
 
   update() {

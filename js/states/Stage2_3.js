@@ -27,6 +27,7 @@ class Stage2_3 extends Phaser.Scene {
 
     this.bullets = this.physics.add.group();
     this.collectibles = this.physics.add.group();
+    this._breadTotal = 0; // scene instances persist across restart()
     this.enemies = this.add.group();
     this.enemyProjectiles = this.physics.add.group();
 
@@ -82,9 +83,8 @@ class Stage2_3 extends Phaser.Scene {
     new GuitarPickup(this, 208, 152, "frostpick");
 
     // --- Pickups ---
-    [[130, 172], [155, 172], [560, 128], [585, 128], [1050, 172],
-     [1420, 120], [1445, 120], [1860, 172], [2260, 128], [2860, 172]]
-      .forEach(([x, y]) => new AntToken(this, x, y));
+    [[560, 122], [1420, 116], [1860, 166], [2260, 122], [2920, 150]]
+      .forEach(([x, y]) => new BreadToken(this, x, y));
     new RoyaltyScrap(this, 1700, 168, "COLD ROOM MANIFEST: 412 UNITS. ASSET CLASS: TALENT");
     [[880, 150], [2100, 150]].forEach(([x, y]) => new SeedAmmoPickup(this, x, y));
     const heal = new PowerUp(this, 1500, 150);
@@ -109,6 +109,7 @@ class Stage2_3 extends Phaser.Scene {
 
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
+    if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
   }
 
   onArtistFreed() {

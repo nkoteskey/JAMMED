@@ -137,11 +137,11 @@ this.bottomTextTween= this.tweens.add({
 
     // Add bread tokens to stage and center anchor each
     this.finalAntTokenOutlines = [
-      this.add.image(centerX - 32, centerY, "ant-token-outline-hud"),
-      this.add.image(centerX - 16, centerY, "ant-token-outline-hud"),
-      this.add.image(centerX, centerY, "ant-token-outline-hud"),
-      this.add.image(centerX + 16, centerY, "ant-token-outline-hud"),
-      this.add.image(centerX + 32, centerY, "ant-token-outline-hud"),
+      this.add.image(centerX - 32, centerY, "bread-token-outline-hud"),
+      this.add.image(centerX - 16, centerY, "bread-token-outline-hud"),
+      this.add.image(centerX, centerY, "bread-token-outline-hud"),
+      this.add.image(centerX + 16, centerY, "bread-token-outline-hud"),
+      this.add.image(centerX + 32, centerY, "bread-token-outline-hud"),
     ];
     for (var i = 0; i < this.finalAntTokenOutlines.length; i++) {
       this.finalAntTokenOutlines[i].anchor.setTo(0.5, 0.5);

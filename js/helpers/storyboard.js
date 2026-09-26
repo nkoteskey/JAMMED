@@ -56,15 +56,94 @@ function buildRocketAxePanel(scn) {
   g.destroy();
 }
 
-// PANEL 2 — The introduction of Blubert
+// PANEL 2 — The introduction of Blubert.
+// An alley, not a hero shot: brick, a dumpster, the beat-up box from
+// the drawing, and trash on the ground. Blubert is found here hurt,
+// so the staging has to read as "someone is down" — the scene lays
+// him on the floor in his stunned frames, it does not hover him.
 function buildBlubertPanel(scn) {
   if (scn.textures.exists("sb-blubert")) return;
   const g = scn.make.graphics({ x: 0, y: 0, add: false });
-  sbSpeedLines(g, 0, 0, 426, 240, 0x2a4ea8, 0x3f68c8);
-  g.fillStyle(0x89b6ff, 0.5); g.fillCircle(288, 88, 74);
+  const GROUND = 150;
 
-  g.fillStyle(0x16306e, 1); g.fillRect(0, 168, 426, 72);
-  g.fillStyle(0x1d3f8c, 1); g.fillRect(0, 168, 426, 6);
+  // Night alley wall
+  g.fillStyle(0x121a30, 1); g.fillRect(0, 0, 426, GROUND);
+  g.fillStyle(0x1a2542, 1);
+  for (let y = 0; y < GROUND; y += 13) {
+    for (let x = (y / 13) % 2 ? -16 : 0; x < 426; x += 36) {
+      g.fillRect(x + 2, y + 2, 32, 9);
+    }
+  }
+  // Fire escape shadow high on the wall
+  g.fillStyle(0x0d1424, 1);
+  g.fillRect(58, 0, 6, 62); g.fillRect(140, 0, 6, 48);
+  for (let y = 10; y < 62; y += 12) g.fillRect(58, y, 88, 3);
+
+  // Ground
+  g.fillStyle(0x0c1220, 1); g.fillRect(0, GROUND, 426, 240 - GROUND);
+  g.fillStyle(0x18223c, 1); g.fillRect(0, GROUND, 426, 4);
+
+  // A single streetlamp pool, off to the left
+  g.fillStyle(0xf2d08a, 0.07); g.fillCircle(150, GROUND, 130);
+  g.fillStyle(0xf2d08a, 0.07); g.fillCircle(150, GROUND, 84);
+  g.fillStyle(0xf2d08a, 0.06); g.fillCircle(150, GROUND, 46);
+
+  // --- Dumpster, right
+  const dx = 330, dy = GROUND;
+  g.fillStyle(0x0a1018, 1);                       // ink
+  g.fillRect(dx - 62, dy - 66, 124, 68);
+  g.fillStyle(0x24503a, 1);                       // body
+  g.fillRect(dx - 59, dy - 62, 118, 62);
+  g.fillStyle(0x2f6a4c, 1);
+  g.fillRect(dx - 59, dy - 62, 118, 8);
+  g.fillStyle(0x1a3a2a, 1);                       // panel seams
+  g.fillRect(dx - 30, dy - 54, 3, 54);
+  g.fillRect(dx + 18, dy - 54, 3, 54);
+  g.fillStyle(0x0a1018, 1);                       // lid, tipped open
+  g.fillRect(dx - 66, dy - 78, 132, 14);
+  g.fillStyle(0x2f6a4c, 1);
+  g.fillRect(dx - 63, dy - 75, 126, 9);
+  g.fillStyle(0x16281c, 1);                       // wheels
+  g.fillCircle(dx - 42, dy + 2, 6); g.fillCircle(dx + 42, dy + 2, 6);
+  // spilled trash beside it
+  g.fillStyle(0x3a4256, 1);
+  g.fillRect(dx - 84, dy - 12, 18, 12);
+  g.fillRect(dx - 96, dy - 7, 14, 7);
+  g.fillStyle(0x4a5468, 1);
+  g.fillRect(dx - 82, dy - 10, 8, 4);
+
+  // --- The beat-up box, tipped on its side, mouth facing left
+  const bx = 246, by = GROUND;
+  g.fillStyle(0x0a1018, 1);
+  g.fillRect(bx - 34, by - 40, 74, 40);
+  g.fillStyle(0x7a6040, 1);                       // near face
+  g.fillRect(bx - 31, by - 37, 68, 37);
+  g.fillStyle(0x8d7049, 1);
+  g.fillRect(bx - 31, by - 37, 68, 5);
+  g.fillStyle(0x5c472e, 1);                       // dark interior at the mouth
+  g.fillRect(bx - 31, by - 31, 26, 31);
+  // crushed corner + torn flap
+  g.fillStyle(0x6a5336, 1);
+  g.fillPoints([
+    { x: bx + 14, y: by - 37 }, { x: bx + 37, y: by - 30 },
+    { x: bx + 37, y: by - 37 },
+  ], true);
+  g.fillStyle(0x0a1018, 1);
+  g.fillRect(bx - 6, by - 40, 4, 10);
+  g.fillStyle(0x8d7049, 1);
+  g.fillPoints([
+    { x: bx - 32, y: by - 36 }, { x: bx - 48, y: by - 44 },
+    { x: bx - 44, y: by - 33 },
+  ], true);
+  // tape
+  g.fillStyle(0xb9a179, 1);
+  g.fillRect(bx + 2, by - 37, 7, 37);
+
+  // scattered debris on the ground
+  g.fillStyle(0x263050, 1);
+  [[96, 8], [118, 5], [190, 6], [286, 5], [72, 4]].forEach(([x, w]) =>
+    g.fillRect(x, GROUND - w + 1, w * 2, w));
+
   g.generateTexture("sb-blubert", 426, 240);
   g.destroy();
 }
@@ -116,9 +195,9 @@ function runStoryboard(scn, textureKey, caption, nextScene, tint, burst) {
       targets: [band, rule, shadow, body], alpha: 1, duration: fade,
       onComplete: () => {
         ready = true;
-        const hint = scn.add.bitmapText(420, 162,
+        const hint = scn.add.bitmapText(420, 8,
           "tempFont", "ANY BUTTON >", 8)
-          .setOrigin(1, 1).setTintFill(0xffffff);
+          .setOrigin(1, 0).setTintFill(0xffffff).setAlpha(0.85);
         scn.tweens.add({ targets: hint, alpha: 0.2, duration: 600,
           yoyo: true, repeat: -1 });
       },

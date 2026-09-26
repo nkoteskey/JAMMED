@@ -30,6 +30,9 @@ class StageSelect extends Phaser.Scene {
       { key: "Stage2_3",       act: "2-3", name: "COLD STORAGE",    tint: 0xa8e8ff },
       { key: "Stage3_1",       act: "3-1", name: "THE SILENT MOUND",tint: 0xffd877 },
       { key: "Stage3_2",       act: "3-2", name: "THE SIGNAL SPIRE",tint: 0xff9a9a },
+      { key: "StageBeach",     act: "??",  name: "IS ANYBODY OUT THERE?", tint: 0xfff0b0,
+        locked: () => typeof AntSecret === "undefined" || !AntSecret.allFound(),
+        lockedName: "??????????" },
       
     ];
 
@@ -41,10 +44,12 @@ class StageSelect extends Phaser.Scene {
       const y = 44 + row * 30;
       const box = this.add.rectangle(x + 90, y + 10, 184, 26, 0x1c1430);
       box.setStrokeStyle(1, 0x3a2a52);
+      const isLocked = typeof s.locked === "function" && s.locked();
       const act = this.add.bitmapText(x + 6, y + 4, "tempFont", s.act, 12)
         .setTintFill(0x8a7a92);
-      const nm = this.add.bitmapText(x + 44, y + 6, "tempFont", s.name, 8)
-        .setTintFill(s.tint);
+      const nm = this.add.bitmapText(x + 44, y + 6, "tempFont",
+        isLocked ? (s.lockedName || "???") : s.name, 8)
+        .setTintFill(isLocked ? 0x5a4a62 : s.tint);
       box.setInteractive();
       box.on("pointerdown", () => {
         if (this.cursor === i) this._launch();
@@ -87,6 +92,16 @@ class StageSelect extends Phaser.Scene {
 
   _launch() {
     const s = this.stages[this.cursor];
+    if (typeof s.locked === "function" && s.locked()) {
+      this.sound.play("enemyHitSound", { volume: 0.15, rate: 0.4 });
+      if (this._lockMsg) this._lockMsg.destroy();
+      this._lockMsg = this.add.bitmapText(213, 200, "tempFont",
+        `FIND ALL ${AntSecret.TOTAL} ANT TOKENS TO OPEN THIS`, 8)
+        .setOrigin(0.5).setTintFill(0xbfa8ff);
+      this.tweens.add({ targets: this._lockMsg, alpha: 0, delay: 1800,
+        duration: 400, onComplete: () => { if (this._lockMsg) this._lockMsg.destroy(); this._lockMsg = null; } });
+      return;
+    }
     // Stage select is a playground: hand over the full guitar rack so
     // late stages are actually playable out of context.
     if (typeof getGuitarCollection === "function") {

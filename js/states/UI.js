@@ -29,6 +29,11 @@ class UIScene extends Phaser.Scene {
     this.breadText = this.add.bitmapText(26, 25, "tempFont", "0/5", 10)
       .setTintFill(0xffd877);
 
+    // Hidden ANT tokens — one per stage, shown small and unexplained
+    this.antIcon = this.add.image(76, 30, "ant-token-hud");
+    this.antText = this.add.bitmapText(88, 25, "tempFont", "0/8", 10)
+      .setTintFill(0xbfa8ff);
+
     // Weapon indicator (top-right)
     this.currentWeapon = "sonic";
     this.weaponIcon = this.add.sprite(410, 14, "audio-wave");
@@ -42,7 +47,7 @@ class UIScene extends Phaser.Scene {
     this.gameplaySceneKeys = [
       "Level1", "Level1BossFight",
       "Stage1_3", "Stage1_4",
-      "Stage2_1", "Stage2_2", "Stage2_3", "Stage3_1", "Stage3_2",
+      "Stage2_1", "Stage2_2", "Stage2_3", "Stage3_1", "Stage3_2", "StageBeach",
     ];
     this.scene.setVisible(false);
 
@@ -135,6 +140,12 @@ class UIScene extends Phaser.Scene {
     if (!this.breadText) return;
     this.breadText.setText(`${got}/${total || 5}`);
     this.breadText.setTintFill(got >= (total || 5) ? 0x8ce070 : 0xffd877);
+  }
+
+  setAnts(got, total) {
+    if (!this.antText) return;
+    this.antText.setText(`${got}/${total || 8}`);
+    this.antText.setTintFill(got >= (total || 8) ? 0x8ce070 : 0xbfa8ff);
   }
 
   setSeedAmmo(n) {

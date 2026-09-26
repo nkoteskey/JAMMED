@@ -483,6 +483,36 @@ CHIP_TRACKS.spire = {
   ],
 };
 
+// THE BEACH (hidden) — bright surf-rock in A major. The only track
+// in the game with nothing wrong underneath it.
+CHIP_TRACKS.beach = {
+  bpm: 146, length: 4, duty1: 0.5, duty2: 0.25, gain1: 0.15,
+  pulse1: [
+    "E5 . C#5 . A4 . C#5 . E5 . . . F#5 . E5 .",
+    "D5 . . . B4 . . . A4 . B4 . C#5 . . .",
+    "E5 . F#5 . A5 . F#5 . E5 . C#5 . B4 . . .",
+    "A4 . B4 . C#5 . E5 . A5 . . . . . . .",
+  ],
+  pulse2: [
+    "A3 C#4 E4 C#4 A3 C#4 E4 C#4 A3 C#4 E4 C#4 A3 C#4 E4 C#4",
+    "D4 F#4 A4 F#4 D4 F#4 A4 F#4 B3 D4 F#4 D4 B3 D4 F#4 D4",
+    "A3 C#4 E4 C#4 A3 C#4 E4 C#4 E4 G#4 B4 G#4 E4 G#4 B4 G#4",
+    "A3 C#4 E4 A4 E4 C#4 A3 C#4 E4 . . . . . . .",
+  ],
+  tri: [
+    "A1 . A1 . E2 . E2 . A1 . A1 . E2 . E2 .",
+    "D2 . D2 . A2 . A2 . B1 . B1 . F#2 . F#2 .",
+    "A1 . A1 . E2 . E2 . E1 . E1 . B1 . B1 .",
+    "A1 . E2 . A1 . E2 . A1 . . . . . . .",
+  ],
+  drums: [
+    "K - H S H - H S K - H S H - H S",
+    "K - H S H - H S K - H S H - H O",
+    "K - H S H - H S K - H S H - H S",
+    "K - H S H - H S K S K S S S S O",
+  ],
+};
+
 // BOSS — aggressive, chromatic, relentless
 CHIP_TRACKS.boss = {
   bpm: 170, length: 4, duty1: 0.125, duty2: 0.25, gain1: 0.16,

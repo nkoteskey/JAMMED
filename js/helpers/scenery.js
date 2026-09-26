@@ -141,6 +141,31 @@ function addForegroundProps(scn, kind, opts = {}) {
     }
   }
 
+  if (kind === "beach") {
+    _fgTex(scn, "fg-palm", (g) => {
+      g.fillStyle(0x4a3018, 1); g.fillRect(14, 28, 8, 82);
+      g.fillStyle(0x2f6f2a, 1);
+      [[0,18],[8,4],[22,0],[34,8],[30,24]].forEach(([px,py]) => {
+        g.fillEllipse(px + 6, py + 10, 26, 12);
+      });
+      g.fillStyle(0xc9a227, 1);
+      g.fillRect(16, 26, 4, 4); g.fillRect(21, 29, 4, 4);
+    }, 44, 110);
+    _fgTex(scn, "fg-chair", (g) => {
+      g.fillStyle(0x1f5f7a, 1);
+      g.fillRect(0, 14, 34, 6);
+      g.fillRect(24, 0, 6, 18);
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(2, 15, 6, 4); g.fillRect(14, 15, 6, 4);
+      g.fillStyle(0x8a5f30, 1);
+      g.fillRect(2, 20, 3, 8); g.fillRect(28, 18, 3, 10);
+    }, 34, 28);
+    for (let x = 240; x < w; x += step) {
+      if ((x / step) % 2 < 1) _fgAdd(scn, scn.add.image(x, yBase - 2, "fg-palm").setOrigin(0.5, 1).setScrollFactor(sf, 1).setDepth(depth));
+      else _fgAdd(scn, scn.add.image(x, yBase - 2, "fg-chair").setOrigin(0.5, 1).setScrollFactor(sf, 1).setDepth(depth));
+    }
+  }
+
   if (kind === "mound") {
     // Nest: root buttresses and earth arches framing the tunnel
     _fgTex(scn, "fg-root", (g) => {

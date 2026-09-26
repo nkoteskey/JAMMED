@@ -4,7 +4,7 @@ window.addEventListener('DOMContentLoaded', function() {
         type: Phaser.AUTO,
         width: 426,
         height: 240,
-        scene: [Boot, Preload, TitleScreen, StageSelect, PauseScene, GuitarRack, UIScene,CutScene1_1, CutScene1_2, CutScene1_3, Level1, Level1BossFight, CutSceneWatermelonDefeated, Stage1_3, Stage1_4, Stage2_1, Stage2_2, Stage2_3, Stage3_1, Stage3_2, EndCredits],
+        scene: [Boot, Preload, TitleScreen, StageSelect, PauseScene, GuitarRack, UIScene,CutScene1_1, CutScene1_2, CutScene1_3, CutSceneRocketAxe, CutSceneBlubert, Level1, Level1BossFight, CutSceneWatermelonDefeated, Stage1_3, Stage1_4, Stage2_1, Stage2_2, Stage2_3, Stage3_1, Stage3_2, StageBeach, EndCredits],
         physics: {
             default: 'arcade',
             arcade: {

@@ -85,13 +85,16 @@ class Stage2_1 extends Phaser.Scene {
     heal.setData("powerUpType", "heal");
     heal.val = 2;
 
+    // The stage's one hidden ANT token (marked by an x0x tag)
+    new AntSecret(this, 372, 152);
+
     this.blubert = new Blubert(this, this.jammy);
     this.blubertRevivesLeft = 1;
 
     // The murmur
     ensureX0XTexture(this);
-    this.add.image(372, 218, "x0x-glyph").setDepth(2);
-    this.add.image(2210, 218, "x0x-glyph").setDepth(2);
+    addX0XTag(this, 372, 218, { depth: 2 });
+    addX0XTag(this, 2210, 218, { depth: 2 });
     this.murmur = new Murmur(this);
     this.murmur.addTrigger(180, "concentrate row. fruit aint meant to grow in ranks");
     this.murmur.addTrigger(520, "drones overhead. aim up and let your scout guide the seeds");
@@ -106,12 +109,14 @@ class Stage2_1 extends Phaser.Scene {
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
     if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
+    if (ui && ui.setAnts) ui.setAnts(AntSecret.count(), AntSecret.TOTAL);
   }
 
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
     updateForegroundProps(this, this.jammy);
+    updateX0XTags(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });
     this.belts.forEach((b) => b.update());

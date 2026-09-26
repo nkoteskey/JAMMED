@@ -135,6 +135,9 @@ class Stage1_4 extends Phaser.Scene {
     new GuitarPickup(this, 1764, 102, "royal-bass");
 
     // Blubert companion, one revive like 1-3
+    // The stage's one hidden ANT token (marked by an x0x tag)
+    new AntSecret(this, 540, 96);
+
     this.blubert = new Blubert(this, this.jammy);
     this.blubertRevivesLeft = 1;
 
@@ -155,8 +158,8 @@ class Stage1_4 extends Phaser.Scene {
       .setOrigin(0.5).setTintFill(0x118a84));
     sign.add(this.add.bitmapText(6, 5, "tempFont", "PRESERVES DIV.", 8)
       .setOrigin(0.5).setTintFill(0x4a6a68));
-    this.add.image(540, 150, "x0x-glyph").setDepth(1);
-    this.add.image(3320, 150, "x0x-glyph").setDepth(1);
+    addX0XTag(this, 540, 150, { depth: 1 });
+    addX0XTag(this, 3320, 150, { depth: 1 });
 
     new RoyaltyScrap(this, 1330, 156);
     new RoyaltyScrap(this, 2700, 156, "RECEIPT: EXPOSURE BONUS = 0 ANT");
@@ -170,12 +173,14 @@ class Stage1_4 extends Phaser.Scene {
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
     if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
+    if (ui && ui.setAnts) ui.setAnts(AntSecret.count(), AntSecret.TOTAL);
   }
 
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
     updateForegroundProps(this, this.jammy);
+    updateX0XTags(this, this.jammy);
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((enemy) => {

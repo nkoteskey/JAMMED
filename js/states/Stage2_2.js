@@ -72,6 +72,9 @@ class Stage2_2 extends Phaser.Scene {
       .forEach(([x, y]) => new BreadToken(this, x, y));
     new RoyaltyScrap(this, 980, 164, "INDEX: 11,408 MASTERS. 0 RELEASED");
 
+    // The stage's one hidden ANT token (marked by an x0x tag)
+    new AntSecret(this, 420, 104);
+
     this.blubert = new Blubert(this, this.jammy);
     this.blubertRevivesLeft = 1;
 
@@ -80,7 +83,7 @@ class Stage2_2 extends Phaser.Scene {
 
     // The murmur — reading the labels
     ensureX0XTexture(this);
-    this.add.image(420, 150, "x0x-glyph").setDepth(2);
+    addX0XTag(this, 420, 150, { depth: 2 });
     this.murmur = new Murmur(this);
     this.murmur.addTrigger(200, "quiet now. read the labels");
     this.murmur.addTrigger(620, "names on the jars. their name on the keys");
@@ -96,12 +99,14 @@ class Stage2_2 extends Phaser.Scene {
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
     if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
+    if (ui && ui.setAnts) ui.setAnts(AntSecret.count(), AntSecret.TOTAL);
   }
 
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
     updateForegroundProps(this, this.jammy);
+    updateX0XTags(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);

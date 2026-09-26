@@ -138,7 +138,9 @@ class Level1 extends Phaser.Scene {
     this.physics.add.collider(this.enemies, this.enemyStopBlocksLayer);
 
     // Blubert companion — follows Jammy, scans for hidden zomberries
-    this.blubert = new Blubert(this, this.jammy);
+    // The stage's one hidden ANT token (marked by an x0x tag)
+    new AntSecret(this, 330, 96);
+
 
     // Stage progression is handled by the Stage Select menu on the
     // title screen now — no debug portals cluttering the first screen
@@ -154,17 +156,19 @@ class Level1 extends Phaser.Scene {
     // view, so it was only visible if you happened to climb up there.
     addDripBillboard(this, 1536, 104, { groundY: 176 });
     ensureX0XTexture(this);
-    this.add.image(330, 150, "x0x-glyph").setDepth(1);
+    addX0XTag(this, 330, 150, { depth: 1 });
 
     // Sync UI weapon indicator with Jammy's starting weapon
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
     if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
+    if (ui && ui.setAnts) ui.setAnts(AntSecret.count(), AntSecret.TOTAL);
   }
 
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
+    updateX0XTags(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((enemy) => {
       if (enemy.update) {

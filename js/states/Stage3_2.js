@@ -55,6 +55,9 @@ class Stage3_2 extends Phaser.Scene {
     this._buildFloorSigns();
     addAmbientWeather(this, "spire");
 
+    // The stage's one hidden ANT token (marked by an x0x tag)
+    new AntSecret(this, 60, 2420);
+
     this.blubert = new Blubert(this, this.jammy);
     this.blubertRevivesLeft = 1;
 
@@ -73,11 +76,13 @@ class Stage3_2 extends Phaser.Scene {
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
     if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
+    if (ui && ui.setAnts) ui.setAnts(AntSecret.count(), AntSecret.TOTAL);
   }
 
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
+    updateX0XTags(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });
 
@@ -322,8 +327,8 @@ class Stage3_2 extends Phaser.Scene {
       this.add.bitmapText(213, y, "tempFont", label, 8)
         .setOrigin(0.5).setTintFill(0x7fe8e0).setDepth(3);
     });
-    this.add.image(60, 2476, "x0x-glyph").setDepth(2);
-    this.add.image(360, 700, "x0x-glyph").setDepth(2);
+    addX0XTag(this, 60, 2476, { depth: 2 });
+    addX0XTag(this, 360, 700, { depth: 2 });
   }
 
   // Broadcast interference — brief, telegraphed, harmless but unnerving

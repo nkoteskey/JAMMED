@@ -193,6 +193,9 @@ class Stage1_3 extends Phaser.Scene {
     this._buildFruitPlatforms();
 
     // Blubert companion
+    // The stage's one hidden ANT token (marked by an x0x tag)
+    new AntSecret(this, 700, 120);
+
     this.blubert = new Blubert(this, this.jammy);
     // One revive per stage — the next pickup Jammy grabs after
     // Blubert is disposed brings him back.
@@ -205,8 +208,8 @@ class Stage1_3 extends Phaser.Scene {
 
     // The murmur — x0x rumor lines and etched glyphs
     ensureX0XTexture(this);
-    this.add.image(700, 208, "x0x-glyph").setDepth(2);
-    this.add.image(2462, 208, "x0x-glyph").setDepth(2);
+    addX0XTag(this, 700, 208, { depth: 2 });
+    addX0XTag(this, 2462, 208, { depth: 2 });
     this.murmur = new Murmur(this);
     this.murmur.addTrigger(420, "there were orchards here before they drained the river for the plant");
     this.murmur.addTrigger(1500, "the runoff flows uphill to the works. follow the drip");
@@ -216,12 +219,14 @@ class Stage1_3 extends Phaser.Scene {
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
     if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
+    if (ui && ui.setAnts) ui.setAnts(AntSecret.count(), AntSecret.TOTAL);
   }
 
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
     updateForegroundProps(this, this.jammy);
+    updateX0XTags(this, this.jammy);
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((enemy) => {

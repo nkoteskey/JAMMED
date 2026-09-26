@@ -104,7 +104,7 @@ class CutSceneWatermelonDefeated extends Phaser.Scene {
 		onComplete: () => {
 			this.sound.stopAll();
 			if (typeof Chip !== "undefined") Chip.stop();
-		  this.scene.start("Stage1_3");
+		  this.scene.start("CutSceneBlubert");
 		
 		},
 	  });

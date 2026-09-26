@@ -55,6 +55,38 @@ class Murmur {
   }
 }
 
+// An x0x tag registered as a HINT: when Jammy is near an ant token
+// that hasn't been found yet, the nearest tag brightens. That's all
+// the "network" is in this game — somebody chalked the wall so the
+// next person through would know where to look.
+function addX0XTag(scn, x, y, opts = {}) {
+  ensureX0XTexture(scn);
+  const img = scn.add.image(x, y, "x0x-glyph").setDepth(opts.depth || 2);
+  img.setAlpha(0.75);
+  scn._x0xTags = scn._x0xTags || [];
+  scn._x0xTags.push(img);
+  return img;
+}
+
+// Call each frame; brightens the tag nearest an unfound ant token.
+function updateX0XTags(scn, jammy) {
+  if (!scn._x0xTags || !jammy || !jammy.sprite) return;
+  const secret = scn._antSecret;
+  for (const tag of scn._x0xTags) {
+    let want = 0.75;
+    if (secret && secret.active) {
+      const nearTag = Phaser.Math.Distance.Between(
+        tag.x, tag.y, jammy.sprite.x, jammy.sprite.y) < 170;
+      const tagMarksIt = Phaser.Math.Distance.Between(
+        tag.x, tag.y, secret.x, secret.y) < 260;
+      if (nearTag && tagMarksIt) {
+        want = 0.85 + Math.sin(scn.time.now / 180) * 0.15;
+      }
+    }
+    tag.alpha += (want - tag.alpha) * 0.1;
+  }
+}
+
 // Scratched x0x glyph — etched into brick, sandstone, pipes. Marks
 // relay points and safehouses. Dark scratch + lighter chipped edge.
 function ensureX0XTexture(scn) {

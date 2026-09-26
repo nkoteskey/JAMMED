@@ -276,12 +276,27 @@ Select until then. Flying beach balls and wind-blown umbrellas to
 evade, nothing to kill. The only track in the game with nothing
 wrong underneath it.
 
-## Still on the board, not yet built
+## 4-1 Stadium of Love — the finale
 
-- **4-1 Stadium of Love** — the intended finale. A stadium is a
-  better climax for this game than the Signal Spire tower.
-- **Guitar-hero boss mechanic** — "circles pressed in certain orders
-  like guitar hero but side scrolling"
+Concentrate's own arena, sold out, every screen in the city carrying
+it. Jammy comes in through the service tunnel past their security,
+walks out onto the stage, and the last fight is not a fight: it is a
+set.
+
+**The duel** is the board's "circles pressed in certain orders like
+guitar hero but side scrolling" — four lanes, coloured notes
+scrolling right to left into a strike bar, A/S/D/F or four touch
+pads. Three rounds of call-and-response; hit under half a round's
+notes and they walk out and you take the stage again. The **CROWD**
+meter is the health bar for both of you: hits swell it, misses drain
+it, and the bowl behind the stage literally lights gold as they come
+over to you. Beat all three rounds and the jumbotron changes from
+THE RAISIN / SOLD OUT to JAMMY / FRESH-SQUEEZED.
+
+The Signal Spire is no longer the ending — seizing the broadcast
+sends you here, because he ran for the arena.
+
+## Still on the board, not yet built
 - **Collectible records** — hidden records carrying the game's music,
   feeding a sound test (the chiptune engine already has the tracks)
 - **Song-title level names** — Kick Out the Jams, Subterranean

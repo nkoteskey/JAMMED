@@ -513,6 +513,66 @@ CHIP_TRACKS.beach = {
   ],
 };
 
+// STADIUM OF LOVE (4-1 approach) — arena rock. Big, wide, a little
+// too polished, because it is their building.
+CHIP_TRACKS.stadium = {
+  bpm: 144, length: 4, duty1: 0.5, duty2: 0.25, gain1: 0.16,
+  pulse1: [
+    "E5 . . . D5 . B4 . A4 . . . B4 . . .",
+    "D5 . . . C#5 . A4 . F#4 . . . A4 . . .",
+    "G4 . A4 . B4 . D5 . E5 . . . . . . .",
+    "B4 . A4 . G4 . F#4 . E4 . . . . . . .",
+  ],
+  pulse2: [
+    "E4 G#4 B4 G#4 E4 G#4 B4 G#4 A3 C#4 E4 C#4 A3 C#4 E4 C#4",
+    "D4 F#4 A4 F#4 D4 F#4 A4 F#4 F#3 A3 C#4 A3 F#3 A3 C#4 A3",
+    "G3 B3 D4 B3 G3 B3 D4 B3 A3 C#4 E4 C#4 A3 C#4 E4 C#4",
+    "B3 D#4 F#4 D#4 B3 D#4 F#4 D#4 E4 G#4 B4 E5 B4 G#4 E4 B3",
+  ],
+  tri: [
+    "E1 . E1 . E1 . E1 . A1 . A1 . A1 . A1 .",
+    "D1 . D1 . D1 . D1 . F#1 . F#1 . F#1 . F#1 .",
+    "G1 . G1 . G1 . G1 . A1 . A1 . A1 . A1 .",
+    "B1 . B1 . B1 . B1 . E1 . E1 . E1 . E2 .",
+  ],
+  drums: [
+    "K - H S H - H S K - H S H - H S",
+    "K - H S H - H S K - H S H - H O",
+    "K - H S H - H S K - H S H - H S",
+    "K - H S H - H S K S K S S S S O",
+  ],
+};
+
+// THE DUEL (4-1 boss) — a hard four-on-the-floor so the note chart
+// has something unmistakable to sit on.
+CHIP_TRACKS.duel = {
+  bpm: 150, length: 4, duty1: 0.125, duty2: 0.25, gain1: 0.16,
+  pulse1: [
+    "A4 . E5 . A5 . E5 . C5 . B4 . A4 . . .",
+    "G4 . D5 . G5 . D5 . B4 . A4 . G4 . . .",
+    "F4 . C5 . F5 . C5 . A4 . G4 . F4 . . .",
+    "E4 . B4 . E5 . G5 . B5 . . . E5 . . .",
+  ],
+  pulse2: [
+    "A3 . . . A3 . . . E4 . . . E4 . . .",
+    "G3 . . . G3 . . . D4 . . . D4 . . .",
+    "F3 . . . F3 . . . C4 . . . C4 . . .",
+    "E3 . . . E3 . . . B3 . . . B3 . . .",
+  ],
+  tri: [
+    "A1 . A1 . A1 . A1 . A1 . A1 . A1 . A1 .",
+    "G1 . G1 . G1 . G1 . G1 . G1 . G1 . G1 .",
+    "F1 . F1 . F1 . F1 . F1 . F1 . F1 . F1 .",
+    "E1 . E1 . E1 . E1 . E1 . E1 . E1 . E1 .",
+  ],
+  drums: [
+    "K - H - K - H - K - H - K - H S",
+    "K - H - K - H - K - H - K - H S",
+    "K - H - K - H - K - H - K - H S",
+    "K - H - K - H - K S K S S S S O",
+  ],
+};
+
 // BOSS — aggressive, chromatic, relentless
 CHIP_TRACKS.boss = {
   bpm: 170, length: 4, duty1: 0.125, duty2: 0.25, gain1: 0.16,

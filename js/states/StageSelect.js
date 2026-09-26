@@ -30,6 +30,7 @@ class StageSelect extends Phaser.Scene {
       { key: "Stage2_3",       act: "2-3", name: "COLD STORAGE",    tint: 0xa8e8ff },
       { key: "Stage3_1",       act: "3-1", name: "THE SILENT MOUND",tint: 0xffd877 },
       { key: "Stage3_2",       act: "3-2", name: "THE SIGNAL SPIRE",tint: 0xff9a9a },
+      { key: "Stage4_1",       act: "4-1", name: "STADIUM OF LOVE",  tint: 0xff9ac0 },
       { key: "StageBeach",     act: "??",  name: "IS ANYBODY OUT THERE?", tint: 0xfff0b0,
         locked: () => typeof AntSecret === "undefined" || !AntSecret.allFound(),
         lockedName: "??????????" },

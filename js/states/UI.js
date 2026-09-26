@@ -54,7 +54,7 @@ class UIScene extends Phaser.Scene {
     this.gameplaySceneKeys = [
       "Level1", "Level1BossFight",
       "Stage1_3", "Stage1_4",
-      "Stage2_1", "Stage2_2", "Stage2_3", "Stage3_1", "Stage3_2", "StageBeach",
+      "Stage2_1", "Stage2_2", "Stage2_3", "Stage3_1", "Stage3_2", "Stage4_1", "StageBeach",
     ];
     this.scene.setVisible(false);
 
@@ -156,6 +156,15 @@ class UIScene extends Phaser.Scene {
     if (!this.breadText) return;
     this.breadText.setText(`${got}/${total || 5}`);
     this.breadText.setTintFill(got >= (total || 5) ? 0x8ce070 : 0xffd877);
+  }
+
+  // During the Stadium duel the platforming HUD is noise and steals
+  // the top of a 240px screen the note lanes need.
+  setDuelMode(on) {
+    const hide = [this.scoreText, this.breadIcon, this.breadText,
+                  this.antIcon, this.antText, this.weaponIcon,
+                  this.weaponLabel, this.weaponAmmoText, this.clockText];
+    hide.forEach((o) => { if (o) o.setVisible(!on); });
   }
 
   setAnts(got, total) {

@@ -565,17 +565,21 @@ class Stage3_2 extends Phaser.Scene {
     Chip.play("victory");
     this.cameras.main.flash(600, 255, 240, 180);
 
-    const t1 = this.add.bitmapText(213, 86, "tempFont", "FRESH-SQUEEZED.", 16)
+    const t1 = this.add.bitmapText(213, 86, "tempFont", "BROADCAST SEIZED", 14)
       .setOrigin(0.5).setScrollFactor(0).setDepth(400).setTintFill(0xffd877);
-    const t2 = this.add.bitmapText(213, 112, "tempFont", "THE BROADCAST IS A JAM SESSION NOW", 8)
+    const t2 = this.add.bitmapText(213, 110, "tempFont",
+      "HE IS PLAYING THE STADIUM TONIGHT", 8)
       .setOrigin(0.5).setScrollFactor(0).setDepth(400).setTintFill(0xd8f4f0);
+    const t3 = this.add.bitmapText(213, 124, "tempFont",
+      "EVERY SCREEN IN THE CITY JUST SWITCHED TO IT", 8)
+      .setOrigin(0.5).setScrollFactor(0).setDepth(400).setTintFill(0x9fd8e0);
     this.time.delayedCall(2600, () => {
-      this.murmur.say("the music keeps itself now");
+      this.murmur.say("he ran for the arena. go take his room");
     });
     this.time.delayedCall(5400, () => {
       this.cameras.main.fadeOut(900, 0, 0, 0);
       this.cameras.main.once("camerafadeoutcomplete", () => {
-        this.scene.start("EndCredits");
+        this.scene.start("Stage4_1");
       });
     });
   }

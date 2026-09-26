@@ -246,9 +246,11 @@ Canon for the two new scenes comes from the artist's own notes and
 drawings on the Trello board, photographed into `docs/reference/`:
 
 - **Jammy gets his Rocket Axe** (after the Watermelon boss) — the
-  band's guitar tech comes out the stage door with the old axe
-  rebuilt, a rocket bolted to the tail. "Patched her up." That's what
-  carries Jammy out of the city and toward the mesa.
+  band's guitar tech catches Jammy on his way out with the old axe,
+  back from the shop with a rocket bolted to the tail. That's what
+  carries him out of the city and toward the mesa. (The tech is
+  spoken of, not shown; if he's ever drawn he should be a jar, not a
+  person — everyone in this world is produce or packaging.)
 - **The introduction of Blubert** (after the Rocket Axe, before 1-3)
   — on his way to the edge of the city, Jammy hears a muffled cry
   from an alley. Under a beat-up box is a blueberry drone clinging

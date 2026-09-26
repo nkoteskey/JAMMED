@@ -1,11 +1,9 @@
 // "Jammy gets his Rocket Axe" — from the Trello storyboard list.
+// Staged with the game's own rocket-axe sprite rather than drawn
+// from scratch; the character art is the artist's.
 //
-// It belongs AFTER the Watermelon boss: the band's guitar tech comes
-// out the stage door with the old axe rebuilt and a booster bolted to
-// the tail, and that's what carries Jammy out to the mesa.
-//
-// Staged with the game's own rocket-axe sprite rather than drawn from
-// scratch; the character art is the artist's.
+// It plays AFTER the Watermelon boss: the band's guitar tech hands the
+// rebuilt axe over on Jammy's way out of the city.
 class CutSceneRocketAxe extends Phaser.Scene {
   constructor() { super({ key: "CutSceneRocketAxe" }); }
   init() { scene = this; }
@@ -17,11 +15,11 @@ class CutSceneRocketAxe extends Phaser.Scene {
 
     buildRocketAxePanel(this);
     runStoryboard(this, "sb-rocketaxe",
-      "The band's guitar tech drags the old axe out the stage door - " +
-      "rebuilt, with a rocket bolted to the tail. Kick off it mid-air " +
-      "and the boosters light. Jammy plugs in and points it at the edge " +
-      "of town.",
-      "CutSceneBlubert", 0xffd066, { text: "ROCKET AXE!", x: 92, y: 26 });
+      "The band's guitar tech catches Jammy on the way out - the old axe, " +
+      "back from the shop with a rocket bolted to the tail. Kick off it " +
+      "mid-air and the boosters light. No time to ask questions; Jammy " +
+      "plugs in and points it at the edge of town.",
+      "CutSceneBlubert", 0xffd066, { text: "ROCKET AXE!", x: 316, y: 40 });
 
     // Jammy riding the axe, big, mid-blast
     const j = sbSprite(this, "jammy-rocketaxe", "rocketaxe-right1", 150, 104, 3.2);
@@ -47,16 +45,5 @@ class CutSceneRocketAxe extends Phaser.Scene {
           duration: 560, onComplete: () => p.destroy() });
       },
     });
-
-    // The tech's line, out of the doorway
-    const bx = 318, by = 62;
-    const bub = this.add.ellipse(bx, by, 170, 44, 0xf6f4ef).setDepth(7);
-    bub.setStrokeStyle(3, 0x0a1018);
-    this.add.triangle(0, 0, bx + 24, by + 18, bx + 6, by + 19, bx + 30, by + 40,
-      0xf6f4ef).setDepth(7);
-    this.add.bitmapText(bx, by - 11, "tempFont", "PATCHED HER UP.", 10)
-      .setOrigin(0.5).setTintFill(0x14101c).setDepth(8);
-    this.add.bitmapText(bx, by + 3, "tempFont", "GO GET 'EM, KID", 10)
-      .setOrigin(0.5).setTintFill(0x14101c).setDepth(8);
   }
 }

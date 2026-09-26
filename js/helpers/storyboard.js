@@ -40,56 +40,18 @@ function sbInk(g, draw, spread = 3) {
   }
 }
 
-// PANEL — Jammy gets his Rocket Axe.
-// This one happens AFTER the Watermelon goes down: the band's guitar
-// tech comes out the stage door with the old axe rebuilt, a booster
-// bolted to the tail. The tech is a backlit silhouette in the doorway
-// — no invented face to sit badly next to the artist's sprites.
+// PANEL 1 backdrop — Jammy gets his Rocket Axe
 function buildRocketAxePanel(scn) {
   if (scn.textures.exists("sb-rocketaxe")) return;
   const g = scn.make.graphics({ x: 0, y: 0, add: false });
-  const GROUND = 168;
   sbSpeedLines(g, 0, 0, 426, 240, 0xd83018, 0xf06030);
-
-  // Ground haze so the sprites have something to stand against
-  g.fillStyle(0x8c1810, 1); g.fillRect(0, GROUND, 426, 240 - GROUND);
-  g.fillStyle(0xa82414, 1); g.fillRect(0, GROUND, 426, 6);
-
-  // --- Stage door, open, light spilling out
-  g.fillStyle(0x3a0a06, 1); g.fillRect(292, 44, 122, GROUND - 44);
-  g.fillStyle(0xffd9a0, 1); g.fillRect(300, 52, 106, GROUND - 52);
-  g.fillStyle(0xfff2cf, 1); g.fillRect(300, 52, 106, 8);
-  // light pooling out onto the ground
-  g.fillStyle(0xffd9a0, 0.22);
-  g.fillPoints([
-    { x: 300, y: GROUND }, { x: 406, y: GROUND },
-    { x: 426, y: 210 }, { x: 250, y: 210 },
-  ], true);
-
-  // --- The guitar tech, silhouetted in the doorway, cap turned
-  // backwards, one arm out holding the axe toward Jammy.
-  const fx = 352;
-  g.fillStyle(0x140806, 1);
-  g.fillRect(fx - 12, 128, 9, GROUND - 128);      // legs
-  g.fillRect(fx + 3, 128, 9, GROUND - 128);
-  g.fillRect(fx - 16, 94, 32, 38);                // torso
-  g.fillRect(fx - 46, 100, 32, 9);                // arm, reaching left
-  g.fillCircle(fx, 86, 11);                       // head
-  g.fillRect(fx - 11, 74, 23, 7);                 // cap
-  g.fillRect(fx + 9, 79, 13, 5);                  // brim, turned backwards
-  g.fillRect(fx - 20, GROUND - 3, 40, 3);         // boots flat on the sill
-  // road case at his feet
-  g.fillRect(fx + 22, 142, 34, GROUND - 142);
-  g.fillStyle(0x3a1a10, 1); g.fillRect(fx + 25, 145, 28, 6);
-  // coiled cable on the floor
-  g.lineStyle(3, 0x140806, 1);
-  g.strokeEllipse(fx - 66, GROUND - 7, 40, 14);
-  g.strokeEllipse(fx - 62, GROUND - 3, 30, 10);
-
-  // Blast glow behind Jammy
+  // Blast glow behind
   g.fillStyle(0xffd066, 0.85); g.fillCircle(152, 100, 84);
   g.fillStyle(0xfff0b0, 0.85); g.fillCircle(152, 100, 56);
 
+  // Ground haze so the sprite has something to stand against
+  g.fillStyle(0x8c1810, 1); g.fillRect(0, 168, 426, 72);
+  g.fillStyle(0xa82414, 1); g.fillRect(0, 168, 426, 6);
   g.generateTexture("sb-rocketaxe", 426, 240);
   g.destroy();
 }

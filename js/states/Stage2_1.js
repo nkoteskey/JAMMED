@@ -336,8 +336,8 @@ class Stage2_1 extends Phaser.Scene {
     }
 
     // Billboards on the gameplay plane
-    addDripBillboard(this, 700, 120);
-    addDripBillboard(this, 2400, 116);
+    addDripBillboard(this, 700, 108, { groundY: 192 });
+    addDripBillboard(this, 2400, 104, { groundY: 192 });
   }
 
   // Identical trees, evenly spaced — the monoculture, on the gameplay plane

@@ -145,8 +145,13 @@ class Level1 extends Phaser.Scene {
 
     // Concentrate, Inc. is already in the city — Drip billboards over
     // the skyline, and the murmur's glyph if you know where to look.
-    addDripBillboard(this, 620, 60);
-    addDripBillboard(this, 1500, 56);
+    // Planted on verified flat rooftops (posts land on the roof)
+    // rather than floating across a building facade.
+    addDripBillboard(this, 1960, 73);
+    // Second sign planted on an open stretch of street, legs down to
+    // the pavement — the rooftop spot sat above the normal camera
+    // view, so it was only visible if you happened to climb up there.
+    addDripBillboard(this, 1536, 104, { groundY: 176 });
     ensureX0XTexture(this);
     this.add.image(330, 150, "x0x-glyph").setDepth(1);
 

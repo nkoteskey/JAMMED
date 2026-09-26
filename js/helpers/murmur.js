@@ -116,11 +116,29 @@ function ensureConcentrateTextures(scn) {
 }
 
 // Places a finished billboard (panel + droplet + text) into a scene.
+// Pass opts.groundY to plant it: legs are drawn from the panel down to
+// that surface so the sign never reads as floating. Without it the
+// stub posts are used, which is correct when the billboard is sitting
+// directly on a rooftop.
 function addDripBillboard(scn, x, y, opts = {}) {
   ensureConcentrateTextures(scn);
   const c = scn.add.container(x, y);
   c.setDepth(opts.depth !== undefined ? opts.depth : 3);
   if (opts.scrollFactor !== undefined) c.setScrollFactor(opts.scrollFactor, 1);
+  if (opts.groundY !== undefined) {
+    // Tall legs down to the deck, with feet
+    const legTop = 18;
+    const len = opts.groundY - y - legTop;
+    if (len > 0) {
+      [-26, 26].forEach((lx) => {
+        c.add(scn.add.rectangle(lx, legTop + len / 2, 5, len, 0x14383a));
+        c.add(scn.add.rectangle(lx, legTop + len - 1, 13, 3, 0x14383a));
+      });
+      // Cross-brace so it reads as a structure, not two sticks
+      const brace = scn.add.rectangle(0, legTop + len * 0.55, 52, 3, 0x14383a);
+      c.add(brace);
+    }
+  }
   c.add(scn.add.image(0, 0, "drip-billboard"));
   c.add(scn.add.image(-28, -3, "drip-droplet"));
   const t1 = scn.add.bitmapText(10, -10, "tempFont", "THE DRIP", 8)

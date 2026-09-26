@@ -52,6 +52,7 @@ class Stage3_2 extends Phaser.Scene {
     this._buildClimbEnemies();
     this._buildPickups();
     this._buildFloorSigns();
+    addAmbientWeather(this, "spire");
 
     this.blubert = new Blubert(this, this.jammy);
     this.blubertRevivesLeft = 1;

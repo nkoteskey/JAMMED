@@ -26,6 +26,8 @@ class Stage2_2 extends Phaser.Scene {
     this._buildTilesetTexture();
     this._buildLevel();
     this._buildShelves();
+    addForegroundProps(this, "archive", { step: 420 });
+    addAmbientWeather(this, "archive");
 
     this.bullets = this.physics.add.group();
     this.collectibles = this.physics.add.group();
@@ -96,6 +98,7 @@ class Stage2_2 extends Phaser.Scene {
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
+    updateForegroundProps(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);

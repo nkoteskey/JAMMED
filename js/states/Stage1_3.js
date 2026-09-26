@@ -37,6 +37,8 @@ class Stage1_3 extends Phaser.Scene {
     this._paintSky();
     this._buildDesertTiles();
     this._scatterDesertDecor();
+    addForegroundProps(this, "mesa", { y: 176, step: 380 });
+    addAmbientWeather(this, "mesa");
 
     this.enemyStopBlocksLayer.setAlpha(0);
     this.deathBlocksLayer.setAlpha(0);
@@ -217,6 +219,7 @@ class Stage1_3 extends Phaser.Scene {
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
+    updateForegroundProps(this, this.jammy);
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((enemy) => {

@@ -8,6 +8,7 @@ CONTROLS:
 * Swap Guitar - C
 * Guitar Rack - G
 * Pause - E
+* Stage Select - S (from the title screen)
 
 On touch devices: joystick + jump/shoot buttons, with on-screen
 SWAP and RACK buttons in the top-right HUD.

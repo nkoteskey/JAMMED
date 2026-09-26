@@ -97,11 +97,27 @@ maps to a bandmate; the rack is secretly a roster.
   decides they're angry. Duke Cassis's jar is here — broken open with
   a bass quake. At the exit, a scanner arch exposes Blubert's beacon;
   he overloads it himself to open the gate.
-- *(future expansions: Brine Canals under the plant — poisoned-gossip
-  ambush; Cold Storage — thawable frozen artists.)*
+- **2-3 Cold Storage**: preservation's other face. Where the Archive
+  seals masters, Cold Storage seals the *artists*: named fruit in ice
+  on the cold-room shelves. Ice floors that carry momentum, flash-
+  freezer wall units, icicles. Three sonic hits crack a slab and
+  someone walks free — optional rescues, tallied, and they sing at
+  the Spire. The **Frostpick** is found here: it freezes an enemy
+  solid, and a frozen enemy is a platform. The stage is built around
+  that one idea. Agency, right after the Archive's despair.
+- *(future: Brine Canals under the plant — the poisoned-gossip
+  ambush.)*
 
 ### Act 3 — The colony wakes
-- **3-1 The Signal Spire**: Concentrate HQ. Floors numbered 100 down
+- **3-1 The Silent Mound**: the colony, and the Archive's deliberate
+  mirror — the same wall-of-cells architecture, but these cells hold
+  SEEDS. Jar room, seed room; the thesis built as level design. The
+  mound wakes in proportion to every ANT banked across the whole run:
+  lit honeycomb banks, lantern density, ant traffic, and past a
+  threshold, living ant bridges spanning the sinkholes. Collect
+  nothing and you Rocket-Axe the gaps alone. Concentrate has sent
+  canners down to seal the vault; they do not belong here.
+- **3-2 The Signal Spire**: Concentrate HQ. Floors numbered 100 down
   to 1, going **up** — you literally climb the charts. Signal beams,
   wasp swarms, canner patrols. Near the top, the broadcast jams *the
   game*: HUD static, flickers (telegraphed, brief).
@@ -149,6 +165,8 @@ Final frame: `"the music keeps itself now"` — x0x scratched beneath.
 | Tin Soldier | A&R / Exclusives | Uniform ranks; frontal armor (sonic clinks off the front — flank it, or pierce with seed blast/bass quake) |
 | Canner Drone | Preserves Div. | Drops sealing jars; a jarred Jammy mashes to break out |
 | Static Wasp | Ad-Supported Tier | No damage — it *mutes your guitar*; interruption as a weapon |
+| Flash Freezer | Cold Chain | Wall unit; its cone freezes Jammy solid — mash out |
+| Frozen Artist | (victim) | Not an enemy. A person in a slab. Three hits frees them |
 | Echo Jammy | Lab-Grown Artist Program | Your own riffs, from concentrate |
 | The Grocer *(future)* | Chart placement | Scanner beam prices platforms out from under you |
 | Mold *(future)* | (entropy) | Attacks the hoard itself; the single vault rots, scattered seeds don't |
@@ -160,6 +178,7 @@ Final frame: `"the music keeps itself now"` — x0x scratched beneath.
 | Crimson V | Sonic waves | Jammy's own |
 | Seedcaster | Seed bombs | Found on the mesa — a busker's, left at the dried river |
 | Royal Bass | Ground quake | Duke Cassis's — abandoned in the Jam Works when he was taken |
+| Frostpick | Freeze solid | Left in Cold Storage; frozen enemies become platforms |
 | *(future models)* | | Each new guitar belongs to another bandmate to find |
 
 ## Writing rules
@@ -176,3 +195,38 @@ Final frame: `"the music keeps itself now"` — x0x scratched beneath.
 4. x0x speaks in lowercase, short lines, no punctuation flourishes.
    Rumors that matter carry confirmation counts.
 5. Dark beats are quiet (reading labels in the Archive), never gory.
+
+---
+
+## Music
+
+Every stage has a chiptune theme written as step data in
+`js/helpers/chiptune.js` (2 pulse + triangle + noise, NES voicing).
+The soundtrack carries the story on its own:
+
+| Track | Stage | Character |
+|---|---|---|
+| title | Title / Stage Select | Heroic, the band tuning up |
+| city | 1-1 | Driving street-punk in A minor |
+| boss | 1-2 | Aggressive, chromatic, relentless |
+| mesa | 1-3 | Warm and wide; western, open intervals |
+| works | 1-4 | Dark industrial; chromatic descent, pounding |
+| orchard | 2-1 | A mechanical ostinato that never varies — the point |
+| archive | 2-2 | Sparse, cold, **no drums**. A room full of people who can't sing |
+| coldstorage | 2-3 | Glassy and slow; the drums are a compressor, not a beat |
+| mound | 3-1 | Warm major, adds voices as it goes — the Archive's opposite |
+| spire | 3-2 | Urgent ascent, climbing arpeggios |
+| echo | Echo Jammy | **The city theme soured into minor** — your own music, from concentrate |
+| finale | Hold the Frequency | Major-key, defiant, building |
+| victory | FRESH-SQUEEZED | Short fanfare |
+
+## Playability contract
+
+Anything added to this game should keep these:
+- Coyote time and jump buffering — a pressed jump is never swallowed
+- Variable jump height (tap ~2 tiles, hold ~3.6 tiles)
+- Hazards are telegraphed before they can hurt you (beams blink amber,
+  presses rattle, icicles shiver, cactuses puff up)
+- Checkpoints on every long stage, verified to sit on solid ground
+- Nothing solid may block an entire lane — the player must always
+  have a route and a firing line

@@ -28,6 +28,8 @@ class Stage1_4 extends Phaser.Scene {
     this._buildLevel();
     this._paintBackground();
     this._decorateVats();
+    addForegroundProps(this, "works", { step: 360 });
+    addAmbientWeather(this, "works");
 
     // Groups
     this.bullets = this.physics.add.group();
@@ -181,6 +183,7 @@ class Stage1_4 extends Phaser.Scene {
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
+    updateForegroundProps(this, this.jammy);
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((enemy) => {

@@ -382,6 +382,30 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
         this.sprite.body.touching.down || this.sprite.body.blocked.down;
       const now = scene.time.now;
 
+      // Landing impact: squash on touchdown, scaled by fall speed
+      if (grounded && !this._wasGrounded) {
+        const impact = Phaser.Math.Clamp((this._lastFallVy || 0) / 600, 0, 1);
+        if (impact > 0.18) this._squash(1 + impact * 0.35, 1 - impact * 0.3, 150);
+        if (impact > 0.45) {
+          scene.cameras.main.shake(70, 0.0016 * impact);
+          for (let i = 0; i < 4; i++) {
+            const side = i % 2 === 0 ? -1 : 1;
+            const d = scene.add.circle(
+              this.sprite.x + side * (4 + Math.random() * 7),
+              this.sprite.y + 14, 1.5 + Math.random() * 1.5, 0xffffff, 0.5);
+            d.setDepth(99);
+            scene.tweens.add({
+              targets: d, x: d.x + side * (10 + Math.random() * 10),
+              alpha: 0, scale: 1.7, duration: 280,
+              onComplete: () => d.destroy(),
+            });
+          }
+        }
+      }
+      this._wasGrounded = grounded;
+      if (!grounded) this._lastFallVy = Math.max(this._lastFallVy || 0, this.sprite.body.velocity.y);
+      else this._lastFallVy = 0;
+
       if (grounded && this.sprite.body.velocity.y >= 0) {
         this.canDoubleJump = false;
         this.jumping = false;
@@ -661,6 +685,7 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
     this.walkingLeft = false;
     this.walkingRight = false;
     this.canDoubleJump = true;
+    this._squash(0.82, 1.22, 130); // stretch upward out of the crouch
     if (!this.jumpSound.isPlaying) this.jumpSound.play();
     // Little dust puff at the feet so the launch has weight
     if (scene.add && scene.add.circle) {
@@ -683,6 +708,21 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
     }
     if (this.facing == "right") this.sprite.play("jumping-right", true);
     else this.sprite.play("jumping-left", true);
+  }
+
+  // Squash & stretch. Tweens the sprite scale and always returns to
+  // 1:1 so a interrupted tween can never leave Jammy deformed.
+  _squash(sx, sy, ms) {
+    if (!this.sprite || !this.sprite.active) return;
+    if (this._squashTween) this._squashTween.remove();
+    this.sprite.setScale(sx, sy);
+    this._squashTween = scene.tweens.add({
+      targets: this.sprite,
+      scaleX: 1, scaleY: 1,
+      duration: ms,
+      ease: "Back.easeOut",
+      onComplete: () => { this._squashTween = null; this.sprite.setScale(1, 1); },
+    });
   }
 
   _rocketAxeBoost() {

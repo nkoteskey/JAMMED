@@ -27,6 +27,8 @@ class Stage2_1 extends Phaser.Scene {
     this._paintBackground();
     this._plantTreeRows();
     this._decorateCanals();
+    addForegroundProps(this, "orchard", { y: 192, step: 400 });
+    addAmbientWeather(this, "orchard");
 
     this.bullets = this.physics.add.group();
     this.collectibles = this.physics.add.group();
@@ -114,6 +116,7 @@ class Stage2_1 extends Phaser.Scene {
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
+    updateForegroundProps(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });
     this.belts.forEach((b) => b.update());

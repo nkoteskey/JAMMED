@@ -54,6 +54,7 @@ class Stage2_3 extends Phaser.Scene {
 
     this._buildShelves();
     this._buildIcicles();
+    addForegroundProps(this, "cold", { step: 420 });
 
     // --- The cold room's staff ---
     [[430, 176, -1], [980, 176, 1], [1640, 176, -1], [2180, 176, 1], [2720, 176, -1]]
@@ -124,6 +125,7 @@ class Stage2_3 extends Phaser.Scene {
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
+    updateForegroundProps(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);

@@ -64,7 +64,33 @@ class ChiptunePlayer {
     const data = buf.getChannelData(0);
     for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
     this._noiseBuf = buf;
+    this._installLifecycle();
     return true;
+  }
+
+  // Browsers suspend the AudioContext when the tab is hidden and do
+  // not always resume it on return, which left the game silent after
+  // switching apps. Resume on every signal we get.
+  _installLifecycle() {
+    if (this._lifecycleInstalled) return;
+    this._lifecycleInstalled = true;
+    const wake = () => {
+      if (!this.ctx) return;
+      if (this.ctx.state === "suspended") {
+        this.ctx.resume().catch(() => {});
+      }
+      // Re-anchor the scheduler so playback picks up cleanly
+      if (this.playing) this.nextTime = this.ctx.currentTime + 0.06;
+    };
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) wake();
+    });
+    window.addEventListener("focus", wake);
+    window.addEventListener("pageshow", wake);
+    // A tap always counts as a user gesture, which is what an
+    // autoplay-blocked context is waiting for.
+    window.addEventListener("pointerdown", wake, { passive: true });
+    window.addEventListener("keydown", wake);
   }
 
   setMuted(m) {
@@ -101,7 +127,14 @@ class ChiptunePlayer {
 
   _schedule() {
     if (!this.playing || !this.track) return;
+    if (this.ctx.state === "suspended") return;   // nothing to do until resumed
     const spb = 60 / this.track.bpm / 4; // seconds per 16th step
+    // Coming back from a backgrounded tab, the clock has moved on
+    // without us. Catching up note-by-note would fire a burst and
+    // still be behind, so jump the cursor to now.
+    if (this.nextTime < this.ctx.currentTime - 0.2) {
+      this.nextTime = this.ctx.currentTime + 0.05;
+    }
     const horizon = this.ctx.currentTime + 0.12;
     let guard = 0;
     while (this.nextTime < horizon && guard++ < 64) {

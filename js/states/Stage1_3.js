@@ -37,7 +37,6 @@ class Stage1_3 extends Phaser.Scene {
     this._paintSky();
     this._buildDesertTiles();
     this._scatterDesertDecor();
-    addForegroundProps(this, "mesa", { y: 176, step: 380 });
     addAmbientWeather(this, "mesa");
 
     this.enemyStopBlocksLayer.setAlpha(0);

@@ -20,6 +20,27 @@ window.addEventListener('DOMContentLoaded', function() {
 
     // Create the game object
     var game = new Phaser.Game(config);
+
+    // Returning from another app left the game silent: the browser
+    // suspends audio while hidden and does not reliably resume it.
+    const wakeAudio = function () {
+        try {
+            if (game.sound && game.sound.context &&
+                game.sound.context.state === 'suspended') {
+                game.sound.context.resume();
+            }
+            if (game.sound && game.sound.unlock) game.sound.unlock();
+            if (typeof Chip !== 'undefined' && Chip.ctx &&
+                Chip.ctx.state === 'suspended') {
+                Chip.ctx.resume();
+            }
+        } catch (e) { /* audio is best-effort */ }
+    };
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) wakeAudio();
+    });
+    window.addEventListener('focus', wakeAudio);
+    window.addEventListener('pageshow', wakeAudio);
     // Expose globally — object classes (AntToken etc.) reference `game`
     window.game = game;
 

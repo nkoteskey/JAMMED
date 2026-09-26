@@ -47,28 +47,28 @@ class BreadToken extends Phaser.Physics.Arcade.Sprite {
       this.play("ant-token-spin");
     }
 
+    // Hover is a sine offset from a live baseline, not a tween.
     // Tilemap object layers construct via `new BreadToken(scene)` and
-    // assign the position afterwards, so x/y are undefined here. A
-    // hover tween built on an undefined y writes NaN and the token
-    // becomes uncollectable — start the hover from setPosition instead.
-    this._startHover();
+    // assign position afterwards — sometimes more than once — so a
+    // tween created in the constructor locks onto a stale y and then
+    // hauls the token back and forth across the gap.
+    this.baseY = typeof y === "number" ? y : null;
+    this._bob = (x || 0) * 0.7;   // per-token phase so they don't pulse in unison
 
     scn._breadTotal = (scn._breadTotal || 0) + 1;
   }
 
   setPosition(x, y, z, w) {
     super.setPosition(x, y, z, w);
-    if (typeof y === "number") this._startHover();
+    if (typeof y === "number") this.baseY = y;
+    if (typeof x === "number") this._bob = x * 0.7;
     return this;
   }
 
-  _startHover() {
-    if (this._hoverTween || typeof this.y !== "number" || isNaN(this.y)) return;
-    if (!this.scene) return;
-    this._hoverTween = this.scene.tweens.add({
-      targets: this, y: this.y - 3,
-      duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut",
-    });
+  preUpdate(time, delta) {
+    super.preUpdate(time, delta);
+    if (this.baseY === null || this.baseY === undefined) return;
+    this.y = this.baseY + Math.sin(time / 420 + this._bob) * 2;
   }
 
   // --- Per-stage tally -----------------------------------------------

@@ -23,7 +23,7 @@ class CutSceneWatermelonDefeated extends Phaser.Scene {
 	  this.background = this.add.sprite(0, 0, "storyboard-watermelon-defeated").setOrigin(0).setAlpha(0);
   
 	  // Create text content
-	  const text = "Jammy defeated the mighty, evil Watermelon and joined the rest of the band for rehearsal. Everything appears to be back to normal, for now...to be continued...";
+	  const text = "The Watermelon goes down hard. Up close it was never a monster - something hollowed it out and pointed it at the city. Whoever did that is still out there. Jammy heads for the edge of town to find them.";
   
 	  this.textContentShadow = this.add
 		.bitmapText(this.cameras.main.centerX + 1, 181, "8-bit-mono", text, 12)

@@ -1,7 +1,11 @@
 # JAMMED — Story Bible
 
-> **Thesis: saved is not the same as kept.**
-> A jar and a seed are both preservation — but only one can grow.
+> **Thesis: they can buy the master. They can't buy the room.**
+>
+> Jammy is an up-and-coming independent rocker who walks out of a
+> try-out into a zomberry outbreak — and the outbreak was
+> manufactured. A streaming conglomerate found a way to squeeze more
+> out of artists, and the runoff is what turned the city.
 
 This is the canonical story document. Every level, enemy, and beat
 should be checkable against this file. Brand rule: **satirize the
@@ -39,22 +43,24 @@ asset. He cannot drink it. Assets aren't for drinking. Everything
 Concentrate does to the city, he did to himself first and called it
 success. The fruit call him the Preserver.
 
-**The murmur (x0x)** — the resistance gossip network. No center, no
-servers; rumors hop bush to cloud to busker. Its glyph `x0x` is
-scratched on pipes, bricks, and rocks, marking safehouses and relay
-points. The sysop is never met; by the finale the player realizes the
-murmur *is* the character. Gossip can be poisoned — one mid-game
-ambush teaches it — after which rumors carry confirmation counts
-("heard from 3 nodes"). Gossip and music ride the same network.
+**x0x** — scratched on pipes, bricks and rocks all over the city. Not
+an organisation and never explained: it's a scene tag, the mark
+people who look out for each other leave on a wall. In play it is a
+**hint** — a tag brightens when there's an unfound ANT token nearby.
+Short lowercase rumour lines share the name. No protocol talk, no
+"nodes", no lecture. A nod, nothing heavier.
 
-**The colony (ANT)** — the ant colony went silent before the game
-began; that's why the city was defenseless. ANT tokens aren't score —
-they re-fund the colony. Every ant carries copies of **seeds**:
-preservation that belongs to whoever grew it. A jar is preservation
-in the owner's pantry — sealed, dead, openable only by its holder. A
-seed can wait a hundred years and still come back as music. The
-colony stores seeds, not jars. The finale scales with total ANT
-banked across the whole game.
+**BREAD** — the collectible, and the game's real currency: gig money,
+what an independent act actually walks away with. **Five per stage**,
+placed off the main line. The end credits have always graded the
+player out of five; the shimmering loaf in
+`assets/img/sprites/bread-token/` was in the repo the whole time.
+
+**ANT tokens** — the game's one true secret. **One hidden per stage,
+eight total**, marked by a nearby x0x tag. Nobody in the story
+mentions them. Find all eight and the hidden beach stage opens. The
+ants are just a small, older presence in the city that leaves marks
+for each other — deliberately kept out of the plot.
 
 **The Stand** — a farmers'-market stall: fruit sell direct, get paid
 on the spot in ANT, and the song's seed goes to the colony under
@@ -109,10 +115,11 @@ maps to a bandmate; the rack is secretly a roster.
   ambush.)*
 
 ### Act 3 — The colony wakes
-- **3-1 The Silent Mound**: the colony, and the Archive's deliberate
-  mirror — the same wall-of-cells architecture, but these cells hold
-  SEEDS. Jar room, seed room; the thesis built as level design. The
-  mound wakes in proportion to every ANT banked across the whole run:
+- **3-1 The Silent Mound**: the underground, and the Archive's
+  deliberate mirror — the same wall-of-cells architecture, but these
+  cells hold seeds and tapes that circulate instead of masters locked
+  in a vault. The mound wakes in proportion to everything banked
+  across the run:
   lit honeycomb banks, lantern density, ant traffic, and past a
   threshold, living ant bridges spanning the sinkholes. Collect
   nothing and you Rocket-Axe the gaps alone. Concentrate has sent
@@ -230,3 +237,55 @@ Anything added to this game should keep these:
 - Checkpoints on every long stage, verified to sit on solid ground
 - Nothing solid may block an entire lane — the player must always
   have a route and a firing line
+
+---
+
+## Cut scenes
+
+Canon for the two new scenes comes from the artist's own notes and
+drawings on the Trello board, photographed into `docs/reference/`:
+
+- **Jammy gets his Rocket Axe** (before Level 1) — the band's old axe
+  comes back from the shop with a rocket bolted to the tail. Ten
+  minutes to rehearsal, no time to ask questions.
+- **The introduction of Blubert** (after the Watermelon, before 1-3)
+  — on his way to the edge of the city, Jammy hears a muffled cry
+  from an alley. Under a beat-up box is a blueberry drone clinging
+  on, somehow untouched by the virus; his family were separated when
+  the wave hit. Jammy shares his nutrients, and Blubert vows to help:
+  he scouts ahead, flags what's hiding, and rigs the seeds.
+  *(From IMG_2483 / IMG_2484.)*
+
+Blubert therefore does **not** appear in Level 1 or the boss fight —
+Level 1 teaches movement and shooting on its own.
+
+`IMG_2485` is the original spec for his detection mechanic (bush eyes
+appearing only once he detects them, Seeds of Destruction, Blubert
+caught in the blast radius needing to recover, drones hiding in
+clouds where he can't see them). All of it is implemented.
+
+Panels are staged from the game's own sprite art at poster scale.
+Hand-drawn panel art is the goal: drop a PNG in
+`assets/img/storyboards/` and pass its key to `runStoryboard`.
+
+## Hidden stage
+
+**IS ANYBODY OUT THERE?** — the beach, from the Trello board. Opens
+once all eight ANT tokens are found; reads `??????????` in Stage
+Select until then. Flying beach balls and wind-blown umbrellas to
+evade, nothing to kill. The only track in the game with nothing
+wrong underneath it.
+
+## Still on the board, not yet built
+
+- **4-1 Stadium of Love** — the intended finale. A stadium is a
+  better climax for this game than the Signal Spire tower.
+- **Guitar-hero boss mechanic** — "circles pressed in certain orders
+  like guitar hero but side scrolling"
+- **Collectible records** — hidden records carrying the game's music,
+  feeding a sound test (the chiptune engine already has the tracks)
+- **Song-title level names** — Kick Out the Jams, Subterranean
+  Homesick Blues, Jump Around, Theme of Watermelon
+- **World reorder** — City → Sewer → Dessert/Outskirts → Stadium
+- **Cactus refinement** — flowers fired in a spiral, and decoys
+  indistinguishable from the real ones

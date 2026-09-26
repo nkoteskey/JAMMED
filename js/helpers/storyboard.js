@@ -40,6 +40,35 @@ function sbInk(g, draw, spread = 3) {
   }
 }
 
+// PANEL 1 backdrop — Jammy gets his Rocket Axe
+function buildRocketAxePanel(scn) {
+  if (scn.textures.exists("sb-rocketaxe")) return;
+  const g = scn.make.graphics({ x: 0, y: 0, add: false });
+  sbSpeedLines(g, 0, 0, 426, 240, 0xd83018, 0xf06030);
+  // Blast glow behind
+  g.fillStyle(0xffd066, 0.85); g.fillCircle(152, 100, 84);
+  g.fillStyle(0xfff0b0, 0.85); g.fillCircle(152, 100, 56);
+
+  // Ground haze so the sprite has something to stand against
+  g.fillStyle(0x8c1810, 1); g.fillRect(0, 168, 426, 72);
+  g.fillStyle(0xa82414, 1); g.fillRect(0, 168, 426, 6);
+  g.generateTexture("sb-rocketaxe", 426, 240);
+  g.destroy();
+}
+
+// PANEL 2 — The introduction of Blubert
+function buildBlubertPanel(scn) {
+  if (scn.textures.exists("sb-blubert")) return;
+  const g = scn.make.graphics({ x: 0, y: 0, add: false });
+  sbSpeedLines(g, 0, 0, 426, 240, 0x2a4ea8, 0x3f68c8);
+  g.fillStyle(0x89b6ff, 0.5); g.fillCircle(288, 88, 74);
+
+  g.fillStyle(0x16306e, 1); g.fillRect(0, 168, 426, 72);
+  g.fillStyle(0x1d3f8c, 1); g.fillRect(0, 168, 426, 6);
+  g.generateTexture("sb-blubert", 426, 240);
+  g.destroy();
+}
+
 // Place one of the game's real sprite frames at poster scale.
 // Nearest-neighbour keeps the artist's pixels readable when blown up.
 function sbSprite(scn, key, frame, x, y, scale, flip) {
@@ -57,19 +86,17 @@ function runStoryboard(scn, textureKey, caption, nextScene, tint, burst) {
   const fade = 450;
   scn.cameras.main.setBackgroundColor("#000000");
   const bg = scn.add.sprite(0, 0, textureKey).setAlpha(0).setOrigin(0);
-  const tex = scn.textures.get(textureKey);
-  if (tex && tex.setFilter) tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
 
   // Caption sits on its own band — the hand-drawn panels are busy and
   // bare text over them is unreadable.
-  const band = scn.add.rectangle(213, 214, 426, 52, 0x0d0a12, 0.92).setAlpha(0);
-  const rule = scn.add.rectangle(213, 188, 426, 2, tint || 0xd8f878, 0.9).setAlpha(0);
-  const shadow = scn.add.bitmapText(scn.cameras.main.centerX + 1, 194,
+  const band = scn.add.rectangle(213, 204, 426, 72, 0x0d0a12, 0.9).setAlpha(0);
+  const rule = scn.add.rectangle(213, 168, 426, 2, tint || 0xd8f878, 0.9).setAlpha(0);
+  const shadow = scn.add.bitmapText(scn.cameras.main.centerX + 1, 177,
     "8-bit-mono", caption, 10)
-    .setOrigin(0.5, 0).setMaxWidth(400).setTint(0x000000).setAlpha(0);
-  const body = scn.add.bitmapText(scn.cameras.main.centerX, 193,
+    .setOrigin(0.5, 0).setMaxWidth(392).setTint(0x000000).setAlpha(0);
+  const body = scn.add.bitmapText(scn.cameras.main.centerX, 176,
     "8-bit-mono", caption, 10)
-    .setOrigin(0.5, 0).setMaxWidth(400).setTint(tint || 0xd8f878).setAlpha(0);
+    .setOrigin(0.5, 0).setMaxWidth(392).setTint(tint || 0xd8f878).setAlpha(0);
 
   if (burst) {
     const bx = burst.x !== undefined ? burst.x : 320;
@@ -89,9 +116,9 @@ function runStoryboard(scn, textureKey, caption, nextScene, tint, burst) {
       targets: [band, rule, shadow, body], alpha: 1, duration: fade,
       onComplete: () => {
         ready = true;
-        const hint = scn.add.bitmapText(418, 232,
+        const hint = scn.add.bitmapText(420, 162,
           "tempFont", "ANY BUTTON >", 8)
-          .setOrigin(1, 0.5).setTintFill(0xffffff);
+          .setOrigin(1, 1).setTintFill(0xffffff);
         scn.tweens.add({ targets: hint, alpha: 0.2, duration: 600,
           yoyo: true, repeat: -1 });
       },

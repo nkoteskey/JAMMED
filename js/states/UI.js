@@ -24,6 +24,13 @@ class UIScene extends Phaser.Scene {
       12
     ).setTintFill(0xffffff);
 
+    // Stage clock (Trello "Add game clock"). Counts up rather than
+    // down: informative for replays, and it can't fail a stage that
+    // was balanced without a time limit.
+    this.stageMs = 0;
+    this.clockText = this.add.bitmapText(352, 40, "tempFont", "0:00", 10)
+      .setOrigin(1, 0).setTintFill(0xd8d4ca);
+
     // Bread counter — the stage's five collectibles
     this.breadIcon = this.add.image(14, 30, "bread-token-hud");
     this.breadText = this.add.bitmapText(26, 25, "tempFont", "0/5", 10)
@@ -125,8 +132,17 @@ class UIScene extends Phaser.Scene {
     return active.find((k) => this.gameplaySceneKeys.includes(k));
   }
 
-  update() {
+  update(time, delta) {
     if (!this.gameplaySceneKeys) return;
+    // Clock only runs while a gameplay scene is actually active
+    const live = this._activeGameplayKey();
+    if (live && this.clockText) {
+      if (live !== this._clockStage) { this._clockStage = live; this.stageMs = 0; }
+      this.stageMs += delta;
+      const t = Math.floor(this.stageMs / 1000);
+      const mm = Math.floor(t / 60), ss = t % 60;
+      this.clockText.setText(`${mm}:${ss < 10 ? "0" : ""}${ss}`);
+    }
     const active = this.scene.manager
       .getScenes(true)
       .some((s) => this.gameplaySceneKeys.includes(s.sys.settings.key));

@@ -103,7 +103,7 @@ class Level1 extends Phaser.Scene {
     this.children.bringToTop(this.jammy.sprite);
 
     // Checkpoints — x0x relay posts the murmur remembers you at
-    initCheckpoints(this, [[900,176],[1900,176],[2900,176],[3900,176]], 176);
+    initCheckpoints(this, [[904,176],[1800,176],[2696,176],[3624,176],[4296,176]], 176);
 
     // Make the camera follow Jammy
     setupPlatformerCamera(this, this.jammy, {});

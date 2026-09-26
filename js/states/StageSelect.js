@@ -28,8 +28,9 @@ class StageSelect extends Phaser.Scene {
       { key: "Stage2_1",       act: "2-1", name: "ORCHARD ROWS",    tint: 0x7fe8e0 },
       { key: "Stage2_2",       act: "2-2", name: "THE ARCHIVE",     tint: 0x9fd8e0 },
       { key: "Stage2_3",       act: "2-3", name: "COLD STORAGE",    tint: 0xa8e8ff },
-      { key: "Stage3_1",       act: "3-1", name: "THE SIGNAL SPIRE",tint: 0xff9a9a },
-      { key: "Stage3_2",       act: "3-2", name: "THE SILENT MOUND",tint: 0xffd877 },
+      { key: "Stage3_1",       act: "3-1", name: "THE SILENT MOUND",tint: 0xffd877 },
+      { key: "Stage3_2",       act: "3-2", name: "THE SIGNAL SPIRE",tint: 0xff9a9a },
+      
     ];
 
     this.cursor = 0;

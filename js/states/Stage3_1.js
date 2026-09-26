@@ -1,71 +1,99 @@
-// Stage 3-1 — THE SIGNAL SPIRE. Concentrate HQ: the floors are
-// numbered 100 down to 1, going UP — you literally climb the charts.
-// Signal beams, wasp swarms and canner patrols on the way; near the
-// top the broadcast starts jamming the game itself. At Floor 1:
-// Echo Jammy, the Raisin in his glass lift, and HOLD THE FREQUENCY.
+// Stage 3-1 — THE SILENT MOUND. The ant colony that went quiet before
+// the game began. Deliberately the Archive's mirror image: the same
+// wall-of-cells architecture, but these cells hold SEEDS, not jars —
+// preservation that belongs to whoever grew it. Jar room, seed room.
+//
+// The colony wakes in proportion to every ANT banked across the whole
+// run, so the level is literally brighter and busier for a player who
+// collected. Concentrate has sent canners down to seal the vault; the
+// stage ends with the colony marching out alongside Jammy.
 class Stage3_1 extends Phaser.Scene {
   constructor() {
     super({ key: "Stage3_1" });
   }
 
-  preload() {
-    scene = this;
-  }
+  preload() { scene = this; }
 
   create() {
     this.sound.stopAll();
     if (typeof Chip !== "undefined") Chip.stop();
-    Chip.play("spire");
-    if (typeof SeedOfDestruction !== "undefined" && SeedOfDestruction.ensureTexture) {
-      SeedOfDestruction.ensureTexture(this);
-    }
+    Chip.play("mound");
 
-    this.cameras.main.setBackgroundColor("#0a1218");
+    if (typeof SeedOfDestruction !== "undefined") SeedOfDestruction.ensureTexture(this);
+
+    this.cameras.main.setBackgroundColor("#160d07");
+
+    // How awake is the colony? Everything below scales off this.
+    const banked = (typeof game !== "undefined" && game && game.antTokensCollected)
+      ? (game.antTokensCollected.level1 || 0) : 0;
+    this.banked = banked;
+    this.wake = Phaser.Math.Clamp(banked / 28, 0, 1);
 
     this._buildTilesetTexture();
     this._buildLevel();
     this._paintBackground();
+    this._buildSeedCells();
 
     this.bullets = this.physics.add.group();
     this.collectibles = this.physics.add.group();
     this.enemies = this.add.group();
     this.enemyProjectiles = this.physics.add.group();
 
-    // Spawn on the lobby floor at the bottom of the tower
-    this.jammy = new Jammy(checkpointSpawn(this, 60, this.map.heightInPixels - 80).x, checkpointSpawn(this, 60, this.map.heightInPixels - 80).y);
+    const sp = checkpointSpawn(this, 56, 150);
+    this.jammy = new Jammy(sp.x, sp.y);
     this.jammy.sprite.setDepth(100);
     this.jammy.controlsEnabled = true;
     this.children.bringToTop(this.jammy.sprite);
 
     // Checkpoints — x0x relay posts the murmur remembers you at
-    initCheckpoints(this, [[80,2400],[80,1920],[80,1440],[80,960],[80,560]], 0);
+    initCheckpoints(this, [[800, 192], [1560, 192]], 192);
 
-    setupPlatformerCamera(this, this.jammy, { look: 18, vertBias: -30, dzH: 40 });
-    this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+    setupPlatformerCamera(this, this.jammy, {});
+    this.cameras.main.setBounds(0, -160, this.map.widthInPixels, 240 + 160);
 
     this.physics.add.overlap(this.jammy.sprite, this.collectibles, (j, c) => c.effect());
     this.physics.add.collider(this.jammy.sprite, this.groundLayer);
+    this.physics.add.collider(this.jammy.sprite, this.deathBlocksLayer, () =>
+      this.jammy.instantDeath());
+    this._changing = false;
+    this.physics.add.collider(this.jammy.sprite, this.sceneChangeLayer, () => this.changeScene());
     this.physics.add.collider(this.collectibles, this.groundLayer);
     this.physics.add.collider(this.enemies, this.groundLayer);
+    this.physics.add.collider(this.enemies, this.enemyStopBlocksLayer);
 
-    this._buildBeams();
-    this._buildClimbEnemies();
-    this._buildPickups();
-    this._buildFloorSigns();
+    this._buildAntBridges();
+    this._spawnColonyLife();
+
+    // Concentrate came down here to seal the vault. They do not belong.
+    [[620, 96], [1420, 96], [2180, 96]].forEach(([x, y]) => new CannerDrone(this, x, y));
+    [880, 1700, 2320].forEach((x) => new TinSoldier(this, x, 170));
+    [[1150, 110], [1980, 110]].forEach(([x, y]) => new StaticWasp(this, x, y));
+
+    [[130, 172], [158, 172], [186, 172], [520, 120], [548, 120],
+     [1000, 172], [1290, 120], [1860, 172], [2260, 128], [2600, 172]]
+      .forEach(([x, y]) => new AntToken(this, x, y));
+    new RoyaltyScrap(this, 980, 168, "NO RECEIPTS DOWN HERE. NOBODY IS SELLING ANYTHING");
+    new SeedAmmoPickup(this, 1600, 150);
+    const heal = new PowerUp(this, 2000, 150);
+    heal.setData("powerUpType", "heal");
+    heal.val = 2;
 
     this.blubert = new Blubert(this, this.jammy);
     this.blubertRevivesLeft = 1;
 
-    // The murmur
     ensureX0XTexture(this);
+    this.add.image(800, 214, "x0x-glyph").setDepth(2);
     this.murmur = new Murmur(this);
-    this._saidIntro = false;
+    this.murmur.addTrigger(120, "the mound. quiet since before the outbreak");
+    this.murmur.addTrigger(300,
+      banked > 16 ? "you brought a lot back. listen to it wake"
+      : banked > 6 ? "some of them are stirring. you brought enough to matter"
+      : "not much came back with you. it will be a thin march");
+    this.murmur.addTrigger(1000, "cells not jars. a seed waits. a jar only keeps");
+    this.murmur.addTrigger(1500, "canners came down to seal the vault. they do not belong here");
+    this.murmur.addTrigger(2500, "the colony is with you. take it to the tower");
 
-    this._bossStarted = false;
-    this._holdPhase = false;
-    this._won = false;
-    this._nextGlitch = 0;
-
+    this._buildVaultGate();
     this._showTitleCard();
 
     const ui = this.scene.get("UIScene");
@@ -77,62 +105,8 @@ class Stage3_1 extends Phaser.Scene {
     updatePlatformerCamera(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });
-
-    const jy = this.jammy.sprite.y;
-
-    if (!this._saidIntro) {
-      this._saidIntro = true;
-      this.murmur.say("the spire. floor one hundred. start climbing");
-      this.murmur.say("jump, then jump again. ride the axe up");
-    }
-
-    // Beam hazards: off -> warn (blinking amber) -> on (hot red)
-    if (this.beams) {
-      for (const b of this.beams) {
-        b.t -= this.game.loop.delta;
-        if (b.t <= 0) {
-          if (b.state === "off") {
-            b.state = "warn";
-            b.t = b.warnMs;
-          } else if (b.state === "warn") {
-            b.state = "on";
-            b.t = b.onMs;
-            b.outer.setFillStyle(0xff4d6a, 0.95);
-            b.core.setFillStyle(0xffffff, 1);
-            b.lamps.forEach((l) => l.setFillStyle(0xff4d6a, 1));
-          } else {
-            b.state = "off";
-            b.t = b.offMs;
-            b.outer.setFillStyle(0xff4d6a, 0.06);
-            b.core.setFillStyle(0xffffff, 0);
-            b.lamps.forEach((l) => l.setFillStyle(0x553333, 1));
-          }
-        }
-        if (b.state === "warn") {
-          // Fast amber blink while charging
-          const blink = Math.floor(this.time.now / 90) % 2 === 0;
-          b.outer.setFillStyle(0xffd877, blink ? 0.35 : 0.1);
-          b.lamps.forEach((l) => l.setFillStyle(blink ? 0xffd877 : 0x553333, 1));
-        }
-        if (b.state === "on" && this.jammy.alive &&
-            Phaser.Geom.Rectangle.Overlaps(b.outer.getBounds(), this.jammy.sprite.getBounds())) {
-          this.jammy.takeDamage();
-        }
-      }
-    }
-
-    // Broadcast interference near the top — the game itself glitches
-    if (jy < 760 && !this._won && this.time.now > this._nextGlitch) {
-      this._nextGlitch = this.time.now + 1700 + Math.random() * 900;
-      this._glitch();
-    }
-
-    // Boss trigger at Floor 1
-    if (!this._bossStarted && jy < 360) {
-      this._startBossFight();
-    }
-
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);
+    if (this.bridges) this.bridges.forEach((b) => b.update());
   }
 
   tryReviveBlubert() {
@@ -143,447 +117,317 @@ class Stage3_1 extends Phaser.Scene {
 
   // ------------------------------------------------------------------
   _buildTilesetTexture() {
-    if (this.textures.exists("spire-tiles")) return;
+    if (this.textures.exists("mound-tiles")) return;
     const g = this.make.graphics({ x: 0, y: 0, add: false });
     const o = (i) => i * 16;
 
-    // 1: steel tower panel
-    g.fillStyle(0x1a2630, 1);
-    g.fillRect(o(1), 0, 16, 16);
-    g.fillStyle(0x24343f, 1);
-    g.fillRect(o(1) + 1, 1, 14, 14);
-    g.fillStyle(0x314452, 1);
-    g.fillRect(o(1) + 1, 1, 14, 2);
-    g.fillStyle(0x101820, 1);
-    g.fillRect(o(1) + 7, 1, 1, 14);
+    // 1: packed earth wall, tunnelled smooth
+    g.fillStyle(0x2e1c10, 1); g.fillRect(o(1), 0, 16, 16);
+    g.fillStyle(0x412a18, 1); g.fillRect(o(1) + 1, 1, 14, 14);
 
-    // 2: grate platform
-    g.fillStyle(0x31445e, 1);
-    g.fillRect(o(2), 0, 16, 4);
-    g.fillStyle(0x4a6078, 1);
-    g.fillRect(o(2), 0, 16, 1);
-    g.fillStyle(0x1a2630, 1);
-    g.fillRect(o(2), 4, 16, 4);
-    g.fillStyle(0x31445e, 1);
-    g.fillRect(o(2) + 2, 4, 2, 4);
-    g.fillRect(o(2) + 8, 4, 2, 4);
-    g.fillRect(o(2) + 14, 4, 2, 4);
+    g.fillStyle(0x54381f, 1); g.fillRect(o(1) + 1, 1, 14, 2);
+    g.fillStyle(0x24150b, 1);
+    g.fillRect(o(1) + 4, 6, 3, 2); g.fillRect(o(1) + 10, 11, 3, 2);
 
-    // 3: teal accent panel
-    g.fillStyle(0x14383a, 1);
-    g.fillRect(o(3), 0, 16, 16);
-    g.fillStyle(0x1d5a5a, 1);
-    g.fillRect(o(3) + 1, 1, 14, 14);
-    g.fillStyle(0x2ab8b0, 1);
-    g.fillRect(o(3) + 1, 1, 14, 2);
+    // 2: chamber floor — tamped earth with a lighter tread line
+    g.fillStyle(0x4a3018, 1); g.fillRect(o(2), 0, 16, 16);
+    g.fillStyle(0x6b4726, 1); g.fillRect(o(2), 0, 16, 3);
+    g.fillStyle(0x8a5f34, 1); g.fillRect(o(2), 0, 16, 1);
+    g.fillStyle(0x33200f, 1);
+    g.fillRect(o(2) + 3, 6, 5, 1); g.fillRect(o(2) + 9, 10, 4, 1);
+    g.fillStyle(0x5c3b1e, 1); g.fillRect(o(2) + 11, 4, 2, 2);
 
-    g.generateTexture("spire-tiles", 4 * 16, 16);
+    // 3: deep earth
+    g.fillStyle(0x33200f, 1); g.fillRect(o(3), 0, 16, 16);
+    g.fillStyle(0x24150b, 1);
+    g.fillRect(o(3) + 2, 3, 5, 3); g.fillRect(o(3) + 10, 9, 4, 3);
+    g.fillStyle(0x452c15, 1); g.fillRect(o(3) + 12, 2, 2, 2);
+
+    // 4: honeycomb seed-cell wall (lit) — warm amber
+    g.fillStyle(0x4a3018, 1); g.fillRect(o(4), 0, 16, 16);
+    g.fillStyle(0xc98a34, 1);
+    g.fillRect(o(4) + 2, 2, 5, 5); g.fillRect(o(4) + 9, 2, 5, 5);
+    g.fillRect(o(4) + 2, 9, 5, 5); g.fillRect(o(4) + 9, 9, 5, 5);
+    g.fillStyle(0xffd877, 1);
+    g.fillRect(o(4) + 3, 3, 3, 3); g.fillRect(o(4) + 10, 3, 3, 3);
+    g.fillRect(o(4) + 3, 10, 3, 3); g.fillRect(o(4) + 10, 10, 3, 3);
+    g.fillStyle(0x8a5f34, 1);
+    g.fillRect(o(4) + 7, 0, 2, 16); g.fillRect(o(4), 7, 16, 2);
+
+    // 5: honeycomb cell wall (dark — a cell nobody refilled)
+    g.fillStyle(0x4a3018, 1); g.fillRect(o(5), 0, 16, 16);
+    g.fillStyle(0x3a2412, 1);
+    g.fillRect(o(5) + 2, 2, 5, 5); g.fillRect(o(5) + 9, 2, 5, 5);
+    g.fillRect(o(5) + 2, 9, 5, 5); g.fillRect(o(5) + 9, 9, 5, 5);
+    g.fillStyle(0x8a5f34, 1);
+    g.fillRect(o(5) + 7, 0, 2, 16); g.fillRect(o(5), 7, 16, 2);
+
+    // 6: root beam platform
+    g.fillStyle(0x6b4726, 1); g.fillRect(o(6), 0, 16, 7);
+    g.fillStyle(0x8a5f34, 1); g.fillRect(o(6), 0, 16, 2);
+    g.fillStyle(0x452c15, 1); g.fillRect(o(6), 7, 16, 3);
+    g.fillStyle(0x33200f, 1);
+    g.fillRect(o(6) + 3, 2, 2, 4); g.fillRect(o(6) + 11, 3, 2, 3);
+
+    // 7: sinkhole (deadly) — a shaft that goes down forever
+    g.fillStyle(0x0e0704, 1); g.fillRect(o(7), 0, 16, 16);
+    g.fillStyle(0x1c1108, 1); g.fillRect(o(7), 0, 16, 2);
+
+    g.generateTexture("mound-tiles", 8 * 16, 16);
     g.destroy();
   }
 
   _buildLevel() {
-    const W = 27, H = 160;
-    const E = -1, PANEL = 1, GRATE = 2, ACCENT = 3;
+    const W = 190, H = 15;
+    const E = -1, WALL = 1, FLOOR = 2, DEEP = 3, CELL = 4, CELLD = 5, ROOT = 6, PIT = 7;
     const grid = () => Array.from({ length: H }, () => Array(W).fill(E));
-    const ground = grid();
+    const ground = grid(), death = grid(), stops = grid(), change = grid();
     const fill = (g, c0, r0, c1, r1, t) => {
-      for (let r = r0; r <= r1; r++)
-        for (let c = c0; c <= c1; c++) g[r][c] = t;
+      for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) g[r][c] = t;
     };
 
-    // Tower shell
-    fill(ground, 0, 0, 1, H - 1, PANEL);
-    fill(ground, W - 2, 0, W - 1, H - 1, PANEL);
-    fill(ground, 0, 0, W - 1, 1, PANEL);
-    fill(ground, 2, H - 4, W - 3, H - 1, PANEL); // lobby floor
-    // Accent stripes up the shaft
-    for (let r = 8; r < H - 4; r += 24) {
-      ground[r][0] = ACCENT; ground[r][1] = ACCENT;
-      ground[r][W - 2] = ACCENT; ground[r][W - 1] = ACCENT;
-    }
+    fill(ground, 0, 0, W - 1, 2, WALL);     // earth ceiling
+    fill(ground, 0, 0, 1, H - 1, WALL);
+    fill(ground, W - 2, 0, W - 1, H - 1, WALL);
 
-    // Zigzag ledges, bottom to top. 80px vertical steps — this climb
-    // is the Rocket Axe's showcase: jump, then jump again to boost.
-    this.ledges = [];
-    let side = 0;
-    for (let r = H - 10; r > 24; r -= 5) {
-      if (side === 0) fill(ground, 2, r, 8, r, GRATE);
-      else if (side === 1) fill(ground, 11, r, 15, r, GRATE);
-      else fill(ground, 18, r, 24, r, GRATE);
-      this.ledges.push({ r, side });
-      side = (side + 1) % 3;
-    }
+    // Chamber floors with sinkholes between them
+    this.floors = [[2, 40], [45, 86], [91, 130], [135, 187]];
+    this.floors.forEach(([a, b]) => {
+      fill(ground, a, 12, b, 12, FLOOR);
+      fill(ground, a, 13, b, 14, DEEP);
+    });
+    this.pits = [[41, 44], [87, 90], [131, 134]];
+    this.pits.forEach(([a, b]) => fill(death, a, 13, b, 14, PIT));
 
-    // Boss arena: a wide stage near the top with open air above
-    fill(ground, 4, 20, 22, 20, GRATE);
+    // Honeycomb seed-cell banks along the back wall. How many are lit
+    // depends on how much ANT the player banked — the colony's
+    // pantry, restocked by the run they actually played.
+    this.cellBanks = [[6, 16], [26, 36], [52, 62], [70, 80],
+                      [96, 106], [114, 124], [140, 150], [158, 172]];
+    this.cellBanks.forEach(([a, b], i) => {
+      const lit = i / this.cellBanks.length < this.wake;
+      fill(ground, a, 9, b, 11, lit ? CELL : CELLD);
+    });
 
-    const map = this.make.tilemap({ data: ground, tileWidth: 16, tileHeight: 16 });
-    const tiles = map.addTilesetImage("spire-tiles");
-    this.map = map;
-    this.groundLayer = map.createLayer(0, tiles, 0, 0);
-    this.groundLayer.setCollision([PANEL, GRATE, ACCENT]);
+    // Root-beam platforms to climb
+    fill(ground, 20, 8, 25, 8, ROOT);
+    fill(ground, 47, 7, 52, 7, ROOT);
+    fill(ground, 64, 9, 69, 9, ROOT);
+    fill(ground, 100, 7, 106, 7, ROOT);
+    fill(ground, 118, 9, 123, 9, ROOT);
+    fill(ground, 152, 8, 158, 8, ROOT);
+    fill(ground, 172, 7, 178, 7, ROOT);
 
-    // Other classes (PowerUp, SeedOfDestruction) probe these layer
-    // references and add colliders — give them a tile-less layer so
-    // the colliders exist but never fire.
-    const emptyMap = this.make.tilemap({ data: grid(), tileWidth: 16, tileHeight: 16 });
-    const emptyTiles = emptyMap.addTilesetImage("spire-tiles");
-    const emptyLayer = emptyMap.createLayer(0, emptyTiles, 0, 0);
-    emptyLayer.setAlpha(0);
-    this.deathBlocksLayer = emptyLayer;
-    this.sceneChangeLayer = emptyLayer;
-    this.enemyStopBlocksLayer = emptyLayer;
+    [3, 39, 46, 85, 92, 129, 136, 186].forEach((c) => (stops[11][c] = WALL));
+    fill(change, 183, 4, 184, 11, WALL);
+
+    const mk = (data) => {
+      const map = this.make.tilemap({ data, tileWidth: 16, tileHeight: 16 });
+      return { map, layer: map.createLayer(0, map.addTilesetImage("mound-tiles"), 0, 0) };
+    };
+    const gnd = mk(ground);
+    this.map = gnd.map;
+    this.groundLayer = gnd.layer;
+    this.groundLayer.setCollision([WALL, FLOOR, DEEP, CELL, CELLD, ROOT]);
+
+    const d = mk(death);
+    this.deathBlocksLayer = d.layer;
+    this.deathBlocksLayer.setDepth(3);
+    this.deathBlocksLayer.setCollision([PIT]);
+
+    const s = mk(stops);
+    this.enemyStopBlocksLayer = s.layer;
+    this.enemyStopBlocksLayer.setAlpha(0);
+    this.enemyStopBlocksLayer.setCollision([WALL]);
+
+    const c = mk(change);
+    this.sceneChangeLayer = c.layer;
+    this.sceneChangeLayer.setAlpha(0);
+    this.sceneChangeLayer.setCollision([WALL]);
   }
 
   _paintBackground() {
-    const h = this.map.heightInPixels;
-    // Interior shaft glow strips + window slits with night sky
-    for (let y = 80; y < h; y += 220) {
-      this.add.rectangle(213, y, 280, 3, 0x2ab8b0, 0.12)
-        .setScrollFactor(0.4).setDepth(-20);
-    }
-    for (let y = 140; y < h; y += 300) {
-      this.add.rectangle(70, y, 18, 40, 0x0d2030)
-        .setScrollFactor(0.6).setDepth(-19);
-      this.add.rectangle(356, y + 130, 18, 40, 0x0d2030)
-        .setScrollFactor(0.6).setDepth(-19);
-      this.add.rectangle(70, y - 8, 4, 4, 0xffd9a0, 0.8)
-        .setScrollFactor(0.6).setDepth(-18);
-    }
-    // Cable bundles running the full shaft
-    [110, 320].forEach((x) => {
-      this.add.rectangle(x, h / 2, 3, h, 0x101820)
-        .setScrollFactor(0.85).setDepth(-15);
-    });
-  }
+    const w = this.map.widthInPixels;
+    [[0, 70, 0x120a05], [70, 130, 0x190f07], [130, 240, 0x22150a]]
+      .forEach(([y0, y1, c]) =>
+        this.add.rectangle(213, (y0 + y1) / 2, 426, y1 - y0, c)
+          .setScrollFactor(0).setDepth(-40));
 
-  _buildBeams() {
-    // Signal beams across the shaft. Three readable states:
-    //   off  — barely-there guide line so the lane is predictable
-    //   warn — blinking amber charge-up (your cue to commit or wait)
-    //   on   — hot red bar with a white core; this is the only state
-    //          that damages
-    this.beams = [];
-    const mk = (x, y, w, onMs, offMs, phase) => {
-      const outer = this.add.rectangle(x, y, w, 9, 0xff4d6a, 0.06);
-      outer.setDepth(50);
-      const core = this.add.rectangle(x, y, w, 3, 0xffffff, 0);
-      core.setDepth(51);
-      // Emitter housings with a status lamp at both ends
-      [-1, 1].forEach((s) => {
-        this.add.rectangle(x + s * (w / 2 + 5), y, 10, 16, 0x14383a).setDepth(52);
-      });
-      const lampL = this.add.rectangle(x - w / 2 - 5, y, 4, 4, 0x553333).setDepth(53);
-      const lampR = this.add.rectangle(x + w / 2 + 5, y, 4, 4, 0x553333).setDepth(53);
-      this.beams.push({
-        outer, core, lamps: [lampL, lampR],
-        state: "off", t: phase, onMs, offMs, warnMs: 550,
-      });
-    };
-    mk(213, 2210, 330, 800, 1500, 300);
-    mk(213, 1920, 330, 750, 1400, 800);
-    mk(213, 1630, 330, 800, 1300, 100);
-    mk(213, 1340, 330, 700, 1300, 500);
-    mk(213, 1050, 330, 750, 1200, 200);
-    mk(213, 700, 330, 700, 1200, 650);
-    mk(213, 540, 330, 650, 1100, 50);
-  }
-
-  _buildClimbEnemies() {
-    [[140, 2120], [290, 1530], [140, 950]].forEach(([x, y]) => {
-      const w = new StaticWasp(this, x, y);
-      w.homeX = x; w.homeY = y;
-    });
-    [[300, 2000], [120, 1200], [300, 620]].forEach(([x, y]) => new CannerDrone(this, x, y));
-  }
-
-  _buildPickups() {
-    [
-      [80, 2330], [120, 2330],
-      [213, 1880], [213, 1590],
-      [340, 1300], [90, 1010],
-      [213, 660], [213, 470],
-    ].forEach(([x, y]) => new AntToken(this, x, y));
-    new RoyaltyScrap(this, 213, 2100, "TOP OF THE CHARTS. NOTHING GROWS UP HERE");
-    new SeedAmmoPickup(this, 340, 1740);
-    const heal = new PowerUp(this, 100, 700);
-    heal.setData("powerUpType", "heal");
-    heal.val = 2;
-  }
-
-  _buildFloorSigns() {
-    // Floors count DOWN as you climb — this is the chart
-    const signs = [
-      [2480, "FLOOR 100"], [2120, "FLOOR 80"], [1760, "FLOOR 60"],
-      [1400, "FLOOR 40"], [1040, "FLOOR 20"], [680, "FLOOR 10"],
-      [380, "FLOOR 1"],
-    ];
-    signs.forEach(([y, label]) => {
-      this.add.rectangle(213, y, 70, 14, 0x14383a).setDepth(2);
-      this.add.bitmapText(213, y, "tempFont", label, 8)
-        .setOrigin(0.5).setTintFill(0x7fe8e0).setDepth(3);
-    });
-    this.add.image(60, 2476, "x0x-glyph").setDepth(2);
-    this.add.image(360, 700, "x0x-glyph").setDepth(2);
-  }
-
-  // Broadcast interference — brief, telegraphed, harmless but unnerving
-  _glitch() {
-    this.cameras.main.shake(70, 0.002);
-    const flash = this.add.rectangle(213, 120, 426, 240, 0x7fe8e0, 0.05)
-      .setScrollFactor(0).setDepth(380);
-    this.time.delayedCall(90, () => flash.destroy());
-    const ui = this.scene.get("UIScene");
-    if (ui && ui.weaponLabel && !this.jammy.muted) {
-      const old = ui.weaponLabel.text;
-      ui.weaponLabel.setText("----");
-      this.time.delayedCall(160, () => {
-        if (!this.jammy.muted) ui.weaponLabel.setText(old);
-      });
-    }
-  }
-
-  // ------------------------------------------------------------------
-  _startBossFight() {
-    this._bossStarted = true;
-    Chip.play("echo");
-    this.murmur.say("floor one. they grew something out of your samples");
-
-    // Echo health bar
-    this.echoBarBg = this.add.rectangle(213, 26, 204, 10, 0x101820)
-      .setScrollFactor(0).setDepth(360);
-    this.echoBar = this.add.rectangle(213, 26, 200, 6, 0x7fe8e0)
-      .setScrollFactor(0).setDepth(361);
-    this.echoLabel = this.add.bitmapText(213, 12, "tempFont", "ECHO JAMMY", 8)
-      .setOrigin(0.5).setScrollFactor(0).setDepth(361).setTintFill(0x7fe8e0);
-
-    this.echo = new EchoJammy(this, 340, 250, {
-      left: 50, right: 26 * 16 - 50, floorY: 20 * 16,
-    });
-
-    this.events.once("echo-defeated", () => this._startHoldPhase());
-  }
-
-  updateEchoHealthbar(hp, maxHp) {
-    if (!this.echoBar) return;
-    this.echoBar.width = Math.max(0, (hp / maxHp) * 200);
-  }
-
-  _startHoldPhase() {
-    if (this._holdPhase) return;
-    this._holdPhase = true;
-    if (this.echoBar) { this.echoBar.destroy(); this.echoBarBg.destroy(); this.echoLabel.destroy(); }
-
-    // The Raisin descends in his glass lift. He does not fight.
-    this._raisinScene(() => {
-      Chip.play("finale");
-      this.murmur.say("hold the frequency. one whole song. the colony is coming");
-      this._buildHoldUI();
-      this._holdStart = this.time.now;
-      this._holdDurationMs = 35000;
-      this._spawnHoldWaves();
-      if (typeof game !== "undefined" && game && game.dukeFreed) {
-        this._spawnDuke();
-      }
-      this._holdTimer = this.time.addEvent({
-        delay: 250,
-        loop: true,
-        callback: () => this._tickHold(),
-      });
-    });
-  }
-
-  _raisinScene(onDone) {
-    if (!this.textures.exists("the-raisin")) {
-      const g = this.make.graphics({ x: 0, y: 0, add: false });
-      // Giant grey suit, tiny wrinkled head
-      g.fillStyle(0x3a4258, 1);
-      g.fillRect(2, 10, 16, 14);
-      g.fillStyle(0x4a5470, 1);
-      g.fillRect(3, 11, 14, 12);
-      g.fillStyle(0xeef8f6, 1);
-      g.fillRect(8, 11, 4, 6); // shirt
-      g.fillStyle(0x2ab8b0, 1);
-      g.fillRect(9, 11, 2, 5); // teal tie
-      // The head: a raisin
-      g.fillStyle(0x3e2452, 1);
-      g.fillEllipse(10, 6, 9, 8);
-      g.fillStyle(0x2a1838, 1);
-      g.fillRect(7, 3, 5, 1);
-      g.fillRect(6, 6, 7, 1);
-      g.fillRect(8, 8, 4, 1);
-      g.fillStyle(0xffffff, 1);
-      g.fillRect(7, 4, 2, 2);
-      g.fillRect(11, 4, 2, 2);
-      g.fillStyle(0x000000, 1);
-      g.fillRect(8, 5, 1, 1);
-      g.fillRect(12, 5, 1, 1);
-      // Gold ring
-      g.fillStyle(0xffd877, 1);
-      g.fillRect(17, 18, 2, 2);
-      g.generateTexture("the-raisin", 20, 24);
-      g.destroy();
+    // Receding tunnel mouths
+    for (let x = 0; x < 1100; x += 118) {
+      this.add.ellipse(x, 150, 70, 96, 0x0d0704)
+        .setScrollFactor(0.16, 1).setDepth(-35);
+      this.add.ellipse(x, 150, 54, 78, 0x080402)
+        .setScrollFactor(0.16, 1).setDepth(-34);
     }
 
-    const lift = this.add.container(213, 120);
-    lift.setDepth(120);
-    const box = this.add.rectangle(0, 0, 44, 56, 0xbfe8f4, 0.25);
-    box.setStrokeStyle(2, 0x8c96b0, 1);
-    lift.add(box);
-    lift.add(this.add.rectangle(0, -30, 50, 6, 0x3a4258));
-    lift.add(this.add.image(0, 8, "the-raisin"));
-    lift.y = 60;
-    this.tweens.add({ targets: lift, y: 200, duration: 1400, ease: "Sine.easeOut" });
+    // Hanging roots
+    for (let x = 30; x < w; x += 86) {
+      const len = 20 + ((x * 7) % 30);
+      this.add.rectangle(x, 48 + len / 2, 3, len, 0x3a2412)
+        .setScrollFactor(0.45, 1).setDepth(-25);
+      this.add.circle(x, 48 + len, 3, 0x452c15)
+        .setScrollFactor(0.45, 1).setDepth(-25);
+    }
 
-    const lines = [
-      "RAISIN: YOU AGAIN. EVERYONE COMES UP EVENTUALLY.",
-      "RAISIN: I SQUEEZED MYSELF FIRST, KID. IT'S CALLED COMMITMENT.",
-      "RAISIN: FRESH DOESN'T SCALE. SQUEEZE HIM.",
-    ];
-    lines.forEach((txt, i) => {
-      this.time.delayedCall(1600 + i * 2100, () => {
-        const t = this.add.bitmapText(213, 100, "tempFont", txt, 8)
-          .setOrigin(0.5).setScrollFactor(0).setDepth(380).setTintFill(0xd8d4ca);
-        this.tweens.add({
-          targets: t, alpha: 0, delay: 1800, duration: 300,
-          onComplete: () => t.destroy(),
-        });
-      });
-    });
-
-    this.time.delayedCall(1600 + lines.length * 2100, () => {
+    // Glow-spore lanterns, denser when the colony is awake
+    const lanterns = 4 + Math.round(this.wake * 14);
+    for (let i = 0; i < lanterns; i++) {
+      const x = 90 + (i * (w - 200)) / Math.max(1, lanterns - 1);
+      const y = 40 + ((i * 37) % 60);
+      const glow = this.add.circle(x, y, 14, 0xffd877, 0.10).setDepth(-20);
+      const core = this.add.circle(x, y, 3, 0xffe9a8, 0.9).setDepth(-19);
       this.tweens.add({
-        targets: lift, y: 40, duration: 1200, ease: "Sine.easeIn",
-        onComplete: () => lift.destroy(),
+        targets: [glow, core], alpha: { from: 0.9, to: 0.35 },
+        duration: 1200 + (i % 5) * 300, yoyo: true, repeat: -1,
       });
-      onDone();
-    });
-  }
+      this.tweens.add({
+        targets: [glow, core], y: y + 6,
+        duration: 2600 + (i % 4) * 400, yoyo: true, repeat: -1, ease: "Sine.easeInOut",
+      });
+    }
 
-  _buildHoldUI() {
-    this.holdBarBg = this.add.rectangle(213, 26, 244, 12, 0x101820)
-      .setScrollFactor(0).setDepth(360);
-    this.holdBar = this.add.rectangle(213 - 120, 26, 0, 8, 0xffd877)
-      .setScrollFactor(0).setDepth(361).setOrigin(0, 0.5);
-    this.holdLabel = this.add.bitmapText(213, 12, "tempFont", "BROADCAST OVERWRITE", 8)
-      .setOrigin(0.5).setScrollFactor(0).setDepth(361).setTintFill(0xffd877);
-  }
-
-  _tickHold() {
-    if (this._won || !this.jammy.alive) return;
-    const frac = Math.min(1, (this.time.now - this._holdStart) / this._holdDurationMs);
-    if (this.holdBar) this.holdBar.width = 240 * frac;
-    if (frac >= 1) this._win();
-  }
-
-  _spawnHoldWaves() {
-    // Interruptions keep coming until the song lands
-    this._waveTimer = this.time.addEvent({
-      delay: 6000,
-      loop: true,
+    // Drifting motes of seed-fluff in the warm air
+    this.time.addEvent({
+      delay: 320, loop: true,
       callback: () => {
-        if (this._won) return;
-        new StaticWasp(this, 70, 260);
-        new StaticWasp(this, 360, 240);
+        const cam = this.cameras.main;
+        const x = cam.scrollX + Math.random() * 426;
+        const m = this.add.circle(x, 210, 1.5, 0xffe9a8, 0.6).setDepth(70);
+        this.tweens.add({
+          targets: m, y: 20 + Math.random() * 60, x: x + (Math.random() * 60 - 30),
+          alpha: 0, duration: 5200 + Math.random() * 2000,
+          onComplete: () => m.destroy(),
+        });
       },
     });
-    this.time.delayedCall(12000, () => { if (!this._won) new CannerDrone(this, 100, 230); });
-    this.time.delayedCall(24000, () => { if (!this._won) new CannerDrone(this, 330, 230); });
+  }
 
-    // The colony arrives — ants streaming across the stage, scaled by
-    // every ANT token banked this run
-    if (!this.textures.exists("colony-ant")) {
+  // Seeds visible inside the lit cells — the thesis, on a wall.
+  _buildSeedCells() {
+    if (!this.textures.exists("cell-seed")) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0xd4a676, 1);
+      g.fillEllipse(4, 5, 7, 9);
+      g.fillStyle(0xf0c899, 1);
+      g.fillEllipse(3, 3, 3, 3);
+      g.fillStyle(0x7e5a34, 1);
+      g.fillRect(3, 8, 2, 2);
+      g.generateTexture("cell-seed", 8, 11);
+      g.destroy();
+    }
+    this.cellBanks.forEach(([a, b], i) => {
+      const lit = i / this.cellBanks.length < this.wake;
+      if (!lit) return;
+      for (let c = a + 1; c < b; c += 2) {
+        const s = this.add.image(c * 16 + 8, 10 * 16 + 8, "cell-seed");
+        s.setDepth(4);
+        s.setAlpha(0.9);
+        this.tweens.add({
+          targets: s, y: s.y - 2,
+          duration: 1400 + ((c * 37) % 800), yoyo: true, repeat: -1, ease: "Sine.easeInOut",
+        });
+      }
+    });
+  }
+
+  // Living bridges: columns of ants that link across the sinkholes.
+  // They only form if enough of the colony woke up, so a player who
+  // skipped the tokens has to Rocket-Axe the gaps instead.
+  _buildAntBridges() {
+    if (!this.textures.exists("bridge-ant")) {
       const g = this.make.graphics({ x: 0, y: 0, add: false });
       g.fillStyle(0x6e1136, 1);
-      g.fillRect(0, 1, 2, 2);
-      g.fillRect(2, 0, 3, 3);
-      g.fillRect(5, 1, 2, 2);
-      g.generateTexture("colony-ant", 7, 4);
+      g.fillRect(0, 2, 3, 3); g.fillRect(3, 1, 4, 4); g.fillRect(7, 2, 3, 3);
+      g.fillStyle(0xc23a66, 1);
+      g.fillRect(4, 2, 2, 2);
+      g.fillStyle(0x2a0a18, 1);
+      g.fillRect(0, 5, 2, 1); g.fillRect(4, 5, 2, 1); g.fillRect(8, 5, 2, 1);
+      g.generateTexture("bridge-ant", 10, 6);
       g.destroy();
     }
-    const banked = (typeof game !== "undefined" && game && game.antTokensCollected)
-      ? (game.antTokensCollected.level1 || 0) : 0;
-    const perWave = Math.min(2 + Math.floor(banked / 3), 12);
-    this._antTimer = this.time.addEvent({
-      delay: 2400,
-      loop: true,
-      callback: () => {
-        for (let i = 0; i < perWave; i++) {
-          const fromLeft = i % 2 === 0;
-          const ant = this.add.image(fromLeft ? 60 : 366, 314, "colony-ant");
-          ant.setDepth(99);
-          ant.setFlipX(!fromLeft);
-          this.tweens.add({
-            targets: ant,
-            x: fromLeft ? 366 : 60,
-            duration: 2000 + Math.random() * 800,
-            delay: i * 120,
-            onComplete: () => ant.destroy(),
-          });
-        }
-      },
-    });
-  }
+    this.bridges = [];
+    if (this.wake < 0.34) return; // too few came back
 
-  _spawnDuke() {
-    // Duke takes the corner of the stage and lays down covering fire
-    this.duke = this.add.image(90, 302, "duke-cassis").setDepth(99);
-    const tag = this.add.bitmapText(90, 278, "tempFont", "DUKE", 8)
-      .setOrigin(0.5).setTintFill(0xb08cff).setDepth(99);
-    this.tweens.add({ targets: tag, alpha: 0, delay: 2400, duration: 400, onComplete: () => tag.destroy() });
-    this._dukeTimer = this.time.addEvent({
-      delay: 5000,
-      loop: true,
-      callback: () => {
-        if (this._won || !this.duke) return;
-        this._dukeDir = this._dukeDir === "right" ? "left" : "right";
-        // His bass quake sweeps the stage, clearing the interruptions
-        new BassWave(this, this.duke.x, this.duke.y + 4,
-          this._dukeDir === "left" && this.duke.x > 213 ? "left" : "right");
-      },
-    });
-  }
-
-  _win() {
-    if (this._won) return;
-    this._won = true;
-    if (this._holdTimer) this._holdTimer.destroy();
-    if (this._waveTimer) this._waveTimer.destroy();
-    if (this._antTimer) this._antTimer.destroy();
-    if (this._dukeTimer) this._dukeTimer.destroy();
-    this.jammy.invincible = true;
-
-    // Every remaining interruption dies with the broadcast
-    this.enemies.getChildren().slice().forEach((e) => {
-      if (e && !e.dead && e.die) e.die();
-    });
-    this.sound.stopAll();
-    Chip.play("victory");
-    this.cameras.main.flash(600, 255, 240, 180);
-
-    const t1 = this.add.bitmapText(213, 86, "tempFont", "FRESH-SQUEEZED.", 16)
-      .setOrigin(0.5).setScrollFactor(0).setDepth(400).setTintFill(0xffd877);
-    const t2 = this.add.bitmapText(213, 112, "tempFont", "THE BROADCAST IS A JAM SESSION NOW", 8)
-      .setOrigin(0.5).setScrollFactor(0).setDepth(400).setTintFill(0xd8f4f0);
-    this.time.delayedCall(2600, () => {
-      this.murmur.say("the music keeps itself now");
-    });
-    this.time.delayedCall(5400, () => {
-      this.cameras.main.fadeOut(900, 0, 0, 0);
-      this.cameras.main.once("camerafadeoutcomplete", () => {
-        this.scene.start("EndCredits");
+    this.pits.forEach(([a, b], idx) => {
+      const x0 = a * 16, x1 = (b + 1) * 16;
+      const w = x1 - x0;
+      const y = 12 * 16 + 2;
+      const plat = this.add.tileSprite(x0 + w / 2, y, w, 6, "bridge-ant");
+      plat.setDepth(55);
+      this.physics.add.existing(plat);
+      plat.body.setAllowGravity(false);
+      plat.body.setImmovable(true);
+      plat.body.checkCollision.down = false;
+      plat.body.checkCollision.left = false;
+      plat.body.checkCollision.right = false;
+      this.physics.add.collider(this.jammy.sprite, plat);
+      this.bridges.push({
+        update: () => { plat.tilePositionX += 0.35 + idx * 0.1; },
       });
     });
+  }
+
+  // Ambient colony: ants streaming along the floor, more of them the
+  // more the player banked. Pure atmosphere, no collision.
+  _spawnColonyLife() {
+    if (!this.textures.exists("bridge-ant")) return;
+    const rate = Math.max(160, 900 - this.wake * 700);
+    this.time.addEvent({
+      delay: rate, loop: true,
+      callback: () => {
+        const cam = this.cameras.main;
+        const fromLeft = Math.random() < 0.5;
+        const y = 186 + Math.random() * 4;
+        const a = this.add.image(
+          cam.scrollX + (fromLeft ? -12 : 438), y, "bridge-ant");
+        a.setDepth(58);
+        a.setFlipX(!fromLeft);
+        this.tweens.add({
+          targets: a, x: a.x + (fromLeft ? 470 : -470),
+          duration: 3000 + Math.random() * 1500,
+          onComplete: () => a.destroy(),
+        });
+      },
+    });
+  }
+
+  _buildVaultGate() {
+    const x = 2930;
+    // The seed vault door: a great honeycomb iris, warm behind it
+    this.add.circle(x, 152, 34, 0x2e1c10).setDepth(1);
+    this.add.circle(x, 152, 29, 0x6b4726).setDepth(1);
+    const iris = this.add.circle(x, 152, 23, 0xffd877, 0.75).setDepth(2);
+    this.tweens.add({
+      targets: iris, alpha: 0.4, scale: 0.94,
+      duration: 1100, yoyo: true, repeat: -1, ease: "Sine.easeInOut",
+    });
+    for (let i = 0; i < 6; i++) {
+      const ang = (i / 6) * Math.PI * 2;
+      this.add.rectangle(x + Math.cos(ang) * 26, 152 + Math.sin(ang) * 26, 6, 6, 0x8a5f34)
+        .setAngle(45).setDepth(2);
+    }
+    this.add.bitmapText(x, 106, "tempFont", "TO THE SPIRE", 8)
+      .setOrigin(0.5).setTintFill(0xffd877).setDepth(2);
   }
 
   _showTitleCard() {
-    const t1 = this.add.bitmapText(213, 92, "tempFont", "STAGE 3-1", 16)
-      .setOrigin(0.5).setScrollFactor(0).setDepth(300).setTintFill(0xd8f4f0);
-    const t2 = this.add.bitmapText(213, 114, "tempFont", "THE SIGNAL SPIRE", 12)
-      .setOrigin(0.5).setScrollFactor(0).setDepth(300).setTintFill(0x7fe8e0);
+    const a = this.add.bitmapText(213, 92, "tempFont", "STAGE 3-1", 16)
+      .setOrigin(0.5).setScrollFactor(0).setDepth(300).setTintFill(0xffe9a8);
+    const b = this.add.bitmapText(213, 114, "tempFont", "THE SILENT MOUND", 12)
+      .setOrigin(0.5).setScrollFactor(0).setDepth(300).setTintFill(0xffd877);
     this.tweens.add({
-      targets: [t1, t2], alpha: 0, delay: 1700, duration: 600,
-      onComplete: () => { t1.destroy(); t2.destroy(); },
+      targets: [a, b], alpha: 0, delay: 1700, duration: 600,
+      onComplete: () => { a.destroy(); b.destroy(); },
     });
+  }
+
+  changeScene() {
+    if (this._changing) return;
+    this._changing = true;
+    clearCheckpoints(this);
+    this.jammy.controlsEnabled = false;
+    this.cameras.main.fadeOut(600, 0, 0, 0);
+    this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start("Stage3_2"));
   }
 }

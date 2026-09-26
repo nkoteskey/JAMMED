@@ -37,7 +37,7 @@ class UIScene extends Phaser.Scene {
     this.gameplaySceneKeys = [
       "Level1", "Level1BossFight",
       "Stage1_3", "Stage1_4",
-      "Stage2_1", "Stage2_2", "Stage3_1",
+      "Stage2_1", "Stage2_2", "Stage2_3", "Stage3_1", "Stage3_2",
     ];
     this.scene.setVisible(false);
 
@@ -146,6 +146,16 @@ class UIScene extends Phaser.Scene {
       this.weaponIcon.setRotation(0);
       this.weaponLabel.setText("SEEDS");
       this.weaponLabel.setTintFill(0xff9966);
+    } else if (weapon === "frost") {
+      if (!this.textures.exists("frost-shard") &&
+          typeof FrostShard !== "undefined" && FrostShard.ensureTexture) {
+        FrostShard.ensureTexture(this);
+      }
+      this.weaponIcon.setTexture("frost-shard");
+      this.weaponIcon.setDisplaySize(18, 12);
+      this.weaponIcon.setRotation(0);
+      this.weaponLabel.setText("FROST");
+      this.weaponLabel.setTintFill(0x7fd4f0);
     } else if (weapon === "bass") {
       if (!this.textures.exists("bass-wave") &&
           typeof BassWave !== "undefined" && BassWave.ensureTexture) {

@@ -437,7 +437,7 @@ class Stage2_2 extends Phaser.Scene {
     this.jammy.controlsEnabled = false;
     this.cameras.main.fadeOut(500, 0, 0, 0);
     this.cameras.main.once("camerafadeoutcomplete", () => {
-      this.scene.start("Stage3_1");
+      this.scene.start("Stage2_3");
     });
   }
 }

@@ -25,6 +25,12 @@ const GUITAR_CATALOG = {
     labelColor: 0xb08cff,
     desc: ["GROUND QUAKE WAVE", "PIERCES ENEMIES"],
   },
+  "frostpick": {
+    name: "FROSTPICK",
+    weapon: "frost",
+    labelColor: 0x7fd4f0,
+    desc: ["FREEZES ENEMIES SOLID", "FROZEN FOES ARE PLATFORMS"],
+  },
 };
 
 function getGuitarCollection() {
@@ -102,6 +108,40 @@ function ensureGuitarTextures(scn) {
   g.fillRect(10, 18, 1, 13);
   g.fillRect(12, 18, 1, 13);
   g.generateTexture("guitar-desert-seedcaster", 22, 38);
+  g.destroy();
+
+  // Frostpick — pale ice-blue, frost-rimed. 22x38.
+  g = scn.make.graphics({ x: 0, y: 0, add: false });
+  g.fillStyle(0x24485c, 1);
+  g.fillRect(8, 0, 6, 7);
+  g.fillStyle(0xd8f4ff, 1);
+  g.fillRect(6, 1, 2, 2);
+  g.fillRect(14, 1, 2, 2);
+  g.fillRect(6, 4, 2, 2);
+  g.fillRect(14, 4, 2, 2);
+  g.fillStyle(0x3a6e8c, 1);
+  g.fillRect(9, 7, 4, 14);
+  g.fillStyle(0x9fdcf4, 1);
+  g.fillRect(9, 10, 4, 1);
+  g.fillRect(9, 15, 4, 1);
+  g.fillRect(9, 19, 4, 1);
+  // Angular frozen body
+  g.fillStyle(0x2f6f92, 1);
+  g.fillTriangle(11, 20, 1, 27, 9, 38);
+  g.fillTriangle(11, 20, 21, 25, 13, 38);
+  g.fillStyle(0x6fb8d8, 1);
+  g.fillTriangle(11, 22, 5, 27, 10, 33);
+  // Rime along the lower edge
+  g.fillStyle(0xd8f4ff, 1);
+  g.fillRect(4, 31, 3, 2);
+  g.fillRect(14, 33, 3, 2);
+  g.fillRect(9, 36, 4, 2);
+  g.fillStyle(0xf0f0f8, 1);
+  g.fillRect(10, 20, 1, 9);
+  g.fillRect(12, 20, 1, 9);
+  g.fillStyle(0x24485c, 1);
+  g.fillRect(8, 28, 7, 2);
+  g.generateTexture("guitar-frostpick", 22, 38);
   g.destroy();
 
   // Royal Bass — deep purple thunder machine. 22x40, longer neck.

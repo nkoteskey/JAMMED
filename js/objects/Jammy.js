@@ -46,6 +46,8 @@ class Jammy {
     }
     this.seedCooldownMs = 320;
     this.bassCooldownMs = 900;
+    this.frostCooldownMs = 520;
+    this.lastFrostTime = 0;
     this.lastBassTime = 0;
     this.muted = false;          // Static Wasp interruption
     this.trappedInJar = false;   // Canner Drone seal
@@ -452,10 +454,23 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
       this.fireSeed();
     } else if (this.currentWeapon === "bass") {
       this.fireBass();
+    } else if (this.currentWeapon === "frost") {
+      this.fireFrost();
     } else {
       this.fireSonic();
     }
     this.playShootingPose();
+  }
+
+  fireFrost() {
+    const now = scene.time.now;
+    if (now - (this.lastFrostTime || 0) < this.frostCooldownMs) return;
+    this.lastFrostTime = now;
+    const sx = this.facing === "right" ? this.sprite.x + 10 : this.sprite.x - 10;
+    new FrostShard(scene, sx, this.sprite.y + 4, this.facing, this.up);
+    if (scene.cache.audio.exists("laserSound")) {
+      scene.sound.play("laserSound", { volume: 0.7, rate: 2.0 });
+    }
   }
 
   fireBass() {
@@ -720,16 +735,41 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
     });
   }
 
+  // Flash-frozen in Cold Storage. Same "mash out" grammar as the
+  // canner jar — the two are the same idea in different temperatures.
+  freezeSolid() {
+    this.trapInJar("ice");
+  }
+
   // --- Canner Drone seal: trapped in a glass jar, mash to break out ---
-  trapInJar() {
+  trapInJar(style) {
     if (this.trappedInJar || !this.alive || this.invincible) return;
     this.trappedInJar = true;
+    this._jarStyle = style === "ice" ? "ice" : "jar";
     this._jarEscapeHits = 0;
     this.sprite.body.setVelocityX(0);
-    if (scene.textures.exists("seal-jar-overlay")) {
+    if (this._jarStyle === "ice") {
+      if (!scene.textures.exists("ice-prison")) {
+        const g = scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(0x8ad4ec, 0.5);
+        g.fillRect(0, 0, 26, 36);
+        g.fillStyle(0xd8f4ff, 0.9);
+        g.fillRect(0, 0, 26, 2); g.fillRect(0, 34, 26, 2);
+        g.fillRect(0, 0, 2, 36); g.fillRect(24, 0, 2, 36);
+        g.fillStyle(0xffffff, 0.65);
+        g.fillRect(4, 4, 2, 16); g.fillRect(19, 9, 2, 18);
+        g.generateTexture("ice-prison", 26, 36);
+        g.destroy();
+      }
+      this._jarOverlay = scene.add.image(this.sprite.x, this.sprite.y - 2, "ice-prison");
+      this._jarOverlay.setDepth(101);
+    } else if (scene.textures.exists("seal-jar-overlay")) {
       this._jarOverlay = scene.add.image(this.sprite.x, this.sprite.y - 2, "seal-jar-overlay");
       this._jarOverlay.setDepth(101);
     }
+    // Prompt so the player knows mashing is the answer
+    this._jarHint = scene.add.bitmapText(213, 62, "tempFont", "MASH!", 12)
+      .setOrigin(0.5).setScrollFactor(0).setDepth(380).setTintFill(0xffd877);
     scene.sound.play("enemyHitSound", { rate: 0.5, volume: 0.5 });
     // Auto-break after 2s if the player doesn't mash out
     this._jarTimer = scene.time.delayedCall(2000, () => this._breakJar());
@@ -748,6 +788,7 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
     if (!this.trappedInJar) return;
     this.trappedInJar = false;
     if (this._jarTimer) this._jarTimer.remove(false);
+    if (this._jarHint) { this._jarHint.destroy(); this._jarHint = null; }
     if (this._jarOverlay) {
       // Glass burst
       for (let i = 0; i < 6; i++) {

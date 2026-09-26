@@ -394,7 +394,67 @@ CHIP_TRACKS.archive = {
   ],
 };
 
-// THE SIGNAL SPIRE (3-1) — urgent ascent, F# minor, climbing arpeggios
+// COLD STORAGE (2-3) — glassy and slow. High bell-like pulse over a
+// deep held bass; the drums are a distant compressor, not a beat.
+CHIP_TRACKS.coldstorage = {
+  bpm: 88, length: 4, duty1: 0.5, duty2: 0.125, gain1: 0.13, gain2: 0.08, gainT: 0.22,
+  pulse1: [
+    "D5 . . . A4 . . . F5 . . . E5 . . .",
+    "D5 . . . . . . . A4 . . . . . . .",
+    "C5 . . . G4 . . . Eb5 . . . D5 . . .",
+    "A4 . . . . . . . . . . . . . . .",
+  ],
+  pulse2: [
+    "- - - - D4 . . . - - - - A3 . . .",
+    "- - - - F4 . . . - - - - D4 . . .",
+    "- - - - C4 . . . - - - - G3 . . .",
+    "- - - - E4 . . . - - - - A3 . . .",
+  ],
+  tri: [
+    "D1 . . . . . . . . . . . . . . .",
+    "D1 . . . . . . . Bb0 . . . . . . .",
+    "C1 . . . . . . . . . . . . . . .",
+    "A0 . . . . . . . . . . . E1 . . .",
+  ],
+  drums: [
+    "K - - - - - - - - - - - H - - -",
+    "K - - - - - - - - - - - - - - -",
+    "K - - - - - - - - - - - H - - -",
+    "K - - - - - - - S - - - - - - -",
+  ],
+};
+
+// THE SILENT MOUND (3-1) — the colony waking. Warm major key that
+// keeps adding voices, the exact opposite of the Archive's silence.
+CHIP_TRACKS.mound = {
+  bpm: 122, length: 4, duty1: 0.5, duty2: 0.25, gain1: 0.15,
+  pulse1: [
+    "F4 . . . A4 . C5 . F5 . . . C5 . A4 .",
+    "G4 . . . Bb4 . D5 . G5 . . . D5 . Bb4 .",
+    "A4 . . . C5 . E5 . A5 . . . E5 . C5 .",
+    "G4 . F4 . E4 . D4 . C4 . . . F4 . . .",
+  ],
+  pulse2: [
+    "F3 A3 C4 A3 F3 A3 C4 A3 F3 A3 C4 A3 F3 A3 C4 A3",
+    "G3 Bb3 D4 Bb3 G3 Bb3 D4 Bb3 G3 Bb3 D4 Bb3 G3 Bb3 D4 Bb3",
+    "A3 C4 E4 C4 A3 C4 E4 C4 A3 C4 E4 C4 A3 C4 E4 C4",
+    "C4 E4 G4 E4 C4 E4 G4 E4 F3 A3 C4 A3 F3 A3 C4 F4",
+  ],
+  tri: [
+    "F1 . . . C2 . . . F1 . . . A1 . . .",
+    "G1 . . . D2 . . . G1 . . . Bb1 . . .",
+    "A1 . . . E2 . . . A1 . . . C2 . . .",
+    "C2 . . . G2 . . . F1 . . . F1 . . .",
+  ],
+  drums: [
+    "K - - H S - - H K - - H S - - H",
+    "K - - H S - - H K - - H S - H H",
+    "K - - H S - - H K - - H S - - H",
+    "K - - H S - - H K - K - S S S O",
+  ],
+};
+
+// THE SIGNAL SPIRE (3-2) — urgent ascent, F# minor, climbing arpeggios
 CHIP_TRACKS.spire = {
   bpm: 164, length: 4, duty1: 0.25, duty2: 0.125, gain1: 0.15,
   pulse1: [

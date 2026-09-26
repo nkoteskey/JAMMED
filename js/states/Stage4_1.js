@@ -303,6 +303,9 @@ class Stage4_1 extends Phaser.Scene {
     this._buildArenaSet();
     const ui = this.scene.get("UIScene");
     if (ui && ui.setDuelMode) ui.setDuelMode(true);
+    if (this.jammy.gamepad && this.jammy.gamepad.setVisible) {
+      this.jammy.gamepad.setVisible(false);
+    }
 
     // Both performers are screen-fixed stand-ins. The real Jammy has a
     // physics body that belongs to the world; moving it into screen

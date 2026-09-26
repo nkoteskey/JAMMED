@@ -14,7 +14,9 @@ class Level1 extends Phaser.Scene {
     this.sound.stopAll();
     
     if (typeof Chip !== "undefined") Chip.stop();
-    Chip.play("city");
+    // Level 1 keeps its original loop — the chiptune score covers the
+    // stages added after it.
+    this.sound.play("Level1MusicLoop", { loop: true });
     // Set the background color
     this.cameras.main.setBackgroundColor("#940084");
 

@@ -245,10 +245,11 @@ Anything added to this game should keep these:
 Canon for the two new scenes comes from the artist's own notes and
 drawings on the Trello board, photographed into `docs/reference/`:
 
-- **Jammy gets his Rocket Axe** (before Level 1) — the band's old axe
-  comes back from the shop with a rocket bolted to the tail. Ten
-  minutes to rehearsal, no time to ask questions.
-- **The introduction of Blubert** (after the Watermelon, before 1-3)
+- **Jammy gets his Rocket Axe** (after the Watermelon boss) — the
+  band's guitar tech comes out the stage door with the old axe
+  rebuilt, a rocket bolted to the tail. "Patched her up." That's what
+  carries Jammy out of the city and toward the mesa.
+- **The introduction of Blubert** (after the Rocket Axe, before 1-3)
   — on his way to the edge of the city, Jammy hears a muffled cry
   from an alley. Under a beat-up box is a blueberry drone clinging
   on, somehow untouched by the virus; his family were separated when

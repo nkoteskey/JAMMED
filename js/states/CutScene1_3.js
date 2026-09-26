@@ -85,7 +85,7 @@ class CutScene1_3 extends Phaser.Scene {
 		alpha: 0,
 		duration: fadeTime,
 		onComplete: () => {
-		  this.scene.start("CutSceneRocketAxe");
+		  this.scene.start("Level1");
 		},
 	  });
 	}

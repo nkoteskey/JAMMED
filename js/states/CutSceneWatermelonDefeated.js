@@ -107,10 +107,9 @@ class CutSceneWatermelonDefeated extends Phaser.Scene {
 		alpha: 0,
 		duration: fadeTime,
 		onComplete: () => {
-			this.sound.stopAll();
-			if (typeof Chip !== "undefined") Chip.stop();
-		  this.scene.start("CutSceneBlubert");
-		
+		  // Music carries straight through the two boards that follow —
+		  // the tech handing over the Rocket Axe, then finding Blubert.
+		  this.scene.start("CutSceneRocketAxe");
 		},
 	  });
 	}

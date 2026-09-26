@@ -9,6 +9,10 @@ class CutSceneBlubert extends Phaser.Scene {
   init() { scene = this; }
 
   create() {
+    // Same track as the two boards before it, uninterrupted.
+    this.sound.stopAll();
+    if (typeof Chip !== "undefined") Chip.play("mesa");
+
     buildBlubertPanel(this);
     runStoryboard(this, "sb-blubert",
       "A muffled cry from an alley. Under a beat-up box, a blueberry drone " +

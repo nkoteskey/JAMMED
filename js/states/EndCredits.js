@@ -13,6 +13,8 @@ class EndCredits extends Phaser.Scene {
     this.nextLineDelay = 240; // 4 seconds
 
     // Start decoding music and sfx, and start when ready
+    this.sound.stopAll();
+    if (typeof Chip !== "undefined") Chip.stop();
     this.bgMusic= this.sound.add("Level1MusicLoop");
    this.bgMusic.play();
 

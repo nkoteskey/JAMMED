@@ -7,6 +7,9 @@ class StageSelect extends Phaser.Scene {
   }
 
   create() {
+    // Menu keeps the chiptune; the sampled tracks belong to the scenes
+    // that shipped with them.
+    this.sound.stopAll();
     if (typeof Chip !== "undefined") Chip.play("title");
 
     const cx = this.cameras.main.centerX;

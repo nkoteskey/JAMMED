@@ -8,9 +8,12 @@ class TitleScreen extends Phaser.Scene {
 console.log(this.input)
     this.nextScene = "CutScene1_1";
 
-    // Chiptune title theme (the sampled mp3 loop is retired in favor
-    // of the runtime synth so every scene can have matched music).
-    if (typeof Chip !== "undefined") Chip.play("title");
+    // The original title theme. The runtime chiptune synth scores the
+    // stages built since, but the intro music is the game's signature
+    // and stays exactly as it was.
+    if (typeof Chip !== "undefined") Chip.stop();
+    this.sound.stopAll();
+    this.sound.play("Jammed", { loop: true });
 
     const startGame = () => {
       if (typeof Chip !== "undefined") Chip.stop();
@@ -68,6 +71,7 @@ console.log(this.input)
       .setOrigin(0.5).setTintFill(0xffd877);
     const openSelect = () => {
       if (typeof Chip !== "undefined") Chip.stop();
+      this.sound.stopAll();
       this.scene.start("StageSelect");
     };
     selBg.setInteractive();

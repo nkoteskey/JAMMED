@@ -14,8 +14,8 @@ class Stage3_1 extends Phaser.Scene {
 
   create() {
     this.sound.stopAll();
-    this.sound.play("BossBattle", { loop: true, volume: 0.75 });
-
+    if (typeof Chip !== "undefined") Chip.stop();
+    Chip.play("spire");
     if (typeof SeedOfDestruction !== "undefined" && SeedOfDestruction.ensureTexture) {
       SeedOfDestruction.ensureTexture(this);
     }
@@ -32,12 +32,15 @@ class Stage3_1 extends Phaser.Scene {
     this.enemyProjectiles = this.physics.add.group();
 
     // Spawn on the lobby floor at the bottom of the tower
-    this.jammy = new Jammy(60, this.map.heightInPixels - 80);
+    this.jammy = new Jammy(checkpointSpawn(this, 60, this.map.heightInPixels - 80).x, checkpointSpawn(this, 60, this.map.heightInPixels - 80).y);
     this.jammy.sprite.setDepth(100);
     this.jammy.controlsEnabled = true;
     this.children.bringToTop(this.jammy.sprite);
 
-    this.cameras.main.startFollow(this.jammy.sprite);
+    // Checkpoints — x0x relay posts the murmur remembers you at
+    initCheckpoints(this, [[80,2400],[80,1920],[80,1440],[80,960],[80,560]], 0);
+
+    setupPlatformerCamera(this, this.jammy, { look: 18, vertBias: -30, dzH: 40 });
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
 
     this.physics.add.overlap(this.jammy.sprite, this.collectibles, (j, c) => c.effect());
@@ -71,6 +74,7 @@ class Stage3_1 extends Phaser.Scene {
 
   update() {
     this.jammy.update();
+    updatePlatformerCamera(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });
 
@@ -342,6 +346,7 @@ class Stage3_1 extends Phaser.Scene {
   // ------------------------------------------------------------------
   _startBossFight() {
     this._bossStarted = true;
+    Chip.play("echo");
     this.murmur.say("floor one. they grew something out of your samples");
 
     // Echo health bar
@@ -371,6 +376,7 @@ class Stage3_1 extends Phaser.Scene {
 
     // The Raisin descends in his glass lift. He does not fight.
     this._raisinScene(() => {
+      Chip.play("finale");
       this.murmur.say("hold the frequency. one whole song. the colony is coming");
       this._buildHoldUI();
       this._holdStart = this.time.now;
@@ -552,7 +558,7 @@ class Stage3_1 extends Phaser.Scene {
       if (e && !e.dead && e.die) e.die();
     });
     this.sound.stopAll();
-    this.sound.play("startGameSound", { volume: 0.9 });
+    Chip.play("victory");
     this.cameras.main.flash(600, 255, 240, 180);
 
     const t1 = this.add.bitmapText(213, 86, "tempFont", "FRESH-SQUEEZED.", 16)

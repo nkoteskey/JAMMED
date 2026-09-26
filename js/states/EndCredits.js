@@ -179,6 +179,7 @@ this.bottomTextTween= this.tweens.add({
       callbackScope: this,
       onComplete: () => {
       this.sound.stopAll();
+      if (typeof Chip !== "undefined") Chip.stop();
     this.scene.start("TitleScreen");
 
       }});

@@ -8,19 +8,20 @@ class TitleScreen extends Phaser.Scene {
 console.log(this.input)
     this.nextScene = "CutScene1_1";
 
-    // Start decoding music and sfx, and start when ready
-    this.sound.play("Jammed");
+    // Chiptune title theme (the sampled mp3 loop is retired in favor
+    // of the runtime synth so every scene can have matched music).
+    if (typeof Chip !== "undefined") Chip.play("title");
 
-    //start Level1 scene on click
-    this.input.once(
-      "pointerdown",
-      function () {
+    const startGame = () => {
+      if (typeof Chip !== "undefined") Chip.stop();
       this.scene.start('CutScene1_1');
-      this.scene.launch('UIScene',{score:0,key:'Level1'});
-        this.scene.bringToTop('UIScene');
-      },
-      this
-    );
+      this.scene.launch('UIScene', { score: 0, key: 'Level1' });
+      this.scene.bringToTop('UIScene');
+    };
+
+    //start the game on click/tap anywhere (except the stage-select chip)
+    this.input.once("pointerdown", startGame, this);
+    this.input.keyboard.on("keydown-SPACE", startGame);
 
 
     // display the background
@@ -56,6 +57,25 @@ console.log(this.input)
       duration: 500,
       ease: "Linear",
     });
+
+    // Stage select — tap the chip or press S. Sits below the start
+    // prompt and swallows its own pointer event so it doesn't also
+    // trigger "start game".
+    const selY = this.cameras.main.height - 26;
+    const selBg = this.add.rectangle(centerX, selY, 148, 18, 0x1c1430, 0.92);
+    selBg.setStrokeStyle(1, 0xffd877, 0.8);
+    this.add.bitmapText(centerX, selY, "tempFont", "S - STAGE SELECT", 8)
+      .setOrigin(0.5).setTintFill(0xffd877);
+    const openSelect = () => {
+      if (typeof Chip !== "undefined") Chip.stop();
+      this.scene.start("StageSelect");
+    };
+    selBg.setInteractive();
+    selBg.on("pointerdown", (pointer, lx, ly, event) => {
+      if (event && event.stopPropagation) event.stopPropagation();
+      openSelect();
+    });
+    this.input.keyboard.on("keydown-S", openSelect);
     // Conditionally, add the VirtualGamepad plugin to the scene
     // if(!this.device.desktop) {
     // 	this.createMobileControls();

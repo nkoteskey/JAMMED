@@ -15,8 +15,8 @@ class Stage1_4 extends Phaser.Scene {
 
   create() {
     this.sound.stopAll();
-    this.sound.play("BossBattle", { loop: true, volume: 0.7 });
-
+    if (typeof Chip !== "undefined") Chip.stop();
+    Chip.play("works");
     if (typeof SeedOfDestruction !== "undefined" && SeedOfDestruction.ensureTexture) {
       SeedOfDestruction.ensureTexture(this);
     }
@@ -44,13 +44,16 @@ class Stage1_4 extends Phaser.Scene {
         this.jammyData.facing
       );
     } else {
-      this.jammy = new Jammy(52, 150);
+      this.jammy = new Jammy(checkpointSpawn(this, 52, 150).x, checkpointSpawn(this, 52, 150).y);
     }
     this.jammy.sprite.setDepth(100);
     this.jammy.controlsEnabled = true;
     this.children.bringToTop(this.jammy.sprite);
 
-    this.cameras.main.startFollow(this.jammy.sprite);
+    // Checkpoints — x0x relay posts the murmur remembers you at
+    initCheckpoints(this, [[600,192],[1180,192],[1960,192],[2460,192]], 192);
+
+    setupPlatformerCamera(this, this.jammy, {});
     // Interior stage — ceiling and floor both on screen, no vertical pan
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, 240);
 
@@ -177,6 +180,7 @@ class Stage1_4 extends Phaser.Scene {
 
   update() {
     this.jammy.update();
+    updatePlatformerCamera(this, this.jammy);
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((enemy) => {
@@ -587,6 +591,8 @@ class Stage1_4 extends Phaser.Scene {
   }
 
   changeScene() {
+
+    clearCheckpoints(this);
     if (this._changing) return;
     this._changing = true;
     this.jammy.controlsEnabled = false;

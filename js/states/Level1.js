@@ -12,7 +12,9 @@ class Level1 extends Phaser.Scene {
     // Start music and sound effects
     
     this.sound.stopAll();
-    this.sound.play("Level1MusicLoop", { loop: true });
+    
+    if (typeof Chip !== "undefined") Chip.stop();
+    Chip.play("city");
     // Set the background color
     this.cameras.main.setBackgroundColor("#940084");
 
@@ -94,14 +96,17 @@ class Level1 extends Phaser.Scene {
         this.jammyData.levelTokensCollected
       );
     } else {
-      this.jammy = new Jammy(132, 100);
+      this.jammy = new Jammy(checkpointSpawn(this, 132, 100).x, checkpointSpawn(this, 132, 100).y);
     }
     this.jammy.sprite.setDepth(100);
     this.jammy.controlsEnabled = true;
     this.children.bringToTop(this.jammy.sprite);
 
+    // Checkpoints — x0x relay posts the murmur remembers you at
+    initCheckpoints(this, [[900,176],[1900,176],[2900,176],[3900,176]], 176);
+
     // Make the camera follow Jammy
-    this.cameras.main.startFollow(this.jammy.sprite);
+    setupPlatformerCamera(this, this.jammy, {});
     // Vertical headroom so the Rocket Axe boost stays in frame.
     this.cameras.main.setBounds(
       0,
@@ -134,59 +139,9 @@ class Level1 extends Phaser.Scene {
     // Blubert companion — follows Jammy, scans for hidden zomberries
     this.blubert = new Blubert(this, this.jammy);
 
-    // Dev teleport portal — walk into it to warp straight to Stage 1-3
-    this.devPortal = this.physics.add.sprite(200, 168, "dev-portal", "portal1");
-    this.devPortal.body.setAllowGravity(false);
-    this.devPortal.body.setImmovable(true);
-    this.devPortal.setDepth(50);
-    this.devPortal.play("dev-portal-swirl");
-    this.add.bitmapText(this.devPortal.x - 24, this.devPortal.y - 22, "tempFont", "DEV->1-3", 8)
-      .setTintFill(0xffccff);
-    this._teleporting = false;
-    this.physics.add.overlap(this.jammy.sprite, this.devPortal, () => {
-      if (this._teleporting) return;
-      this._teleporting = true;
-      this.devPortal.destroy();
-      this.time.delayedCall(10, () => this.scene.start("Stage1_3"));
-    });
-
-    // Second dev portal — warp straight to Stage 1-4 (The Jam Works).
-    // Left of Jammy's spawn so walking right still reaches the 1-3
-    // portal without crossing this one.
-    this.devPortal2 = this.physics.add.sprite(84, 168, "dev-portal", "portal1");
-    this.devPortal2.body.setAllowGravity(false);
-    this.devPortal2.body.setImmovable(true);
-    this.devPortal2.setDepth(50);
-    this.devPortal2.setTint(0xffb86b);
-    this.devPortal2.play("dev-portal-swirl");
-    this.add.bitmapText(this.devPortal2.x - 24, this.devPortal2.y - 22, "tempFont", "DEV->1-4", 8)
-      .setTintFill(0xffd9a0);
-    this.physics.add.overlap(this.jammy.sprite, this.devPortal2, () => {
-      if (this._teleporting) return;
-      this._teleporting = true;
-      this.devPortal2.destroy();
-      this.time.delayedCall(10, () => this.scene.start("Stage1_4"));
-    });
-
-    // Dev portals for Act 2/3 testing
-    const mkDevPortal = (x, tint, label, sceneKey) => {
-      const p = this.physics.add.sprite(x, 168, "dev-portal", "portal1");
-      p.body.setAllowGravity(false);
-      p.body.setImmovable(true);
-      p.setDepth(50);
-      p.setTint(tint);
-      p.play("dev-portal-swirl");
-      this.add.bitmapText(x - 24, 146, "tempFont", label, 8).setTintFill(tint);
-      this.physics.add.overlap(this.jammy.sprite, p, () => {
-        if (this._teleporting) return;
-        this._teleporting = true;
-        p.destroy();
-        this.time.delayedCall(10, () => this.scene.start(sceneKey));
-      });
-    };
-    mkDevPortal(36, 0x7fe8e0, "DEV->2-1", "Stage2_1");
-    mkDevPortal(320, 0xb08cff, "DEV->2-2", "Stage2_2");
-    mkDevPortal(380, 0xff8888, "DEV->3-1", "Stage3_1");
+    // Stage progression is handled by the Stage Select menu on the
+    // title screen now — no debug portals cluttering the first screen
+    // a player ever sees.
 
     // Concentrate, Inc. is already in the city — Drip billboards over
     // the skyline, and the murmur's glyph if you know where to look.
@@ -202,6 +157,7 @@ class Level1 extends Phaser.Scene {
 
   update() {
     this.jammy.update();
+    updatePlatformerCamera(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((enemy) => {
       if (enemy.update) {
@@ -211,6 +167,8 @@ class Level1 extends Phaser.Scene {
   }
 
   changeScene() {
+
+    clearCheckpoints(this);
     this.scene.start("Level1BossFight");
   }
 

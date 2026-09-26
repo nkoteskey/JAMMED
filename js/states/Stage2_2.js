@@ -14,9 +14,9 @@ class Stage2_2 extends Phaser.Scene {
 
   create() {
     this.sound.stopAll();
+    if (typeof Chip !== "undefined") Chip.stop();
     // Muffled, slowed — music heard through a sealed door
-    this.sound.play("Level1MusicLoop", { loop: true, volume: 0.22, rate: 0.82 });
-
+    Chip.play("archive");
     if (typeof SeedOfDestruction !== "undefined" && SeedOfDestruction.ensureTexture) {
       SeedOfDestruction.ensureTexture(this);
     }
@@ -32,12 +32,15 @@ class Stage2_2 extends Phaser.Scene {
     this.enemies = this.add.group();
     this.enemyProjectiles = this.physics.add.group();
 
-    this.jammy = new Jammy(52, 150);
+    this.jammy = new Jammy(checkpointSpawn(this, 52, 150).x, checkpointSpawn(this, 52, 150).y);
     this.jammy.sprite.setDepth(100);
     this.jammy.controlsEnabled = true;
     this.children.bringToTop(this.jammy.sprite);
 
-    this.cameras.main.startFollow(this.jammy.sprite);
+    // Checkpoints — x0x relay posts the murmur remembers you at
+    initCheckpoints(this, [[760,192],[1560,192]], 192);
+
+    setupPlatformerCamera(this, this.jammy, {});
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, 240);
 
     this.physics.add.overlap(this.jammy.sprite, this.collectibles, (j, c) => c.effect());
@@ -92,6 +95,7 @@ class Stage2_2 extends Phaser.Scene {
 
   update() {
     this.jammy.update();
+    updatePlatformerCamera(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);
@@ -426,6 +430,8 @@ class Stage2_2 extends Phaser.Scene {
   }
 
   changeScene() {
+
+    clearCheckpoints(this);
     if (this._changing) return;
     this._changing = true;
     this.jammy.controlsEnabled = false;

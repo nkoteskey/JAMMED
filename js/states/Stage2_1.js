@@ -13,8 +13,8 @@ class Stage2_1 extends Phaser.Scene {
 
   create() {
     this.sound.stopAll();
-    this.sound.play("Level1MusicLoop", { loop: true, volume: 0.8 });
-
+    if (typeof Chip !== "undefined") Chip.stop();
+    Chip.play("orchard");
     if (typeof SeedOfDestruction !== "undefined" && SeedOfDestruction.ensureTexture) {
       SeedOfDestruction.ensureTexture(this);
     }
@@ -33,12 +33,15 @@ class Stage2_1 extends Phaser.Scene {
     this.enemies = this.add.group();
     this.enemyProjectiles = this.physics.add.group();
 
-    this.jammy = new Jammy(52, 150);
+    this.jammy = new Jammy(checkpointSpawn(this, 52, 150).x, checkpointSpawn(this, 52, 150).y);
     this.jammy.sprite.setDepth(100);
     this.jammy.controlsEnabled = true;
     this.children.bringToTop(this.jammy.sprite);
 
-    this.cameras.main.startFollow(this.jammy.sprite);
+    // Checkpoints — x0x relay posts the murmur remembers you at
+    initCheckpoints(this, [[760,192],[1560,192],[2280,192]], 192);
+
+    setupPlatformerCamera(this, this.jammy, {});
     // Rocket-Axe headroom — open sky above the rows
     this.cameras.main.setBounds(0, -240, this.map.widthInPixels, 240 + 240);
 
@@ -110,6 +113,7 @@ class Stage2_1 extends Phaser.Scene {
 
   update() {
     this.jammy.update();
+    updatePlatformerCamera(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });
     this.belts.forEach((b) => b.update());
@@ -417,6 +421,8 @@ class Stage2_1 extends Phaser.Scene {
   }
 
   changeScene() {
+
+    clearCheckpoints(this);
     if (this._changing) return;
     this._changing = true;
     this.jammy.controlsEnabled = false;

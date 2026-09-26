@@ -9,8 +9,8 @@ class Stage1_3 extends Phaser.Scene {
 
   create() {
     this.sound.stopAll();
-    this.sound.play("Level1MusicLoop", { loop: true });
-
+    if (typeof Chip !== "undefined") Chip.stop();
+    Chip.play("mesa");
     // Make sure the teardrop texture exists before the HUD tries to show it
     if (typeof SeedOfDestruction !== "undefined" && SeedOfDestruction.ensureTexture) {
       SeedOfDestruction.ensureTexture(this);
@@ -89,13 +89,16 @@ class Stage1_3 extends Phaser.Scene {
         this.jammyData.facing
       );
     } else {
-      this.jammy = new Jammy(60, 100);
+      this.jammy = new Jammy(checkpointSpawn(this, 60, 100).x, checkpointSpawn(this, 60, 100).y);
     }
     this.jammy.sprite.setDepth(100);
     this.jammy.controlsEnabled = true;
     this.children.bringToTop(this.jammy.sprite);
 
-    this.cameras.main.startFollow(this.jammy.sprite);
+    // Checkpoints — x0x relay posts the murmur remembers you at
+    initCheckpoints(this, [[620,176],[1250,176],[1900,176]], 176);
+
+    setupPlatformerCamera(this, this.jammy, {});
     // Extra 240px of vertical headroom so the camera follows Jammy up
     // during a Rocket Axe boost instead of leaving him off the top edge.
     this.cameras.main.setBounds(
@@ -213,6 +216,7 @@ class Stage1_3 extends Phaser.Scene {
 
   update() {
     this.jammy.update();
+    updatePlatformerCamera(this, this.jammy);
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((enemy) => {
@@ -674,6 +678,8 @@ class Stage1_3 extends Phaser.Scene {
   }
 
   changeScene() {
+
+    clearCheckpoints(this);
     // Onward to the fortress stage — The Jam Works
     if (this._changing) return;
     this._changing = true;

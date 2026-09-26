@@ -16,7 +16,19 @@ class Jammy {
     this.canJump = false;
     this.jumpTimer = 0;
     this.jumpHoldTime = 160;
-    this.jumpVelocity = -300;
+    this.jumpVelocity = -330;
+    // --- Platformer feel ---
+    // Coyote time: a short grace window after walking off a ledge in
+    // which a jump still counts. Jump buffer: a jump pressed slightly
+    // before landing fires the moment Jammy touches down. Together
+    // these remove almost all "I pressed jump and nothing happened".
+    this.coyoteMs = 110;
+    this.jumpBufferMs = 140;
+    this._lastGroundedAt = -9999;
+    this._jumpQueuedAt = -9999;
+    this._jumpHeld = false;
+    this._jumpCutMultiplier = 0.42; // release early -> shorter hop
+    this._fastFallGravity = 320;    // extra gravity on the way down
     this.facing = facing ? facing : "right";
     this.antTokens = 0;
     // Weapons come from the guitar collection — each owned guitar
@@ -202,6 +214,15 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
       this
     );
 
+    // Releasing jump cuts the rise (variable jump height).
+    this.jumpButton.on(
+      "up",
+      function () {
+        this._jumpHeld = false;
+      },
+      this
+    );
+
     this.attackButton.on(
       "down",
       function () {
@@ -355,13 +376,38 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
         }
       }
 
-      if (
-        (this.sprite.body.touching.down || this.sprite.body.blocked.down) &&
-        this.sprite.body.velocity.y >= 0
-      ) {
+      const grounded =
+        this.sprite.body.touching.down || this.sprite.body.blocked.down;
+      const now = scene.time.now;
+
+      if (grounded && this.sprite.body.velocity.y >= 0) {
         this.canDoubleJump = false;
         this.jumping = false;
         this.falling = false;
+        this._lastGroundedAt = now;
+        // A jump pressed just before landing fires now instead of
+        // being swallowed by the frame Jammy was still airborne.
+        if (now - this._jumpQueuedAt <= this.jumpBufferMs) {
+          this._jumpQueuedAt = -9999;
+          this._doGroundJump();
+        }
+      }
+
+      // Variable jump height: let go on the way up and the rise is cut
+      // short, so a tap is a hop and a hold is a full leap.
+      if (
+        !this._jumpHeld &&
+        !this.rocketBoostActive &&
+        this.sprite.body.velocity.y < -60
+      ) {
+        this.sprite.body.velocity.y *= this._jumpCutMultiplier;
+      }
+
+      // Weightier descent than ascent — the classic platformer arc
+      if (!this.rocketBoostActive) {
+        this.sprite.body.setGravityY(
+          this.sprite.body.velocity.y > 0 ? this._fastFallGravity : 0
+        );
       }
 
       // Disable controls when taking damage and move Jammy slowly in
@@ -562,33 +608,66 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
       this._jarMash();
       return;
     }
-    if (
-      (this.sprite.body.touching.down || this.sprite.body.blocked.down) &&
-      !this.canDoubleJump
-    ) {
-      this.sprite.body.velocity.y = this.jumpVelocity;
-      this.jumping = true;
-      this.falling = false;
-      this.walkingLeft = false;
-      this.walkingRight = false;
-      if (!this.jumpSound.isPlaying) {
-        // Prevent rapid jump sounds
-        this.jumpSound.play();
-      }
+    this._jumpHeld = true;
+    const now = scene.time.now;
+    const grounded =
+      this.sprite.body.touching.down || this.sprite.body.blocked.down;
+    // Coyote time — a jump just after walking off an edge still counts
+    const coyoteOk = now - this._lastGroundedAt <= this.coyoteMs;
 
-      this.canDoubleJump = true;
+    if ((grounded || coyoteOk) && !this.canDoubleJump) {
+      this._doGroundJump();
     } else if (this.canDoubleJump) {
       // Rocket Axe — Jammy kicks off his guitar and the boosters
       // fire, propelling him up and forward in a long arc.
       this._rocketAxeBoost();
       this.canDoubleJump = false;
       return; // _rocketAxeBoost owns the texture + animation during the boost
+    } else {
+      // Airborne with no jumps left: remember the press so it fires
+      // the instant Jammy lands.
+      this._jumpQueuedAt = now;
+      return;
     }
     if (this.facing == "right") {
       this.sprite.play("jumping-right", true);
     } else {
       this.sprite.play("jumping-left", true);
     }
+  }
+
+  // The actual liftoff, shared by a fresh press and a buffered one.
+  _doGroundJump() {
+    this._lastGroundedAt = -9999; // consume the coyote window
+    this.sprite.body.setGravityY(0);
+    this.sprite.body.velocity.y = this.jumpVelocity;
+    this.jumping = true;
+    this.falling = false;
+    this.walkingLeft = false;
+    this.walkingRight = false;
+    this.canDoubleJump = true;
+    if (!this.jumpSound.isPlaying) this.jumpSound.play();
+    // Little dust puff at the feet so the launch has weight
+    if (scene.add && scene.add.circle) {
+      for (let i = 0; i < 3; i++) {
+        const d = scene.add.circle(
+          this.sprite.x + (Math.random() * 12 - 6),
+          this.sprite.y + 14,
+          1.5 + Math.random(), 0xffffff, 0.5
+        );
+        d.setDepth(99);
+        scene.tweens.add({
+          targets: d,
+          x: d.x + (Math.random() * 16 - 8),
+          y: d.y + 2,
+          alpha: 0, scale: 1.8,
+          duration: 240,
+          onComplete: () => d.destroy(),
+        });
+      }
+    }
+    if (this.facing == "right") this.sprite.play("jumping-right", true);
+    else this.sprite.play("jumping-left", true);
   }
 
   _rocketAxeBoost() {
@@ -746,6 +825,12 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
       this.takingDamage = true;
       this.flashOnce();
       this.invincible = true;
+
+      // Impact: brief freeze, shake and a red screen edge so a hit
+      // registers even on a small phone screen.
+      if (typeof hitStop === "function") hitStop(scene, 70);
+      if (typeof damageVignette === "function") damageVignette(scene);
+      scene.cameras.main.shake(180, 0.006);
       this.sprite.scene.time.addEvent({
         delay: this.invincibiltyTime,
         callback: this.restoreVulnerability,
@@ -817,6 +902,7 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
 
     this.sprite.scene.sound.stopAll();
 
+    if (typeof Chip !== "undefined") Chip.stop();
     // Clear persisting Jammy Data
     this.sprite.scene.jammyData = null;
 

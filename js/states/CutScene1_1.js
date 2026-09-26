@@ -16,6 +16,7 @@ init(){scene = this}
   
 	  // Play music
 	  this.sound.stopAll();
+	  if (typeof Chip !== "undefined") Chip.stop();
 	  this.startSounds("Jammed",{loop:true});
   
 	  // Create background

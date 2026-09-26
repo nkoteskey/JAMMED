@@ -17,8 +17,8 @@ class CutSceneWatermelonDefeated extends Phaser.Scene {
   
 	  // Play background music
 	  scene.sound.stopAll();
-	  scene.sound.play("Level1MusicLoop");
-  
+	  if (typeof Chip !== "undefined") Chip.stop();
+	  Chip.play("mesa");
 	  // Create background
 	  this.background = this.add.sprite(0, 0, "storyboard-watermelon-defeated").setOrigin(0).setAlpha(0);
   
@@ -103,6 +103,7 @@ class CutSceneWatermelonDefeated extends Phaser.Scene {
 		duration: fadeTime,
 		onComplete: () => {
 			this.sound.stopAll();
+			if (typeof Chip !== "undefined") Chip.stop();
 		  this.scene.start("Stage1_3");
 		
 		},

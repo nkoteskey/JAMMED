@@ -12,8 +12,8 @@ class Level1BossFight extends Phaser.Scene {
   
     // Stop all existing sounds and play boss battle music
     this.sound.stopAll();
-    this.sound.play("BossBattle", { loop: true });
-
+    if (typeof Chip !== "undefined") Chip.stop();
+    Chip.play("boss");
     // Set background color
     this.cameras.main.setBackgroundColor("#000000");
 

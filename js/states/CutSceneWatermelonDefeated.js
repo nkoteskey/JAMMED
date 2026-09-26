@@ -56,6 +56,7 @@ class CutSceneWatermelonDefeated extends Phaser.Scene {
 				duration: fadeTime,
 				onComplete: () => {
 				  this.storyComplete = true;
+				  this.armAdvance();
 				},
 			  });
 			},
@@ -69,31 +70,35 @@ class CutSceneWatermelonDefeated extends Phaser.Scene {
 	  }
 	}
   
-	update() {
-	  if (this.storyComplete) {
-		const keys = this.input.keyboard;
-  
-		// Check for key presses
-		if (
-		  keys.addKey(Phaser.Input.Keyboard.KeyCodes.Z).isDown ||
-		  keys.addKey(Phaser.Input.Keyboard.KeyCodes.X).isDown ||
-		  
-		  keys.addKey(Phaser.Input.Keyboard.KeyCodes.Q).isDown ||
-		  keys.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).isDown 
-		) {
-		  this.transitionToNextScene();
-		}
-  
-		// Check for virtual button presses
-		if (!this.sys.game.device.os.desktop) {
-		  if (this.jumpButtonPressed || this.attackButtonPressed) {
-			this.transitionToNextScene();
-		  }
-		}
-	  }
+	// This scene used to poll isDown for Z/X/Q/SPACE and, on touch,
+	// for this.jumpButtonPressed — which is never assigned anywhere in
+	// the codebase. With no pointer handler either, a phone player was
+	// stuck here permanently after beating the Watermelon. Advance is
+	// now event-driven, accepts a tap, and can't strand anyone.
+	armAdvance() {
+	  if (this._armed) return;
+	  this._armed = true;
+	  const go = () => this.transitionToNextScene();
+	  this.input.keyboard.once("keydown", go);
+	  this.input.once("pointerdown", go);
+	  this._bailout = this.time.delayedCall(12000, go);
+
+	  const hint = this.add
+		.bitmapText(this.cameras.main.centerX, 228, "tempFont",
+		  "PRESS ANY BUTTON", 8)
+		.setOrigin(0.5)
+		.setTintFill(0xffffff);
+	  this.tweens.add({
+		targets: hint, alpha: 0.2, duration: 600, yoyo: true, repeat: -1,
+	  });
 	}
+
+	update() {}
   
 	transitionToNextScene() {
+	  if (this._leaving) return;
+	  this._leaving = true;
+	  if (this._bailout) this._bailout.remove(false);
 	  const fadeTime = 500;
   
 	  // Fade out background and text, then transition to EndCredits scene

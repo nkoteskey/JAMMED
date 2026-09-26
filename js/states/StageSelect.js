@@ -31,7 +31,7 @@ class StageSelect extends Phaser.Scene {
       { key: "Stage3_1",       act: "3-1", name: "THE SILENT MOUND",tint: 0xffd877 },
       { key: "Stage3_2",       act: "3-2", name: "THE SIGNAL SPIRE",tint: 0xff9a9a },
       { key: "Stage4_1",       act: "4-1", name: "STADIUM OF LOVE",  tint: 0xff9ac0 },
-      { key: "StageBeach",     act: "??",  name: "IS ANYBODY OUT THERE?", tint: 0xfff0b0,
+      { key: "StageBeach",     act: "??",  name: "IS ANYBODY OUT THERE", tint: 0xfff0b0,
         locked: () => typeof AntSecret === "undefined" || !AntSecret.allFound(),
         lockedName: "??????????" },
       
@@ -42,13 +42,13 @@ class StageSelect extends Phaser.Scene {
       const col = i % 2;
       const row = Math.floor(i / 2);
       const x = 30 + col * 196;
-      const y = 44 + row * 30;
-      const box = this.add.rectangle(x + 90, y + 10, 184, 26, 0x1c1430);
+      const y = 38 + row * 27;
+      const box = this.add.rectangle(x + 90, y + 9, 184, 24, 0x1c1430);
       box.setStrokeStyle(1, 0x3a2a52);
       const isLocked = typeof s.locked === "function" && s.locked();
-      const act = this.add.bitmapText(x + 6, y + 4, "tempFont", s.act, 12)
+      const act = this.add.bitmapText(x + 6, y + 3, "tempFont", s.act, 12)
         .setTintFill(0x8a7a92);
-      const nm = this.add.bitmapText(x + 44, y + 6, "tempFont",
+      const nm = this.add.bitmapText(x + 44, y + 5, "tempFont",
         isLocked ? (s.lockedName || "???") : s.name, 8)
         .setTintFill(isLocked ? 0x5a4a62 : s.tint);
       box.setInteractive();
@@ -59,9 +59,9 @@ class StageSelect extends Phaser.Scene {
       return { box, act, nm, s };
     });
 
-    this.add.bitmapText(cx, 212, "tempFont", "A/D/W/S MOVE   SPACE START", 8)
+    this.add.bitmapText(cx, 214, "tempFont", "A/D/W/S MOVE   SPACE START", 8)
       .setOrigin(0.5).setTintFill(0x8a7a92);
-    const back = this.add.bitmapText(cx, 226, "tempFont", "ESC - BACK TO TITLE", 8)
+    const back = this.add.bitmapText(cx, 228, "tempFont", "ESC - BACK TO TITLE", 8)
       .setOrigin(0.5).setTintFill(0x6a5a72);
     back.setInteractive();
     back.on("pointerdown", () => this._back());

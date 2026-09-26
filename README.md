@@ -13,6 +13,15 @@ CONTROLS:
 On touch devices: joystick + jump/shoot buttons, with on-screen
 SWAP and RACK buttons in the top-right HUD.
 
+STAGES (or jump to any of them from Stage Select):
+1-1 City Runamuck / 1-2 Watermelon Boss / 1-3 Sunset Mesa /
+1-4 The Jam Works / 2-1 Orchard Rows / 2-2 The Archive /
+2-3 Cold Storage / 3-1 The Silent Mound / 3-2 The Signal Spire /
+4-1 Stadium of Love, plus one hidden stage.
+
+In the Stadium the fight is a set, not a brawl: notes scroll in from
+the right, hit them with A/S/D/F or the four on-screen pads.
+
 COLLECTIBLES:
 * BREAD - five per stage, the end-credits grade you on them
 * ANT tokens - one hidden per stage, eight total. An x0x tag

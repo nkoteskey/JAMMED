@@ -28,7 +28,6 @@ class Stage1_4 extends Phaser.Scene {
     this._buildLevel();
     this._paintBackground();
     this._decorateVats();
-    addForegroundProps(this, "works", { step: 360 });
     addAmbientWeather(this, "works");
 
     // Groups
@@ -170,6 +169,9 @@ class Stage1_4 extends Phaser.Scene {
     this.murmur.addTrigger(3000, "duke is in the archive past the orchards. bring his bass");
 
     // Sync UI weapon indicator
+    // Anything already killed stays killed across a checkpoint respawn
+    trackEnemyDeaths(this);
+
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
     if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
@@ -179,7 +181,6 @@ class Stage1_4 extends Phaser.Scene {
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
-    updateForegroundProps(this, this.jammy);
     updateX0XTags(this, this.jammy);
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);
     if (this.blubert) this.blubert.update();

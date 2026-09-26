@@ -27,7 +27,6 @@ class Stage2_1 extends Phaser.Scene {
     this._paintBackground();
     this._plantTreeRows();
     this._decorateCanals();
-    addForegroundProps(this, "orchard", { y: 192, step: 400 });
     addAmbientWeather(this, "orchard");
 
     this.bullets = this.physics.add.group();
@@ -106,6 +105,9 @@ class Stage2_1 extends Phaser.Scene {
     this._buildExitGate();
     this._showTitleCard();
 
+    // Anything already killed stays killed across a checkpoint respawn
+    trackEnemyDeaths(this);
+
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
     if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
@@ -115,7 +117,6 @@ class Stage2_1 extends Phaser.Scene {
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
-    updateForegroundProps(this, this.jammy);
     updateX0XTags(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });

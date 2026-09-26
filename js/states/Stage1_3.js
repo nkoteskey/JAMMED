@@ -215,6 +215,9 @@ class Stage1_3 extends Phaser.Scene {
     this.murmur.addTrigger(2300, "heard from 3 nodes: the press runs day and night past the works");
 
     // Sync UI weapon indicator
+    // Anything already killed stays killed across a checkpoint respawn
+    trackEnemyDeaths(this);
+
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
     if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
@@ -224,7 +227,6 @@ class Stage1_3 extends Phaser.Scene {
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
-    updateForegroundProps(this, this.jammy);
     updateX0XTags(this, this.jammy);
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);
     if (this.blubert) this.blubert.update();

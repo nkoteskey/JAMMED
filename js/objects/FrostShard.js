@@ -70,9 +70,9 @@ class FrostShard extends Phaser.Physics.Arcade.Sprite {
 
   _hit(enemy) {
     if (typeof enemy.freeze === "function") {
-      enemy.freeze(4200);
+      enemy.freeze(7500);
     } else if (typeof FrostShard.freezeEnemy === "function") {
-      FrostShard.freezeEnemy(this.scene, enemy, 4200);
+      FrostShard.freezeEnemy(this.scene, enemy, 7500);
     }
     if (typeof enemy.takeDamage === "function" && !enemy.invincible) {
       enemy.takeDamage(this.damage);
@@ -99,7 +99,7 @@ class FrostShard extends Phaser.Physics.Arcade.Sprite {
 
   // Generic freeze for any enemy that doesn't implement its own:
   // encase it in a solid ice block that Jammy can stand on.
-  static freezeEnemy(scn, enemy, ms = 4200) {
+  static freezeEnemy(scn, enemy, ms = 7500) {
     if (!enemy || enemy.dead || enemy._frozen) return;
     enemy._frozen = true;
 
@@ -169,9 +169,9 @@ class FrostShard extends Phaser.Physics.Arcade.Sprite {
       }
     };
     // Crack warning in the last second
-    scn.time.delayedCall(ms - 900, () => {
+    scn.time.delayedCall(ms - 1500, () => {
       if (block.active) {
-        scn.tweens.add({ targets: block, alpha: 0.45, duration: 150, yoyo: true, repeat: 3 });
+        scn.tweens.add({ targets: block, alpha: 0.45, duration: 170, yoyo: true, repeat: 4 });
       }
     });
     scn.time.delayedCall(ms, thaw);

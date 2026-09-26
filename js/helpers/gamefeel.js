@@ -119,6 +119,55 @@ function checkpointSpawn(scene, defaultX, defaultY) {
 function clearCheckpoints(scene) {
   scene._checkpointX = null;
   scene._checkpointY = null;
+  scene._deadEnemies = null;
+}
+
+// --- Enemies stay dead between checkpoint respawns -------------------
+// Dying used to rebuild the whole stage, so everything you had already
+// fought came back while you restarted from the middle. Each enemy
+// gets a key from its class and spawn position; kills are recorded on
+// the scene (which Phaser reuses across restart()) and any enemy
+// already killed is removed as the stage rebuilds.
+//
+// Call once at the END of create(), after every enemy is spawned and
+// positioned.
+function trackEnemyDeaths(scene) {
+  // No checkpoint means this is a fresh attempt at the whole stage,
+  // so the slate is clean.
+  if (scene._checkpointX === undefined || scene._checkpointX === null) {
+    scene._deadEnemies = new Set();
+  }
+  scene._deadEnemies = scene._deadEnemies || new Set();
+  const dead = scene._deadEnemies;
+
+  scene.enemies.getChildren().slice().forEach((e) => {
+    if (!e || e._deathTracked) return;
+    const key =
+      (e.constructor && e.constructor.name ? e.constructor.name : "E") +
+      ":" + Math.round(e.x) + ":" + Math.round(e.y);
+    e._spawnKey = key;
+    e._deathTracked = true;
+
+    if (dead.has(key)) {
+      // Already beaten before the respawn — take it back off the board,
+      // along with anything it owns (a bush, a cover cloud, pupils).
+      if (e.bush && e.bush.destroy) e.bush.destroy();
+      if (e.cloud && e.cloud.destroy) e.cloud.destroy();
+      if (e.leftPupil && e.leftPupil.destroy) e.leftPupil.destroy();
+      if (e.rightPupil && e.rightPupil.destroy) e.rightPupil.destroy();
+      if (e.halo && e.halo.destroy) e.halo.destroy();
+      if (e.label && e.label.destroy) e.label.destroy();
+      e.destroy();
+      return;
+    }
+    if (typeof e.die === "function") {
+      const original = e.die.bind(e);
+      e.die = function (...args) {
+        dead.add(key);
+        return original(...args);
+      };
+    }
+  });
 }
 
 // --- Impact feedback --------------------------------------------------

@@ -49,8 +49,6 @@ class StageBeach extends Phaser.Scene {
     [[420, 150], [980, 120], [1480, 150], [2050, 116], [2560, 150]]
       .forEach(([x, y]) => new BreadToken(this, x, y));
 
-    addForegroundProps(this, "beach", { y: 192, step: 380 });
-
     this.murmur = new Murmur(this);
     this.murmur.addTrigger(90, "you found every last one of them. the ants said take the day");
     this.murmur.addTrigger(900, "nothing to shoot out here. just dont get flattened");
@@ -58,6 +56,9 @@ class StageBeach extends Phaser.Scene {
 
     this._buildEnd();
     this._showTitleCard();
+
+    // Anything already killed stays killed across a checkpoint respawn
+    trackEnemyDeaths(this);
 
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
@@ -68,7 +69,6 @@ class StageBeach extends Phaser.Scene {
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
-    updateForegroundProps(this, this.jammy);
     if (this.murmur) this.murmur.update(this.jammy.sprite.x);
     if (this.hazards) this.hazards.forEach((h) => h.update());
   }

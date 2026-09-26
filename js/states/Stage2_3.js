@@ -55,7 +55,6 @@ class Stage2_3 extends Phaser.Scene {
 
     this._buildShelves();
     this._buildIcicles();
-    addForegroundProps(this, "cold", { step: 420 });
 
     // --- The cold room's staff ---
     [[430, 176, -1], [980, 176, 1], [1640, 176, -1], [2180, 176, 1], [2720, 176, -1]]
@@ -110,6 +109,9 @@ class Stage2_3 extends Phaser.Scene {
     this._buildExitDoor();
     this._showTitleCard();
 
+    // Anything already killed stays killed across a checkpoint respawn
+    trackEnemyDeaths(this);
+
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
     if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
@@ -130,7 +132,6 @@ class Stage2_3 extends Phaser.Scene {
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
-    updateForegroundProps(this, this.jammy);
     updateX0XTags(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });

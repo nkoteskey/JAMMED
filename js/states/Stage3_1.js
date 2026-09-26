@@ -33,7 +33,6 @@ class Stage3_1 extends Phaser.Scene {
     this._buildLevel();
     this._paintBackground();
     this._buildSeedCells();
-    addForegroundProps(this, "mound", { step: 420 });
 
     this.bullets = this.physics.add.group();
     this.collectibles = this.physics.add.group();
@@ -100,6 +99,9 @@ class Stage3_1 extends Phaser.Scene {
     this._buildVaultGate();
     this._showTitleCard();
 
+    // Anything already killed stays killed across a checkpoint respawn
+    trackEnemyDeaths(this);
+
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
     if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
@@ -109,7 +111,6 @@ class Stage3_1 extends Phaser.Scene {
   update() {
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
-    updateForegroundProps(this, this.jammy);
     updateX0XTags(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });

@@ -78,6 +78,9 @@ class Stage4_1 extends Phaser.Scene {
     this._crowd = 0.55;      // 0 = their crowd, 1 = yours
     this._changing = false;
 
+    // Anything already killed stays killed across a checkpoint respawn
+    trackEnemyDeaths(this);
+
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
     if (ui && ui.setBread) ui.setBread(BreadToken.collectedIn(this), this._breadTotal || 5);
@@ -99,7 +102,6 @@ class Stage4_1 extends Phaser.Scene {
 
     this.jammy.update();
     updatePlatformerCamera(this, this.jammy);
-    updateForegroundProps(this, this.jammy);
     updateX0XTags(this, this.jammy);
     if (this.blubert) this.blubert.update();
     this.enemies.getChildren().forEach((e) => { if (e.update) e.update(); });
@@ -230,8 +232,6 @@ class Stage4_1 extends Phaser.Scene {
         this.add.circle(x, 168 - i * 26, 3, 0x0d0916).setDepth(5);
       }
     });
-
-    addForegroundProps(this, "works", { step: 520 });
   }
 
   // The arena is a fixed-camera set piece, so everything in it is

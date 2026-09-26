@@ -233,6 +233,7 @@ class UIScene extends Phaser.Scene {
   }
 
   setScore(score=100){
+    if (!this.scoreText) return;   // HUD not created yet
     this.newScore+=score;
     scene.tweens.add({
     targets:this,

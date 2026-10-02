@@ -1,5 +1,0 @@
-  code: 'MODULE_NOT_FOUND',
-  requireStack: []
-}
-
-Node.js v22.22.0

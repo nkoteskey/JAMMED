@@ -3,7 +3,7 @@ An 8-bit platformer inspired by Jams Player, featuring retro-style gameplay and 
 
 Play it here: https://nkoteskey.github.io/JAMMED/
 
-(The game is published automatically by the *Deploy to GitHub Pages* workflow in `.github/workflows/deploy-pages.yml` on every push to `main`.)
+(The game is published automatically to the `gh-pages` branch by the *Deploy to GitHub Pages* workflow in `.github/workflows/deploy-pages.yml` on every push to `main`.)
 
 ![image](https://github.com/user-attachments/assets/4126a93b-7b5d-4edd-b78f-aae124eff760)
 

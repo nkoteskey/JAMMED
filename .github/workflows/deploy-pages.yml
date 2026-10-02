@@ -1,10 +1,9 @@
 # Publishes the game to GitHub Pages so it is playable at
 # https://nkoteskey.github.io/JAMMED/
 #
-# Runs on every push to main (and on the improvement branch while its pull
-# request is open), or by hand from the Actions tab. The first run enables
-# Pages for the repository with "GitHub Actions" as the source; if that step
-# is refused, enable it once under Settings -> Pages -> Source: GitHub Actions.
+# The static game files are pushed to the `gh-pages` branch, which GitHub
+# Pages serves. Runs on every push to main (and on the improvement branch
+# while its pull request is open), or by hand from the Actions tab.
 name: Deploy to GitHub Pages
 
 on:
@@ -15,9 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
@@ -26,17 +23,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Stage site files
         # The game is static: ship everything except source art (.xcf) and
@@ -46,12 +35,13 @@ jobs:
           rsync -a --exclude '.git' --exclude '.github' --exclude '_site' \
             --exclude '*.xcf' --exclude '*.tmx' --exclude '*.tmj' \
             ./ _site/
+          touch _site/.nojekyll
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: _site
-
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          publish_branch: gh-pages
+          force_orphan: true
+          commit_message: "Publish ${{ github.sha }}"

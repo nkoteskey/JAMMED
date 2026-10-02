@@ -57,7 +57,7 @@ class HornedFruit extends Phaser.Physics.Arcade.Sprite {
     // Damage Jammy on contact
     this.jammyOverlap = this.scene.physics.add.overlap(this, this.scene.jammy.sprite, () => {
       if (!this.dead && this.scene.jammy.alive) {
-        this.scene.jammy.takeDamage();
+        this.scene.jammy.takeDamage(this.x);
         this.die();
       }
     });

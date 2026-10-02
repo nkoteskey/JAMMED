@@ -65,7 +65,7 @@ class WatermelonSnapper extends Phaser.Physics.Arcade.Sprite {
       const dx = Math.abs(j.x - this.x);
       const dyAbove = this.y - j.y;
       if (dx < this.attackHorizRange && dyAbove > 0 && dyAbove < this.attackVertRange) {
-        this.scene.jammy.takeDamage();
+        this.scene.jammy.takeDamage(this.x);
       }
     });
   }

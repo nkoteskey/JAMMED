@@ -2,35 +2,39 @@ class WatermelonSeed extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, velocityX, velocityY) {
     super(scene, x, y, "watermelon-seed");
 
-    // Prevent Jammy from being able to shoot the enemy down
+    // Prevent Jammy from being able to shoot the seed down
     this.invincible = true;
+    this.dead = false;
 
-    // Add to the scene
     scene.add.existing(this);
     scene.physics.add.existing(this);
-
-    // Set anchor point
-    this.setOrigin(0.5, 0.5);
-
-    // Physics settings
-    this.body.setBounce(0);
-	  this.body.setAllowGravity(false);
-	  this.body.setVelocity(velocityX, velocityY);
-    this.setCollideWorldBounds(false);
-
-    // Add this to the enemy projectiles group
+    // Group first — physics groups apply defaults when a body is added
     scene.enemyProjectiles.add(this);
 
+    this.setOrigin(0.5, 0.5);
+    this.setDepth(90);
+    this.body.setBounce(0);
+    this.body.setAllowGravity(false);
+    this.body.setVelocity(velocityX, velocityY);
+  }
 
-    // Handle out-of-bounds behavior
-    scene.physics.world.on("worldbounds", (body) => {
-      if (body.gameObject === this) {
-        this.die();
-      }
-    });
+  preUpdate(time, delta) {
+    super.preUpdate(time, delta);
+    if (!this.active) return;
+    const cam = this.scene.cameras.main;
+    if (
+      this.x < cam.scrollX - 32 ||
+      this.x > cam.scrollX + cam.width + 32 ||
+      this.y < cam.scrollY - 32 ||
+      this.y > cam.scrollY + cam.height + 32
+    ) {
+      this.die();
+    }
   }
 
   die() {
+    if (this.dead) return;
+    this.dead = true;
     this.destroy();
   }
 }

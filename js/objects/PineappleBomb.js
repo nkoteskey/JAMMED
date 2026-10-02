@@ -6,6 +6,7 @@ class Pineapple extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.alive = true;
+    this.dead = false;
     // Basic character properties
     this.hp = 1;
     this.roamSpeed = 40;
@@ -88,23 +89,27 @@ class Pineapple extends Phaser.Physics.Arcade.Sprite {
     this.roamTimer = this.scene.time.addEvent({
       delay: 50,
       callback: function () {
+        if (!this.body) return;
         if(this.alive){
+        const j = this.scene.jammy;
+        if (!j || !j.sprite) return;
         if (
           Phaser.Math.Distance.Between(
             this.x,
             this.y,
-            this.scene.jammy.sprite.x,
-            this.scene.jammy.sprite.y
-          ) < 10
+            j.sprite.x,
+            j.sprite.y
+          ) < 18
         ) {
-          this.burningDown = true;
+          this.burnDown();
         }
         if (this.burningDown) {
           this.alive=false;
+          this.body.setVelocityX(0);
           this.play(
             this.facing === 1 ? "burn-down-right" : "burn-down-left",
             true
-          ).on("animationcomplete", () => this.die());
+          ).once("animationcomplete", () => this.die());
         } else if (
           Phaser.Math.Distance.Between(
             this.x,
@@ -123,6 +128,10 @@ class Pineapple extends Phaser.Physics.Arcade.Sprite {
       callbackScope: this,
       repeat: -1,
     });
+
+    this.once(Phaser.GameObjects.Events.DESTROY, () => {
+      if (this.roamTimer) this.roamTimer.remove(false);
+    });
   }
 
   update() {}
@@ -138,6 +147,7 @@ class Pineapple extends Phaser.Physics.Arcade.Sprite {
   }
 
   burnDown() {
+    if (this.burningDown) return;
     this.body.setVelocityX(0);
     this.scene.sound.play("pineappleBombFuseSound");
     this.burningDown = true;
@@ -178,12 +188,16 @@ class Pineapple extends Phaser.Physics.Arcade.Sprite {
   }
 
   die() {
-   
+    if (this.dead) return;
+    this.dead = true;
+    this.alive = false;
     this.launchFragments();
     this.scene.scene.get("UIScene").setScore(this.score);
     this.scene.sound.stopByKey("pineappleBombFuseSound");
+    this.scene.sound.play("shortExplosion", { volume: 0.7 });
+    this.scene.cameras.main.shake(100, 0.004);
     this.visible = false;
     this.body.setEnable(false);
-    scene.time.delayedCall(1000, () => this.destroy());
+    this.destroy();
   }
 }

@@ -37,6 +37,14 @@ class GuitarRack extends Phaser.Scene {
       const owned = coll.owned.includes(id);
 
       const img = this.add.image(x, y - 8, "guitar-" + id).setScale(1.6);
+      frame.setInteractive({ useHandCursor: true });
+      frame.on("pointerdown", () => {
+        if (this.cursor === i) this._equip();
+        else {
+          this.cursor = i;
+          this._refresh();
+        }
+      });
       let label;
       if (owned) {
         label = this.add.bitmapText(x, y + 36, "tempFont", cat.name, 8)
@@ -57,8 +65,15 @@ class GuitarRack extends Phaser.Scene {
       .setOrigin(0.5).setTintFill(0xffffff);
     this.descText2 = this.add.bitmapText(cx, cy + 70, "tempFont", "", 8)
       .setOrigin(0.5).setTintFill(0xc0b0c8);
-    this.add.bitmapText(cx, cy + 88, "tempFont", "A/D MOVE - SPACE EQUIP - G CLOSE", 8)
+    const hint = isTouchDevice()
+      ? "TAP A GUITAR TO SELECT - TAP AGAIN TO EQUIP"
+      : "A/D MOVE - SPACE EQUIP - G CLOSE";
+    this.add.bitmapText(cx, cy + 88, "tempFont", hint, 8)
       .setOrigin(0.5).setTintFill(0x8a7a92);
+    const closeBtn = this.add.bitmapText(cx + 182, cy - 94, "tempFont", "X", 12)
+      .setOrigin(0.5).setTintFill(0xffd877)
+      .setInteractive(new Phaser.Geom.Rectangle(-12, -12, 24, 24), Phaser.Geom.Rectangle.Contains);
+    closeBtn.on("pointerdown", () => this._close());
 
     this._refresh();
 
@@ -119,10 +134,12 @@ class GuitarRack extends Phaser.Scene {
   }
 
   _close() {
-    this.scene.stop("GuitarRack");
+    if (this._closing) return;
+    this._closing = true;
     this.scene.resume(this.gameScene);
     const level = this.scene.get(this.gameScene);
     if (level) level.cameras.main.setAlpha(1);
     this.scene.resume("UIScene");
+    this.scene.stop("GuitarRack");
   }
 }

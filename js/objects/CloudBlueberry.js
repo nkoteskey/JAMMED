@@ -196,7 +196,7 @@ class CloudBlueberry extends Blueberry {
           const d = Phaser.Math.Distance.Between(this.x, this.y, jm.x, jm.y);
           if (d < 20) {
             this._diveDamaged = true;
-            this.scene.jammy.takeDamage();
+            this.scene.jammy.takeDamage(this.x);
           }
         }
       },

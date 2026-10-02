@@ -46,7 +46,7 @@ class JamBubble extends Phaser.Physics.Arcade.Sprite {
 
     this.jammyOverlap = scn.physics.add.overlap(this, scn.jammy.sprite, () => {
       if (this.inFlight && this.scene.jammy.alive) {
-        this.scene.jammy.takeDamage();
+        this.scene.jammy.takeDamage(this.x);
       }
     });
 

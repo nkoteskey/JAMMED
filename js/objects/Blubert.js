@@ -153,23 +153,20 @@ class Blubert {
     if (this.stunned || !this.jammy || !this.jammy.alive) return;
     if (!this.scene.enemies) return;
 
-    // Audio cue — use existing laser sound as placeholder beep
-    if (this.scene.sound.get("laserSound")) {
-      this.scene.sound.play("laserSound", { volume: 0.15, rate: 2.5 });
-    }
-
     const enemies = this.scene.enemies.getChildren();
     const cam = this.scene.cameras.main;
     let nearest = null;
     let nearestDist = Infinity;
+    let spotted = false;
     for (const e of enemies) {
-      if (!e || e.dead) continue;
+      if (!e || e.dead || !e.active) continue;
       // Only care about enemies currently on screen.
       if (!cam.worldView.contains(e.x, e.y)) continue;
       const d = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, e.x, e.y);
       if (d > this.scanRange) continue;
-      if (e.hidden && typeof e.detect === "function") {
+      if (e.hidden && typeof e.detect === "function" && !e.detected) {
         e.detect();
+        spotted = true;
       }
       // Track the nearest detected zomberry threatening Jammy
       if (e.detected || e.inPursuit) {
@@ -178,6 +175,11 @@ class Blubert {
           nearest = e;
         }
       }
+    }
+    // Audio cue only when a hidden enemy is newly revealed, or when the
+    // lock-on switches to a new target — a beep every scan was noise.
+    if (spotted || (nearest && nearest !== this.trackedEnemy)) {
+      this.scene.sound.play("laserSound", { volume: 0.15, rate: 2.5 });
     }
     this.trackedEnemy = nearest;
   }
@@ -225,7 +227,7 @@ class Blubert {
     if (this.dead) return;
     this.dead = true;
     this.trackedEnemy = null;
-    if (this.scanTimer) this.scanTimer.destroy();
+    if (this.scanTimer) this.scanTimer.remove(false);
     if (this.reticle) { this.reticle.destroy(); this.reticle = null; }
     // Clear the scene reference immediately — the fade-out takes
     // 600ms and a pickup grabbed during that window should trigger

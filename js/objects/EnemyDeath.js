@@ -9,22 +9,12 @@ class EnemyDeath extends Phaser.GameObjects.Sprite {
         // Set anchor (origin)
         this.setOrigin(0.5, 0.5);
 
-        // Add animations and play the death animation
-        this.scene.anims.create({
-            key: "death",
-            frames: this.scene.anims.generateFrameNames("enemy-death", {
-                prefix: "death",
-                start: 1,
-                end: 2,
-            }),
-            frameRate: 10,
-            repeat: -1,
-        });
-		this.scene.sound.play("enemyDeathSound"); // Play sound effect
+        // The "death" animation is created once in Preload
+        this.scene.sound.play("enemyDeathSound"); // Play sound effect
 
-        this.play("death").on("animationcomplete", () => {
-		this.destroy();
-	})
+        this.play("death").once("animationcomplete", () => {
+            this.destroy();
+        });
 
       
     }

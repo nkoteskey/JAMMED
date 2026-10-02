@@ -1,7 +1,7 @@
 class Raspberry extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y) {
     super(scene, x, y, "raspberry");
-    this.score=750;
+    this.score = 750;
     // Add Raspberry to the scene and enable physics
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -29,7 +29,7 @@ class Raspberry extends Phaser.Physics.Arcade.Sprite {
     this.body.setAllowGravity(true);
     this.body.setSize(14, 30);
 
-    // Animations
+    // Animations (local to this sprite)
     this.anims.create({
       key: "resting-right",
       frames: [{ key: "raspberry", frame: "resting-right1" }],
@@ -59,7 +59,7 @@ class Raspberry extends Phaser.Physics.Arcade.Sprite {
         start: 1,
         end: 4,
       }),
-      frameRate: 6,
+      frameRate: 10,
       repeat: -1,
     });
     this.anims.create({
@@ -69,7 +69,7 @@ class Raspberry extends Phaser.Physics.Arcade.Sprite {
         start: 1,
         end: 2,
       }),
-      frameRate: 6,
+      frameRate: 10,
       repeat: -1,
     });
     this.anims.create({
@@ -111,51 +111,49 @@ class Raspberry extends Phaser.Physics.Arcade.Sprite {
       callbackScope: this,
       repeat: -1,
       callback: function () {
-        if (this.dead) return;
+        if (this.dead || !this.body) return;
         if (!this.jammyInRange && !this.attacking) {
           this.rest();
-        } else {
-          if (!this.attacking) {
-            this.roam(this.facing);
-          }
+        } else if (!this.attacking) {
+          this.roam(this.facing);
         }
       },
+    });
+
+    this.once(Phaser.GameObjects.Events.DESTROY, () => {
+      if (this.chaseTimer) this.chaseTimer.remove(false);
+      if (this.attackOverlap) this.attackOverlap.destroy();
     });
   }
 
   update() {
+    if (this.dead || !this.body) return;
+    const jammy = this.scene.jammy;
+    if (!jammy || !jammy.sprite) return;
+
     if (!this.attackOverlap) {
-      this.attackOverlap = scene.physics.add.overlap(
+      this.attackOverlap = this.scene.physics.add.overlap(
         this,
-        scene.jammy.sprite,
-        () => {
-          this.attack();
-        },
-        function () {
-          return !this.attacking;
-        },
+        jammy.sprite,
+        () => this.attack(),
+        () => !this.attacking && !this.dead && jammy.alive,
         this
       );
     }
 
-    if (this.x < this.scene.jammy.sprite.x) {
-      this.facing = 1;
-    } else {
-      this.facing = -1;
-    }
+    this.facing = this.x < jammy.sprite.x ? 1 : -1;
 
-    if (!this.dead && !this.attacking) {
+    if (!this.attacking) {
       // Action logic based on distance to Jammy
-      let distanceToJammy = Phaser.Math.Distance.Between(
+      const distanceToJammy = Phaser.Math.Distance.Between(
         this.x,
         this.y,
-        this.scene.jammy.sprite.x,
-        this.scene.jammy.sprite.y
+        jammy.sprite.x,
+        jammy.sprite.y
       );
       this.jammyInRange = distanceToJammy <= this.awareDistance;
       this.inPursuit =
-        distanceToJammy <= this.chaseDistance &&
-        Math.abs(this.y - this.scene.jammy.sprite.y) < 10;
+        distanceToJammy <= this.chaseDistance && Math.abs(this.y - jammy.sprite.y) < 10;
     }
   }
 
@@ -185,58 +183,54 @@ class Raspberry extends Phaser.Physics.Arcade.Sprite {
   }
 
   attack() {
-    if (!this.dead) {
-      this.attacking = true;
-      scene.jammy.takeDamage();
-      this.play(
-        this.facing === 1 ? "attacking-right" : "attacking-left",
-        true
-      ).on(
-        "animationcomplete",
-        () => {
-          this.roam(this.facing);
-          scene.time.delayedCall(
-            500,
-            () => {
-              this.attacking = false;
-            },
-            this
-          );
-        },
-        this
-      );
-    }
+    if (this.dead || this.attacking) return;
+    this.attacking = true;
+    this.scene.jammy.takeDamage(this.x);
+    this.play(this.facing === 1 ? "attacking-right" : "attacking-left", true);
+    // `once` — a listener per attack used to pile up and fire together
+    this.once("animationcomplete", () => {
+      if (this.dead) return;
+      this.roam(this.facing);
+      this.scene.time.delayedCall(500, () => {
+        this.attacking = false;
+      });
+    });
   }
 
-  takeDamage(val=1) {
-    if (!this.dead) {
-      this.hp-=val;
-      this.takingDamage = true;
-      this.invincible = true;
-      this.flashOnce();
-      if (this.hp <= 0) {
-        this.die();
-      } else {
-        this.scene.time.delayedCall(this.invincibilityTime, () => {
-          this.invincible = false;
-          this.takingDamage = false;
-        });
-      }
-      this.scene.sound.play("enemyHitSound");
+  takeDamage(val = 1) {
+    if (this.dead) return;
+    this.hp -= val;
+    this.takingDamage = true;
+    this.invincible = true;
+    this.flashOnce();
+    if (this.hp <= 0) {
+      this.die();
+    } else {
+      this.scene.time.delayedCall(this.invincibilityTime, () => {
+        this.invincible = false;
+        this.takingDamage = false;
+      });
     }
+    this.scene.sound.play("enemyHitSound");
   }
 
   flashOnce() {
     this.setTint(0x0000ff);
-    this.scene.time.delayedCall(50, () => this.clearTint());
+    this.scene.time.delayedCall(50, () => {
+      if (this.active) this.clearTint();
+    });
   }
 
   die() {
+    if (this.dead) return;
     this.dead = true;
-    scene.scene.get("UIScene").setScore(this.score);
+    this.attacking = false;
+    this.scene.scene.get("UIScene").setScore(this.score);
     this.body.setAllowGravity(false);
     this.body.setEnable(false);
-    this.play("death").on("animationcomplete-death", () => {
+    this.clearTint();
+    this.scene.sound.play("enemyDeathSound");
+    this.play("death").once("animationcomplete-death", () => {
       this.destroy();
     });
   }

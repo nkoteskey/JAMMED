@@ -22,8 +22,10 @@ class AntToken extends Phaser.Physics.Arcade.Sprite {
         if (scene.jammy && typeof scene.jammy.antTokens === 'number') {
             scene.jammy.antTokens += 1;
         }
-        if (game.antTokensCollected) {
-            game.antTokensCollected.level1 = (game.antTokensCollected.level1 || 0) + 1;
+        const run = getRunState();
+        if (run) {
+            const key = scene.sys.settings.key;
+            run.tokens[key] = (run.tokens[key] || 0) + 1;
         }
         if (typeof scene.tryReviveBlubert === 'function') scene.tryReviveBlubert();
 

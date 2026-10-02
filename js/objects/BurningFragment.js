@@ -3,6 +3,7 @@ class BurningFragment extends Phaser.Physics.Arcade.Sprite {
 	  super(scene, x, y, 'burning-fragment');
 	  // Set initial properties
 	  this.invincible = true;
+	  this.dead = false;
   
 	  // Add fragment to scene and enable physics
 	  scene.add.existing(this);
@@ -32,14 +33,16 @@ class BurningFragment extends Phaser.Physics.Arcade.Sprite {
 		  // Check collision with Jammy
 		  this.scene.physics.add.overlap(this, this.scene.jammy.sprite, (frag, jammy) => {
 			if (!jammy.parentObject.invincible) {
-			  jammy.parentObject.takeDamage();
+			  jammy.parentObject.takeDamage(frag.x);
 			}
 		  }, null, this);
-		
-		this.autoDestoryTimer = scene.time.addEvent({
+
+		this.autoDestroyTimer = scene.time.addEvent({
 			delay: 2000,
-			callback: this.destroy,
-			callbackScope: this,
+			callback: () => { if (this.active) this.destroy(); },
+		});
+		this.once(Phaser.GameObjects.Events.DESTROY, () => {
+			if (this.autoDestroyTimer) this.autoDestroyTimer.remove(false);
 		});
 	
 		

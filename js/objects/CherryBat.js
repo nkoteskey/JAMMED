@@ -82,7 +82,7 @@ class CherryBat extends Phaser.Physics.Arcade.Sprite {
 
     this.jammyOverlap = scn.physics.add.overlap(this, scn.jammy.sprite, () => {
       if (this.state === "swoop" && !this.dead && this.scene.jammy.alive) {
-        this.scene.jammy.takeDamage();
+        this.scene.jammy.takeDamage(this.x);
       }
     });
 

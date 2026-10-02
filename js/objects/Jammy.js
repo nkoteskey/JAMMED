@@ -1,383 +1,194 @@
 class Jammy {
-  constructor(x, y, hp = 5, facing = "right") {
+  constructor(x, y, hp, facing = "right") {
+    const run = getRunState();
+
     this.bulletLimit = 3;
     this.maxHP = 5;
-    this.hp = hp ? hp : this.maxHP;
+    this.hp = Phaser.Math.Clamp(hp || (run ? run.hp : this.maxHP) || this.maxHP, 1, this.maxHP);
     this.walkSpeed = 125;
     this.invincible = false;
-    this.invincibiltyTime = 500;
+    this.invincibilityTime = 1000;
+    this.stunTime = 400;
     this.takingDamage = false;
-    this.hitDirection;
-    this.hitHisHead = false;
-    this.canAttack = true;
+    this.hitDirection = 1;
     this.falling = false;
     this.jumping = false;
     this.canDoubleJump = false;
-    this.canJump = false;
-    this.jumpTimer = 0;
-    this.jumpHoldTime = 160;
     this.jumpVelocity = -300;
-    this.facing = facing ? facing : "right";
+    this.doubleJumpVelocity = -270;
+    // Rocket Axe double-jump is unlocked from Stage 1-3; before that the
+    // second jump is a plain mid-air hop.
+    this.rocketAxe = !!(run && run.rocketAxe);
+    // A short grace window after walking off a ledge where a jump still
+    // counts, and a short buffer so a jump pressed just before landing
+    // fires on touchdown — both make the controls feel far less "sticky".
+    this.coyoteMs = 90;
+    this.jumpBufferMs = 120;
+    this.coyoteUntil = 0;
+    this.jumpBufferedUntil = 0;
+    this.facing = facing === "left" ? "left" : "right";
     this.antTokens = 0;
-    // Weapons come from the guitar collection — each owned guitar
-    // model is a weapon. Equipped guitar decides the current weapon.
-    const guitarColl =
-      typeof getGuitarCollection === "function" ? getGuitarCollection() : null;
-    if (guitarColl && typeof GUITAR_CATALOG !== "undefined") {
-      this.availableWeapons = guitarColl.owned.map(
-        (id) => GUITAR_CATALOG[id].weapon
-      );
-      this.currentWeapon = GUITAR_CATALOG[guitarColl.equipped].weapon;
-    } else {
-      this.currentWeapon = "sonic";
-      this.availableWeapons = ["sonic"];
-    }
+
+    // Weapons come from the guitar collection — each owned guitar model
+    // is a weapon. The equipped guitar decides the current weapon.
+    const guitarColl = getGuitarCollection();
+    this.availableWeapons = guitarColl.owned.map((id) => GUITAR_CATALOG[id].weapon);
+    this.currentWeapon = GUITAR_CATALOG[guitarColl.equipped].weapon;
+
     this.seedCooldownMs = 320;
     this.bassCooldownMs = 900;
     this.lastBassTime = 0;
     this.lastSeedTime = 0;
-    this.seedAmmo = 1;
+    this.seedAmmo = run ? Math.max(1, run.seedAmmo || 1) : 1;
     this.seedAmmoMax = 12;
     this.lastDryClickTime = 0;
     this.controlsEnabled = true;
     this.alive = true;
     this.walkingLeft = false;
     this.walkingRight = false;
-    this.wasWalking = false;
-    this.jumpSound = scene.sound.add("jumpSound");
-    this.leftIsDown = false;
-    this.rightIsDown = false;
     this.up = false;
+    this.rocketBoostActive = false;
+    this.shootingPoseActive = false;
 
-    this.gamepad = new VirtualGamepad(scene);
+    // Touch-screen input, written by the HUD's virtual gamepad
+    this.touch = { left: false, right: false, up: false };
+
+    this.jumpSound = scene.sound.add("jumpSound");
 
     this.sprite = scene.physics.add.sprite(x, y, "jammy", "resting-right2");
-
     this.sprite.play("resting-right");
     this.sprite.parentObject = this;
+    this.sprite.body.setSize(18, 28, true);
 
-    // Set some physics for Jammy
+    // --- Keyboard ---
+    const kb = scene.input.keyboard;
+    this.leftKeys = addKeys(kb, controls.left);
+    this.rightKeys = addKeys(kb, controls.right);
+    this.aimKeys = addKeys(kb, controls.aim);
+    this.jumpKeys = addKeys(kb, controls.jump);
+    this.shootKeys = addKeys(kb, controls.shoot);
+    this.cycleKeys = addKeys(kb, controls.cycleWeapon);
+    // Keep SPACE / arrows from scrolling the page
+    kb.addCapture([
+      Phaser.Input.Keyboard.KeyCodes.SPACE,
+      Phaser.Input.Keyboard.KeyCodes.UP,
+      Phaser.Input.Keyboard.KeyCodes.DOWN,
+      Phaser.Input.Keyboard.KeyCodes.LEFT,
+      Phaser.Input.Keyboard.KeyCodes.RIGHT,
+    ]);
 
-    //this.sprite.body.collideWorldBounds = true;
+    onKeys(this.jumpKeys, "down", () => this.jump(), this);
+    onKeys(this.shootKeys, "down", () => this.shoot(), this);
+    onKeys(this.cycleKeys, "down", () => this.cycleWeapon(), this);
+  }
 
-    // Set collision body size
-    this.sprite.body.setSize(18, 28);
+  get x() {
+    return this.sprite.x;
+  }
+  get y() {
+    return this.sprite.y;
+  }
 
-    // Add attack button
-    this.attackButton = scene.input.keyboard.addKey(controls.shoot);
-    //this.attackButton.onDown.add(this.fireAudioWave, this);
-
-    // Add jump button
-
-    this.leftButton = scene.input.keyboard.addKey(controls.left);
-    this.rightButton = scene.input.keyboard.addKey(controls.right);
-    this.jumpButton = scene.input.keyboard.addKey(controls.jump);
-    this.aimButton = scene.input.keyboard.addKey(controls.aim);
-    this.secondaryAimButton = scene.input.keyboard.addKey(
-      controls.secondaryAim
-    );
-this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot);
-    scene.input.keyboard.addCapture(controls.cycleWeapon);
-    this.cycleWeaponButton = scene.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes[controls.cycleWeapon] || controls.cycleWeapon
-    );
-    this.cycleWeaponButton.on(
-      "down",
-      function () {
-        if (!this.alive || !this.controlsEnabled) return;
-        // Cycle through the owned guitars in the collection
-        if (typeof getGuitarCollection === "function" && typeof GUITAR_CATALOG !== "undefined") {
-          const coll = getGuitarCollection();
-          if (coll.owned.length <= 1) return;
-          const i = coll.owned.indexOf(coll.equipped);
-          coll.equipped = coll.owned[(i + 1) % coll.owned.length];
-          this.currentWeapon = GUITAR_CATALOG[coll.equipped].weapon;
-        } else {
-          if (this.availableWeapons.length <= 1) return;
-          const i = this.availableWeapons.indexOf(this.currentWeapon);
-          this.currentWeapon = this.availableWeapons[(i + 1) % this.availableWeapons.length];
-        }
-        const ui = scene.scene.get("UIScene");
-        if (ui && ui.setWeapon) ui.setWeapon(this.currentWeapon);
-      },
-      this
-    );
-    this.aimButton.on(
-      "down",
-      function () {
-        this.up = true;
-      },
-      this
-    );
-
-    this.aimButton.on(
-      "up",
-      function () {
-        this.up = false;
-      },
-      this
-    );
-
-    this.secondaryAimButton.on(
-      "down",
-      function () {
-        this.up = true;
-      },
-      this
-    );
-
-    this.secondaryAimButton.on(
-      "up",
-
-      function () {
-        this.up = false;
-      },
-      this
-    );
-
-    this.leftButton.on(
-      "down",
-      function (event) {
-        if (this.alive) {
-          this.leftIsDown = true;
-          this.walkingLeft = true;
-
-          this.facing = "left";
-
-          this.move(this.facing);
-        }
-      },
-      this
-    );
-
-    this.rightButton.on(
-      "down",
-      function (event) {
-        if (this.alive) {
-          this.rightIsDown = true;
-          this.walkingRight = true;
-          this.facing = "right";
-          this.move(this.facing);
-        }
-      },
-      this
-    );
-
-    this.leftButton.on(
-      "up",
-      function (event) {
-        this.leftIsDown = false;
-        this.walkingLeft = false;
-        this.wasWalking = false;
-        if (!this.jumping && !this.falling) {
-          this.rest();
-        }
-      },
-      this
-    );
-
-    this.rightButton.on(
-      "up",
-      function (event) {
-        this.rightIsDown = false;
-        this.walkingRight = false;
-        this.wasWalking = false;
-        if (!this.jumping && !this.falling) {
-          this.rest();
-        }
-      },
-      this
-    );
-
-    this.jumpButton.on(
-      "down",
-      function (event) {
-        if (this.alive) {
-          this.jump();
-        }
-      },
-      this
-    );
-
-    this.attackButton.on(
-      "down",
-      function () {
-        if (this.alive) {
-          this.shoot();
-        }
-      },
-      this
-    );
-
-  
-
-    this.attackButton.on("up", function () {}, this);
-
-    this.secondaryShootButton.on(
-      "down",
-      function () {
-        if (this.alive) {
-          this.shoot();
-        }
-      },
-      this
-    );
-
-    this.secondaryShootButton.on("up", function () { }, this);
-    
-
-
-    this.gamepad.gamepad.touchCursor.cursorKeys.up.on(
-      "down",
-      function (event) {
-        this.aimButton.emit("down");
-      },
-      this
-    );
-
-    this.gamepad.gamepad.touchCursor.cursorKeys.up.on(
-      "up",
-      function (event) {
-        this.aimButton.emit("up");
-      },
-      this
-    );
-
-    this.gamepad.gamepad.touchCursor.cursorKeys.left.on(
-      "down",
-      function (event) {
-        this.leftButton.emit("down");
-      },
-      this
-    );
-
-    this.gamepad.gamepad.touchCursor.cursorKeys.right.on(
-      "down",
-      function (event) {
-        this.rightButton.emit("down");
-      },
-      this
-    );
-
-    this.gamepad.gamepad.touchCursor.cursorKeys.left.on(
-      "up",
-      function (event) {
-        this.leftButton.emit("up");
-      },
-      this
-    );
-
-    this.gamepad.gamepad.touchCursor.cursorKeys.right.on(
-      "up",
-      function (event) {
-        this.rightButton.emit("up");
-      },
-      this
-    );
-
-    this.gamepad.gamepad.touchCursor.cursorKeys.up.on(
-      "up",
-      function (event) {
-        this.up = false;
-      },
-      this
-    );
-    this.gamepad.xButton.on(
-      "pointerdown",
-      function () {
-        this.jumpButton.emit("down");
-      },
-      this
-    );
-
-    this.gamepad.xButton.on(
-      "pointerup",
-      function () {
-        this.jumpButton.emit("up");
-      },
-      this
-    );
-
-    this.gamepad.zButton.on(
-      "pointerdown",
-      function () {
-        this.attackButton.emit("down");
-      },
-      this
-    );
-
-    this.gamepad.zButton.on(
-      "pointerup",
-      function () {
-        this.attackButton.emit("up");
-      },
-      this
-    );
-    scene.input.addPointer(3);
+  isGrounded() {
+    const b = this.sprite.body;
+    return b.blocked.down || b.touching.down;
   }
 
   update() {
-    if (this.alive) {
-      // Skip left/right walk override while the Rocket Axe is firing so
-      // the boost's 300px/s horizontal impulse isn't clamped back down
-      // to walkSpeed on the very next frame when Jammy is running.
-      if (!this.rocketBoostActive) {
-        if(this.leftIsDown){this.sprite.body.setVelocityX(-this.walkSpeed);}
-        if(this.rightIsDown){this.sprite.body.setVelocityX(this.walkSpeed);}
-      }
-      if (
-        !this.falling &&
-        !this.jumping &&
-        !this.walkingLeft &&
-        !this.walkingRight &&
-        !this.wasWalking &&
-        !this.shootingPoseActive &&
-        (this.sprite.body.touching.down || this.sprite.body.blocked.down)
-      ) {
-        this.rest();
-      } else {
-        if (
-          (this.sprite.body.touching.down || this.sprite.body.blocked.down) &&
-          (this.leftIsDown || this.rightIsDown)
-        ) {
-          this.move(this.facing);
-        }
-      }
+    const body = this.sprite.body;
+    if (!this.alive) {
+      body.setVelocityX(0);
+      return;
+    }
+    const now = scene.time.now;
+    const grounded = this.isGrounded();
 
-      if (
-        (this.sprite.body.touching.down || this.sprite.body.blocked.down) &&
-        this.sprite.body.velocity.y >= 0
-      ) {
-        this.canDoubleJump = false;
+    // Fell out of the world (below the map) — count it as a pit death
+    if (scene.map && this.sprite.y > scene.map.heightInPixels + 48) {
+      this.instantDeath();
+      return;
+    }
+
+    if (grounded) {
+      this.coyoteUntil = now + this.coyoteMs;
+      if (body.velocity.y >= 0) {
         this.jumping = false;
         this.falling = false;
+        this.canDoubleJump = false;
       }
-
-      // Disable controls when taking damage and move Jammy slowly in
-      // direction of damage taken
-      if (this.takingDamage) {
-        this.controlsEnabled = false;
-
-        // Move Jammy slowly
-        var movement = this.hitDirection == 1 ? -10 : 10;
-        this.sprite.body.velocity.x = movement;
-
-        // Play damage animation
-        if (this.facing == "right") {
-          this.sprite.play("taking-damage-right");
-        } else {
-          this.sprite.play("taking-damage-left");
-        }
+    } else {
+      if (body.velocity.y > 0) this.falling = true;
+      // Walked off a ledge: once the coyote window is gone the Rocket
+      // Axe is still available, exactly as it would be after a jump.
+      if (!this.jumping && now >= this.coyoteUntil && !this.rocketBoostActive) {
+        this.canDoubleJump = true;
       }
-
-      // Controls
-    }
-    else {
-      this.sprite.body.setVelocityX(0);
     }
 
+    // Jump pressed a hair before landing
+    if (this.jumpBufferedUntil > now && grounded && this.controlsEnabled && !this.takingDamage) {
+      this.jumpBufferedUntil = 0;
+      this._groundJump();
+    }
+
+    // Stunned: drift away from whatever hit us and show the hurt frame
+    if (this.takingDamage) {
+      body.setVelocityX(this.hitDirection * 30);
+      this.sprite.play(this.facing === "right" ? "taking-damage-right" : "taking-damage-left", true);
+      return;
+    }
+
+    const input = this.controlsEnabled;
+    const left = input && (anyKeyDown(this.leftKeys) || this.touch.left);
+    const right = input && (anyKeyDown(this.rightKeys) || this.touch.right);
+    this.up = input && (anyKeyDown(this.aimKeys) || this.touch.up);
+
+    this.walkingLeft = left && !right;
+    this.walkingRight = right && !left;
+
+    // Skip the walk override while the Rocket Axe is firing so the
+    // boost's horizontal impulse isn't clamped back down to walkSpeed.
+    if (!this.rocketBoostActive) {
+      if (this.walkingLeft) {
+        body.setVelocityX(-this.walkSpeed);
+        this.facing = "left";
+      } else if (this.walkingRight) {
+        body.setVelocityX(this.walkSpeed);
+        this.facing = "right";
+      } else {
+        body.setVelocityX(0);
+      }
+    }
+
+    if (this.rocketBoostActive) return; // boost owns the sprite
+
+    const dir = this.facing;
+    if (!grounded) {
+      this.sprite.play("jumping-" + dir, true);
+    } else if (this.walkingLeft || this.walkingRight) {
+      this.sprite.play("running-" + dir, true);
+    } else if (!this.shootingPoseActive) {
+      this.sprite.play("resting-" + dir, true);
+    }
   }
+
+  // ---------------------------------------------------------------
+  // Weapons
+  // ---------------------------------------------------------------
+  cycleWeapon() {
+    if (!this.alive || !this.controlsEnabled) return;
+    const coll = getGuitarCollection();
+    if (coll.owned.length <= 1) return;
+    const i = coll.owned.indexOf(coll.equipped);
+    coll.equipped = coll.owned[(i + 1) % coll.owned.length];
+    this.currentWeapon = GUITAR_CATALOG[coll.equipped].weapon;
+    const ui = scene.scene.get("UIScene");
+    if (ui && ui.setWeapon) ui.setWeapon(this.currentWeapon);
+    scene.sound.play("antTokenCollectSound", { volume: 0.35, rate: 1.6 });
+  }
+
   shoot() {
+    if (!this.alive || !this.controlsEnabled) return;
     if (this.currentWeapon === "seed") {
       this.fireSeed();
     } else if (this.currentWeapon === "bass") {
@@ -394,79 +205,33 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
     this.lastBassTime = now;
     new BassWave(scene, this.sprite.x, this.sprite.y + 8, this.facing);
     // Low rumble: pitched-down laser + a soft thump
-    if (scene.cache.audio.exists("laserSound")) {
-      scene.sound.play("laserSound", { volume: 0.9, rate: 0.45 });
-    }
-    if (scene.cache.audio.exists("shortWave")) {
-      scene.time.delayedCall(60, () => scene.sound.play("shortWave", { rate: 0.5, volume: 0.6 }));
-    }
+    scene.sound.play("laserSound", { volume: 0.9, rate: 0.45 });
+    scene.time.delayedCall(60, () => scene.sound.play("shortWave", { rate: 0.5, volume: 0.6 }));
     scene.cameras.main.shake(90, 0.0028);
   }
 
   playShootingPose() {
     // Angry standing-still-firing sprite — only while stationary
-    const stationary =
-      !this.walkingLeft &&
-      !this.walkingRight &&
-      !this.jumping &&
-      !this.falling &&
-      (this.sprite.body.touching.down || this.sprite.body.blocked.down);
+    const stationary = !this.walkingLeft && !this.walkingRight && this.isGrounded();
     if (!stationary) return;
-    const anim = this.facing === "right" ? "shooting-right" : "shooting-left";
     this.shootingPoseActive = true;
-    this.sprite.play(anim, true);
-    // Up-aim needs its own sprite frame to look right — the atlas
-    // doesn't have one yet, so no tilt. Left as-is until we have
-    // shooting-up-right/left frames in jammy.json.
+    this.sprite.play(this.facing === "right" ? "shooting-right" : "shooting-left", true);
     if (this._shootPoseTimer) this._shootPoseTimer.remove(false);
     this._shootPoseTimer = scene.time.delayedCall(320, () => {
       this.shootingPoseActive = false;
-      if (!this.alive) return;
-      if (
-        !this.walkingLeft &&
-        !this.walkingRight &&
-        !this.jumping &&
-        !this.falling
-      ) {
-        this.rest();
-      }
     });
   }
 
   fireSonic() {
-    if (scene.bullets.getChildren().length < this.bulletLimit) {
-      if (this.facing == "right") {
-        let audiowave = new AudioWave(
-          scene,
-          this.sprite.x,
-          this.sprite.y + 5,
-          this.facing,
-          this.up,
-          this.bigShot
-        );
-      } else {
-        let audiowave = new AudioWave(
-          scene,
-          this.sprite.x - this.sprite.width,
-          this.sprite.y + 5,
-          this.facing,
-          this.up,
-          this.bigShot
-        );
-      }
-    }
+    if (scene.bullets.countActive(true) >= this.bulletLimit) return;
+    new AudioWave(scene, this.sprite.x, this.sprite.y + 5, this.facing, this.up, this.bigShot);
     if (this.bigShot) {
       this.bigShot = false;
-      this.sprite.setTint(0xffffff);
+      this.sprite.clearTint();
       this.sprite.setPipeline("Electric");
-      scene.time.delayedCall(
-        500,
-        function () {
-          this.sprite.resetPipeline();
-        },
-        [],
-        this
-      );
+      scene.time.delayedCall(500, () => {
+        if (this.sprite && this.sprite.active) this.sprite.resetPipeline();
+      });
     }
   }
 
@@ -496,77 +261,61 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
     if (ui && ui.setSeedAmmo) ui.setSeedAmmo(this.seedAmmo);
   }
 
-  move(direction) {
-    if (this.alive) {
-      if (direction == "right") {
-        this.walkingRight = true;
-      } else {
-        this.walkingLeft = true;
-      }
-      this.wasWalking = true;
-      if (direction == "right") {
-        this.sprite.body.velocity.x = this.walkSpeed;
-        this.sprite.body.setSize(18, 28, 8, 4);
-
-        this.sprite.play("running-right", true);
-      } else if (direction == "left") {
-        this.sprite.body.velocity.x = -this.walkSpeed;
-        this.sprite.body.setSize(18, 28, 8, 4);
-
-        this.sprite.play("running-left", true);
-      }
-    }
-  }
-
-  rest() {
-    if (this.alive) {
-      if (!this.leftIsDown && !this.rightIsDown) {
-        this.sprite.body.velocity.x = 0;
-      }
-      if (this.facing == "right") {
-        this.sprite.play("resting-right", true);
-        this.sprite.body.setSize(18, 28, 8, 4);
-      } else {
-        this.sprite.play("resting-left", true);
-        this.sprite.body.setSize(18, 28, 8, 4);
-      }
-    }
-  }
-
+  // ---------------------------------------------------------------
+  // Movement
+  // ---------------------------------------------------------------
   jump() {
-    if (
-      (this.sprite.body.touching.down || this.sprite.body.blocked.down) &&
-      !this.canDoubleJump
-    ) {
-      this.sprite.body.velocity.y = this.jumpVelocity;
-      this.jumping = true;
-      this.falling = false;
-      this.walkingLeft = false;
-      this.walkingRight = false;
-      if (!this.jumpSound.isPlaying) {
-        // Prevent rapid jump sounds
-        this.jumpSound.play();
-      }
-
-      this.canDoubleJump = true;
-    } else if (this.canDoubleJump) {
-      // Rocket Axe — Jammy kicks off his guitar and the boosters
-      // fire, propelling him up and forward in a long arc.
-      this._rocketAxeBoost();
+    if (!this.alive || !this.controlsEnabled || this.takingDamage) return;
+    const now = scene.time.now;
+    const grounded = this.isGrounded();
+    if ((grounded || now < this.coyoteUntil) && !this.jumping) {
+      this._groundJump();
+    } else if (this.canDoubleJump && !this.rocketBoostActive) {
       this.canDoubleJump = false;
-      return; // _rocketAxeBoost owns the texture + animation during the boost
+      if (this.rocketAxe) {
+        // Rocket Axe — Jammy kicks off his guitar and the boosters fire,
+        // propelling him up and forward in a long arc.
+        this._rocketAxeBoost();
+      } else {
+        this._doubleJump();
+      }
+    } else if (!grounded) {
+      this.jumpBufferedUntil = now + this.jumpBufferMs;
     }
-    if (this.facing == "right") {
-      this.sprite.play("jumping-right", true);
-    } else {
-      this.sprite.play("jumping-left", true);
-    }
+  }
+
+  _groundJump() {
+    this.sprite.body.setVelocityY(this.jumpVelocity);
+    this.jumping = true;
+    this.falling = false;
+    this.coyoteUntil = 0;
+    this.canDoubleJump = true;
+    if (!this.jumpSound.isPlaying) this.jumpSound.play();
+    this.sprite.play(this.facing === "right" ? "jumping-right" : "jumping-left", true);
+  }
+
+  _doubleJump() {
+    this.sprite.body.setVelocityY(this.doubleJumpVelocity);
+    this.jumping = true;
+    this.falling = false;
+    this.sprite.play(this.facing === "right" ? "jumping-right" : "jumping-left", true);
+    scene.sound.play("jumpSound", { rate: 1.25, volume: 0.9 });
+    // Little dust ring under his feet so the second jump reads
+    const ring = scene.add.circle(this.sprite.x, this.sprite.y + 12, 6, 0xffffff, 0.6);
+    ring.setDepth(99);
+    scene.tweens.add({
+      targets: ring,
+      scaleX: 2.2,
+      scaleY: 0.6,
+      alpha: 0,
+      duration: 220,
+      onComplete: () => ring.destroy(),
+    });
   }
 
   _rocketAxeBoost() {
     const dirX = this.facing === "right" ? 1 : -1;
-    this.sprite.body.velocity.y = -560;
-    this.sprite.body.velocity.x = dirX * 300;
+    this.sprite.body.setVelocity(dirX * 300, -560);
     this.jumping = true;
     this.falling = false;
     this.rocketBoostActive = true;
@@ -575,51 +324,61 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
     const boostMs = 520;
 
     // Swap Jammy's sprite to the hand-composited rocket-axe atlas
-    // (body + guitar-under-feet + flame). Original frames are 32x32,
-    // this one is 40x50, so we remember the original body size and
-    // restore it on boost end.
-    if (!this._rocketOrigBody) {
-      this._rocketOrigBody = {
-        w: this.sprite.body.width,
-        h: this.sprite.body.height,
-        ox: this.sprite.body.offset.x,
-        oy: this.sprite.body.offset.y,
-      };
-    }
+    // (body + guitar-under-feet + flame).
     this.sprite.setTexture("jammy-rocketaxe", "rocketaxe-right1");
     this.sprite.setFlipX(dirX === -1);
     this.sprite.play("jammy-rocketaxe-right", true);
 
     // Launch sfx
-    if (s.cache.audio.exists("laserSound")) {
-      s.sound.play("laserSound", { volume: 1.0, rate: 0.55 });
-    }
-    if (s.cache.audio.exists("shortExplosion")) {
-      s.time.delayedCall(70, () => {
-        if (s.cache && s.cache.audio.exists("shortExplosion")) {
-          s.sound.play("shortExplosion", { volume: 0.55, rate: 0.9 });
-        }
-      });
-    }
+    s.sound.play("laserSound", { volume: 1.0, rate: 0.55 });
+    s.time.delayedCall(70, () => s.sound.play("shortExplosion", { volume: 0.55, rate: 0.9 }));
+
+    // Exhaust puffs trailing behind the guitar
+    this._rocketPuffTimer = s.time.addEvent({
+      delay: 45,
+      repeat: Math.floor(boostMs / 45),
+      callback: () => {
+        if (!this.sprite || !this.sprite.active) return;
+        const puff = s.add.circle(
+          this.sprite.x - dirX * 10 + Phaser.Math.Between(-3, 3),
+          this.sprite.y + 16,
+          2 + Math.random() * 2,
+          Math.random() < 0.5 ? 0xffb347 : 0xff6a3d,
+          0.9
+        );
+        puff.setDepth(99);
+        s.tweens.add({
+          targets: puff,
+          y: puff.y + 10,
+          alpha: 0,
+          scale: 1.8,
+          duration: 260,
+          onComplete: () => puff.destroy(),
+        });
+      },
+    });
 
     // Revert sprite at boost end
     if (this._rocketEndTimer) this._rocketEndTimer.remove(false);
-    this._rocketEndTimer = s.time.delayedCall(boostMs, () => {
-      this.rocketBoostActive = false;
-      if (!this.sprite || !this.sprite.active) return;
-      this.sprite.setFlipX(false);
-      if (this.facing === "right") this.sprite.play("resting-right", true);
-      else this.sprite.play("resting-left", true);
-    });
+    this._rocketEndTimer = s.time.delayedCall(boostMs, () => this._endRocketBoost());
   }
 
+  _endRocketBoost() {
+    if (!this.rocketBoostActive) return;
+    this.rocketBoostActive = false;
+    if (this._rocketPuffTimer) this._rocketPuffTimer.remove(false);
+    if (!this.sprite || !this.sprite.active || !this.alive) return;
+    this.sprite.setFlipX(false);
+    this.sprite.play(this.isGrounded() ? "resting-" + this.facing : "jumping-" + this.facing, true);
+  }
+
+  // ---------------------------------------------------------------
+  // Health
+  // ---------------------------------------------------------------
   powerUp(type, val = 0) {
     switch (type) {
       case "heal":
-        this.hp += val;
-        if (this.hp > this.maxHP) {
-          this.hp = this.maxHP;
-        }
+        this.hp = Math.min(this.maxHP, this.hp + val);
         break;
       case "bigShot":
         this.bigShot = true;
@@ -627,120 +386,122 @@ this.secondaryShootButton = scene.input.keyboard.addKey(controls.secondaryShoot)
         this.sprite.setPipeline("Electric2");
         break;
     }
-    // Play power up sound
     scene.sound.play("powerUpSound");
   }
 
-  takeDamage() {
-    if (this.alive && !this.invincible) {
-      this.controlsEnabled = false;
-      this.hp--;
-
-      // Blubert feels it too — companion flashes/recoils in sympathy
-      if (scene.blubert && scene.blubert.takeSympathyDamage) {
-        scene.blubert.takeSympathyDamage();
-      }
-
-      this.takingDamage = true;
-      this.flashOnce();
-      this.invincible = true;
-      this.sprite.scene.time.addEvent({
-        delay: this.invincibiltyTime,
-        callback: this.restoreVulnerability,
-        callbackScope: this,
-      }); // Invicibility delay
-      this.sprite.scene.time.addEvent({
-        delay: 500,
-        callback: function () {
-          this.takingDamage = false;
-          this.controlsEnabled = true;
-          if (this.hp <= 0) {
-            this.die();
-          }
-        },
-        callbackScope: this,
-      });
-      this.invincibilityLoop = this.sprite.scene.time.addEvent({
-        delay: 100,
-        callback: this.blinkInvincible,
-        callbackScope: this,
-      });
-      this.sprite.scene.sound.play("jammyTakeDamageSound");
+  // sourceX (optional): world x of whatever hurt Jammy, so the knockback
+  // pushes him away from it.
+  takeDamage(sourceX) {
+    if (!this.alive || this.invincible) return;
+    this.hp--;
+    if (typeof sourceX === "number") {
+      this.hitDirection = sourceX > this.sprite.x ? -1 : 1;
+    } else {
+      this.hitDirection = this.facing === "right" ? -1 : 1;
     }
-  }
 
-  // Flash Red when taking damage
-  flashOnce(tint) {
-    this.sprite.tint = tint ? tint : 0xff0000;
-    this.sprite.scene.time.addEvent({
-      delay: 50,
-      callback: function () {
-        this.restoreAlpha();
-        this.removeTint();
+    // Blubert feels it too — companion flashes/recoils in sympathy
+    if (scene.blubert && scene.blubert.takeSympathyDamage) {
+      scene.blubert.takeSympathyDamage();
+    }
+
+    this._endRocketBoost();
+    this.takingDamage = true;
+    this.controlsEnabled = false;
+    this.invincible = true;
+    this.shootingPoseActive = false;
+    if (this.isGrounded()) this.sprite.body.setVelocityY(-90);
+    this.flashOnce();
+
+    const t = scene.time;
+    if (this._stunTimer) this._stunTimer.remove(false);
+    this._stunTimer = t.delayedCall(this.stunTime, () => {
+      this.takingDamage = false;
+      if (this.hp <= 0) {
+        this.die();
+      } else if (this.alive) {
+        this.controlsEnabled = true;
+      }
+    });
+    if (this._invTimer) this._invTimer.remove(false);
+    this._invTimer = t.delayedCall(this.invincibilityTime, () => this.restoreVulnerability());
+    if (this.invincibilityLoop) this.invincibilityLoop.remove(false);
+    this.invincibilityLoop = t.addEvent({
+      delay: 80,
+      loop: true,
+      callback: () => {
+        if (this.sprite && this.sprite.active) this.sprite.alpha = this.sprite.alpha < 1 ? 1 : 0.35;
       },
-      callbackScope: this,
     });
+    scene.sound.play("jammyTakeDamageSound");
+    scene.cameras.main.shake(80, 0.004);
   }
 
-  // Blink to show invincibility
-  blinkInvincible() {
-    this.sprite.alpha = 0;
-    this.sprite.scene.time.addEvent({
-      delay: 25,
-      callback: this.restoreAlpha,
-      callbackScope: this,
-    });
+  // Flash red when taking damage
+  flashOnce(tint) {
+    this.sprite.setTint(tint ? tint : 0xff0000);
+    scene.time.delayedCall(60, () => this.removeTint());
   }
 
   restoreAlpha() {
-    this.sprite.alpha = 1;
+    if (this.sprite) this.sprite.alpha = 1;
   }
 
   removeTint() {
-    this.sprite.tint = 0xffffff;
+    if (!this.sprite || !this.sprite.active) return;
+    // Keep the bigShot charge colour if it's still armed
+    if (this.bigShot) this.sprite.setTint(0x0000f5);
+    else this.sprite.clearTint();
   }
 
   restoreVulnerability() {
+    if (this.invincibilityLoop) {
+      this.invincibilityLoop.remove(false);
+      this.invincibilityLoop = null;
+    }
     this.restoreAlpha();
     this.removeTint();
     this.invincible = false;
-    this.takingDamage = false;
   }
 
-  die = function () {
-    // Make sure user cannot move
-    this.controlsEnabled = false;
-
-    // Stop the music
-
-    this.sprite.scene.sound.stopAll();
-
-    // Clear persisting Jammy Data
-    this.sprite.scene.jammyData = null;
-
-    // Kill Jammy and show death animation
+  die() {
+    if (!this.alive) return;
     this.alive = false;
+    this.controlsEnabled = false;
+    this.takingDamage = false;
+    this._endRocketBoost();
+    if (this.invincibilityLoop) this.invincibilityLoop.remove(false);
+    this.restoreAlpha();
+    this.sprite.clearTint();
+    this.sprite.resetPipeline();
 
-    // Play death sound
-    this.sprite.scene.sound.play("jammyDeathSound");
-    this.sprite.body.setSize(this.sprite.width / 6, this.sprite.width / 6);
-    if (this.facing == "right") {
-      this.sprite.play("dead-right");
-    } else {
-      this.sprite.play("dead-left");
-    }
-    // Reset scene after short delay
-    this.sprite.scene.time.addEvent({
-      delay: 1000,
-      callback: function () {
-        //this.destroy();
-        this.sprite.scene.scene.restart();
-      },
-      callbackScope: this,
+    const s = scene;
+    s.sound.stopAll();
+    s.sound.play("jammyDeathSound");
+
+    // Dying means a fresh start for the stage: full health
+    const run = getRunState();
+    if (run) run.hp = this.maxHP;
+
+    // Lie down and stop interacting with things
+    this.sprite.body.setVelocity(0, 0);
+    this.sprite.body.setSize(16, 12, true);
+    this.sprite.body.checkCollision.none = false;
+    this.sprite.play(this.facing === "right" ? "dead-right" : "dead-left");
+
+    // Fade and restart the stage after a short pause
+    // A stage that is already ending (e.g. the boss fell to Jammy's
+    // last shot as he went down) wins over the restart.
+    s.time.delayedCall(900, () => {
+      if (!s._changing) s.cameras.main.fadeOut(500, 0, 0, 0);
     });
-  };
+    s.time.delayedCall(1400, () => {
+      if (!s._changing) s.scene.restart();
+    });
+  }
 
   instantDeath() {
+    if (!this.alive) return;
     this.hp = 0;
     this.die();
   }

@@ -6,6 +6,7 @@ class WatermelonBoss extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.alive = true;
+    this.dead = false;
     // Set basic character properties
     this.maxHP = 60;
     this.hp = this.maxHP;
@@ -20,8 +21,6 @@ class WatermelonBoss extends Phaser.Physics.Arcade.Sprite {
     this.attacking = false;
     this.firingSeeds = false;
     this.nextActionCountdown = 180; // 3-second countdown
-    scene.enemyHitSound = scene.sound.add("enemyHitSound");
-    scene.bossDeathSound = scene.sound.add("bossDeathSound");
 
 
     // Physics and body setup
@@ -37,16 +36,22 @@ class WatermelonBoss extends Phaser.Physics.Arcade.Sprite {
 
     // Add to enemies group
     scene.enemies.add(this);
-    this.actionTimer = // Execute action countdown
-      scene.time.addEvent({
-        delay: 500,
-        callback: function () {
-          this.faceJammy();
-          this.swapAction();
-        },
-        callbackScope: this,
-        repeat: -1,
-      });
+    // Short intro before the first attack so the stage card can be read
+    this.actionTimer = scene.time.addEvent({
+      delay: 500,
+      startAt: -1500,
+      callback: function () {
+        this.faceJammy();
+        this.swapAction();
+      },
+      callbackScope: this,
+      repeat: -1,
+    });
+    this.once(Phaser.GameObjects.Events.DESTROY, () => {
+      if (this.actionTimer) this.actionTimer.remove(false);
+      if (this.bounceLoop) this.bounceLoop.remove(false);
+      if (this.invincibilityLoop) this.invincibilityLoop.remove(false);
+    });
 
     this.on(
       "fire",
@@ -146,6 +151,7 @@ class WatermelonBoss extends Phaser.Physics.Arcade.Sprite {
     ];
 
     animConfig.forEach(({ key, frames, frameRate, repeat }) => {
+      if (scene.anims.exists(key)) return;
       scene.anims.create({
         key,
         frames: scene.anims.generateFrameNames("watermelon-boss", frames),
@@ -229,8 +235,9 @@ if(this.alive){
     }
   }
 
-  takeDamage() {
-    this.hp--;
+  takeDamage(val = 1) {
+    if (!this.alive || this.invincible) return;
+    this.hp -= Math.max(1, val || 1);
     this.takingDamage = true;
     this.flashOnce();
     this.invincible = true;
@@ -255,7 +262,7 @@ if(this.alive){
       loop: true,
     });
 
-    this.scene.enemyHitSound.play();
+    this.scene.sound.play("enemyHitSound");
     if(this.hp<=0){
       this.die();
     }
@@ -285,9 +292,12 @@ if(this.alive){
   }
 
   die() {
-this.alive=false;
+    if (this.dead) return;
+    this.dead = true;
+    this.alive = false;
+    this.invincible = true;
 
-scene.scene.get("UIScene").setScore(this.score);
+    scene.scene.get("UIScene").setScore(this.score);
 
 //check for any timers and remove them
 
@@ -315,18 +325,15 @@ scene.scene.get("UIScene").setScore(this.score);
     });
 
     this.body.setVelocity(0);
+    this.setAlpha(1);
+    this.clearTint();
     this.play("dead");
     this.body.setSize(this.frame.width, this.frame.height);
-  
-    this.scene.bossDeathSound.play();
-    scene.time.addEvent({
-      delay: 2000,
-      callback: () => {
-        scene.scene.stop("UIScene");
-        scene.scene.start("CutSceneWatermelonDefeated");
-      },
-      callbackScope: this,
-    });
-    
+    this.body.setImmovable(true);
+
+    this.scene.sound.stopByKey("BossBattle");
+    this.scene.sound.play("bossDeathSound");
+    this.scene.cameras.main.shake(400, 0.01);
+    if (this.scene.bossDefeated) this.scene.bossDefeated();
   }
 }

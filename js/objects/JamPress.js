@@ -62,7 +62,7 @@ class JamPress extends Phaser.Physics.Arcade.Sprite {
     // Solid against Jammy; the touch only hurts while slamming.
     scn.physics.add.collider(scn.jammy.sprite, this, () => {
       if (this.state === "slam" && this.scene.jammy.alive) {
-        this.scene.jammy.takeDamage();
+        this.scene.jammy.takeDamage(this.x);
       }
     });
 

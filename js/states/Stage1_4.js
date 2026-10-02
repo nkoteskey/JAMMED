@@ -30,24 +30,11 @@ class Stage1_4 extends Phaser.Scene {
     this._decorateVats();
 
     // Groups
-    this.bullets = this.physics.add.group();
-    this.collectibles = this.physics.add.group();
-    this.enemies = this.add.group();
-    this.enemyProjectiles = this.physics.add.group();
+    LevelCommon.createGroups(this);
 
     // Jammy
-    if (this.jammyData) {
-      this.jammy = new Jammy(
-        this.jammyData.nextX,
-        this.jammyData.nextY,
-        this.jammyData.hp,
-        this.jammyData.facing
-      );
-    } else {
-      this.jammy = new Jammy(52, 150);
-    }
+    this.jammy = new Jammy(52, 150);
     this.jammy.sprite.setDepth(100);
-    this.jammy.controlsEnabled = true;
     this.children.bringToTop(this.jammy.sprite);
 
     this.cameras.main.startFollow(this.jammy.sprite);
@@ -55,24 +42,8 @@ class Stage1_4 extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, 240);
 
     // Collisions
-    this.physics.add.overlap(
-      this.jammy.sprite,
-      this.collectibles,
-      (jammy, collectible) => {
-        collectible.effect();
-      }
-    );
-    this.physics.add.collider(this.jammy.sprite, this.groundLayer);
-    this.physics.add.collider(this.jammy.sprite, this.deathBlocksLayer, () =>
-      this.jammy.instantDeath()
-    );
     this._changing = false;
-    this.physics.add.collider(this.jammy.sprite, this.sceneChangeLayer, () =>
-      this.changeScene()
-    );
-    this.physics.add.collider(this.collectibles, this.groundLayer);
-    this.physics.add.collider(this.enemies, this.groundLayer);
-    this.physics.add.collider(this.enemies, this.enemyStopBlocksLayer);
+    LevelCommon.wireCollisions(this, { onSceneChange: () => this.changeScene() });
 
     // Conveyor belts (need Jammy to exist first)
     this.belts = [
@@ -144,6 +115,8 @@ class Stage1_4 extends Phaser.Scene {
 
     this._buildExitDoor();
     this._showTitleCard();
+    LevelCommon.registerStage(this);
+    LevelCommon.unlockRocketAxe(this);
 
     // Sync UI weapon indicator
     const ui = this.scene.get("UIScene");
@@ -160,18 +133,7 @@ class Stage1_4 extends Phaser.Scene {
   }
 
   tryReviveBlubert() {
-    if (this.blubert || !this.jammy || (this.blubertRevivesLeft || 0) <= 0) return;
-    this.blubertRevivesLeft -= 1;
-    this.blubert = new Blubert(this, this.jammy);
-    if (this.blubert.sprite) {
-      this.blubert.sprite.setScale(0.2);
-      this.blubert.sprite.setAlpha(0.2);
-      this.tweens.add({
-        targets: this.blubert.sprite,
-        scaleX: 1, scaleY: 1, alpha: 1,
-        duration: 260, ease: "Back.easeOut",
-      });
-    }
+    LevelCommon.tryReviveBlubert(this);
   }
 
   // ------------------------------------------------------------------
@@ -561,12 +523,6 @@ class Stage1_4 extends Phaser.Scene {
   }
 
   changeScene() {
-    if (this._changing) return;
-    this._changing = true;
-    this.jammy.controlsEnabled = false;
-    this.cameras.main.fadeOut(500, 0, 0, 0);
-    this.cameras.main.once("camerafadeoutcomplete", () => {
-      this.scene.start("EndCredits");
-    });
+    LevelCommon.finishStage(this, "EndCredits");
   }
 }

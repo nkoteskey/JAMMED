@@ -15,10 +15,13 @@ class PowerUp extends Phaser.Physics.Arcade.Sprite {
     scene.physics.add.collider(this, scene.enemyStopBlocksLayer, () =>
       this.destroy()
     );
+    // Tiled properties are applied right after construction, so pick
+    // the frame on the next tick. Heart = heal, bolt = big shot.
     scene.time.addEvent({
       delay: 10,
       callback: () => {
-        this.setFrame(this.data.values.powerUpType=='heal?'? 'still1' : 'still2');
+        if (!this.active) return;
+        this.setFrame(this.getPowerUpType() === "heal" ? "still1" : "still2");
       },
     });
 
@@ -26,8 +29,12 @@ class PowerUp extends Phaser.Physics.Arcade.Sprite {
 
   update() {}
 
+  getPowerUpType() {
+    return (this.data && this.data.values && this.data.values.powerUpType) || "heal";
+  }
+
   effect() {
-    scene.jammy.powerUp(this.data.values.powerUpType, this.val);
+    scene.jammy.powerUp(this.getPowerUpType(), this.val);
     this.destroy();
   }
 }

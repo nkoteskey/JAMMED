@@ -9,6 +9,7 @@ class Stage1_3 extends Phaser.Scene {
 
   create() {
     this.sound.stopAll();
+    this._changing = false;
     this.sound.play("Level1MusicLoop", { loop: true });
 
     // Make sure the teardrop texture exists before the HUD tries to show it
@@ -47,10 +48,7 @@ class Stage1_3 extends Phaser.Scene {
     this.sceneChangeLayer.setCollisionByExclusion(-1);
     this.enemyStopBlocksLayer.setCollisionByExclusion(-1);
 
-    this.bullets = this.physics.add.group();
-    this.collectibles = this.physics.add.group();
-    this.enemies = this.add.group();
-    this.enemyProjectiles = this.physics.add.group();
+    LevelCommon.createGroups(this);
 
     // Tilemap-driven spawns
     this.map.createFromObjects("PowerUpsLayer", {
@@ -79,20 +77,18 @@ class Stage1_3 extends Phaser.Scene {
       key: "watermelon-snapper",
       classType: WatermelonSnapper,
     });
+    // The Tiled objects sit at y=224 — under the sand, where a snapper
+    // can neither be seen nor reach Jammy. Seat them on the surface.
+    this.enemies.getChildren().forEach((e) => {
+      if (e instanceof WatermelonSnapper) {
+        e.setPosition(e.x, 170);
+        e.setDepth(5);
+      }
+    });
 
     // Jammy
-    if (this.jammyData) {
-      this.jammy = new Jammy(
-        this.jammyData.nextX,
-        this.jammyData.nextY,
-        this.jammyData.hp,
-        this.jammyData.facing
-      );
-    } else {
-      this.jammy = new Jammy(60, 100);
-    }
+    this.jammy = new Jammy(60, 100);
     this.jammy.sprite.setDepth(100);
-    this.jammy.controlsEnabled = true;
     this.children.bringToTop(this.jammy.sprite);
 
     this.cameras.main.startFollow(this.jammy.sprite);
@@ -106,25 +102,7 @@ class Stage1_3 extends Phaser.Scene {
     );
 
     // Collisions
-    this.physics.add.overlap(
-      this.jammy.sprite,
-      this.collectibles,
-      (jammy, collectible) => {
-        collectible.effect();
-      }
-    );
-    this.physics.add.collider(this.jammy.sprite, this.groundLayer);
-    this.physics.add.collider(this.jammy.sprite, this.deathBlocksLayer, () =>
-      this.jammy.instantDeath()
-    );
-    this.physics.add.collider(this.jammy.sprite, this.sceneChangeLayer, () =>
-      this.changeScene()
-    );
-    this.physics.add.collider(this.collectibles, this.groundLayer);
-    this.physics.add.collider(this.enemies, this.groundLayer);
-    this.physics.add.collider(this.enemies, this.enemyStopBlocksLayer);
-
-    // Bullets vs ground — AudioWaves don't currently collide with ground, so skip
+    LevelCommon.wireCollisions(this, { onSceneChange: () => this.changeScene() });
 
     // Decoy bushes — visually identical to BushZomberry bushes but empty.
     // Mixed in so the player can't tell by sight alone; Blubert's eyes
@@ -196,6 +174,8 @@ class Stage1_3 extends Phaser.Scene {
     // real portal object at the end of the run.
     this._buildExitPortal();
     this._showTitleCard();
+    LevelCommon.registerStage(this);
+    LevelCommon.unlockRocketAxe(this);
 
     // Sync UI weapon indicator
     const ui = this.scene.get("UIScene");
@@ -212,19 +192,7 @@ class Stage1_3 extends Phaser.Scene {
   }
 
   tryReviveBlubert() {
-    if (this.blubert || !this.jammy || (this.blubertRevivesLeft || 0) <= 0) return;
-    this.blubertRevivesLeft -= 1;
-    this.blubert = new Blubert(this, this.jammy);
-    // Small pop-in so the revive reads
-    if (this.blubert.sprite) {
-      this.blubert.sprite.setScale(0.2);
-      this.blubert.sprite.setAlpha(0.2);
-      this.tweens.add({
-        targets: this.blubert.sprite,
-        scaleX: 1, scaleY: 1, alpha: 1,
-        duration: 260, ease: "Back.easeOut",
-      });
-    }
+    LevelCommon.tryReviveBlubert(this);
   }
 
   _buildFruitPlatforms() {
@@ -665,12 +633,6 @@ class Stage1_3 extends Phaser.Scene {
 
   changeScene() {
     // Onward to the fortress stage — The Jam Works
-    if (this._changing) return;
-    this._changing = true;
-    this.jammy.controlsEnabled = false;
-    this.cameras.main.fadeOut(500, 0, 0, 0);
-    this.cameras.main.once("camerafadeoutcomplete", () => {
-      this.scene.start("Stage1_4");
-    });
+    LevelCommon.finishStage(this, "Stage1_4");
   }
 }

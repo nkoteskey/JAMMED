@@ -131,7 +131,7 @@ class NeedleCactus extends Phaser.Physics.Arcade.Sprite {
 
     // Spiky to the touch
     this.jammyOverlap = scn.physics.add.overlap(this, scn.jammy.sprite, () => {
-      if (!this.dead && this.scene.jammy.alive) this.scene.jammy.takeDamage();
+      if (!this.dead && this.scene.jammy.alive) this.scene.jammy.takeDamage(this.x);
     });
 
     scn.enemies.add(this);
@@ -225,7 +225,7 @@ class NeedleCactus extends Phaser.Physics.Arcade.Sprite {
     n.body.setVelocity(Math.cos(ang) * speed, Math.sin(ang) * speed);
 
     const jOverlap = this.scene.physics.add.overlap(n, this.scene.jammy.sprite, () => {
-      if (this.scene.jammy.alive) this.scene.jammy.takeDamage();
+      if (this.scene.jammy.alive) this.scene.jammy.takeDamage(this.x);
       n.destroy();
     });
     if (this.scene.groundLayer) {

@@ -1,91 +1,50 @@
-class AudioWave  {
-  constructor(scene, x, y, direction = 1, up=false, bigShot=false, velocity=500) {
-    // Determine x spawn based on direction Jammy is facing
-    const spawnX = direction === -1 ? x - 16 : x + 16;
-    if(bigShot){
-      this.damage=3;
-    }
-    // Call Phaser Sprite constructor
-    this.sprite=scene.add.sprite( spawnX, y, "audio-wave");
-    this.scene = scene;
-    // Add the sprite to the scene and enable physics
-    scene.physics.add.existing(this.sprite);
-    scene.bullets.add(this.sprite);
-    // Set anchor point to the center
-    this.sprite.setOrigin(0.5, 0.5);
+// Jammy's basic shot — a sonic wave from the Crimson V. Flies straight
+// (or diagonally up when aiming), passes through scenery like sound
+// does, and is culled once it leaves the screen. Damage is dealt by the
+// level's bullets-vs-enemies overlap (see js/helpers/level.js).
+class AudioWave extends Phaser.Physics.Arcade.Sprite {
+  constructor(scn, x, y, direction = "right", up = false, bigShot = false, speed = 500) {
+    const dir = direction === "left" ? -1 : 1;
+    super(scn, x + dir * 14, y, "audio-wave");
+    scn.add.existing(this);
+    scn.physics.add.existing(this);
+    // Group membership first — physics groups apply their defaults to
+    // a body when it's added, so configure the body afterwards.
+    scn.bullets.add(this);
 
-    // Flip the sprite if Jammy is facing left
-    if (direction === 'left') {
-      this.sprite.setFlipX(true);
-      velocity = -velocity;
-      if(up){
-        this.sprite.angle = 45;
-      }
+    this.damage = bigShot ? 3 : 1;
+    this.setDepth(99);
+    this.setFlipX(dir === -1);
+    if (up) this.setAngle(dir === -1 ? 45 : -45);
+    if (bigShot) this.setScale(1.5);
 
-    }
-    else{
-      if(up){
-        this.sprite.angle = -45;
-      }
-    }
+    this.body.setAllowGravity(false);
+    this.body.setBounce(0);
+    this.body.setSize(13, 15, true);
+    this.body.setVelocity(dir * speed, up ? -speed : 0);
 
-    // Set physics properties
-    this.sprite.body.setBounce(0); // No bounce
-    this.sprite.body.setAllowGravity(false);
-    this.sprite.body.setSize(13, 15, true); // Adjust collision body size
-
-    // Play laser sound
-    scene.sound.play("laserSound");
-
-    // Handle out of bounds auto-destroy
-    //  this.sprite.body.onWorldBounds = true;
-   
-
-    // Set velocity for movement
-    this.sprite.body.setVelocityX(velocity);
-    if (up) {
-        this.sprite.body.setVelocityY(-Math.abs(velocity));
-      
-    }
-
-    // Check for collisions with enemies
-    this.scene.physics.add.overlap(
-      this.sprite,
-      this.scene.enemies,
-      (bullet, enemy) => {
-        this.sprite.destroy();
-        if (!enemy.invincible) {
-          enemy.takeDamage(this.damage);
-        }
-      }
-    );
-
-    this.destructionCheck = scene.time.addEvent({
-      delay: 50,
-      callback: function () {
-        if (
-          this.sprite.x >
-            this.scene.cameras.main.scrollX + this.scene.cameras.main.width ||
-          this.sprite.x <
-            this.scene.cameras.main.scrollX - this.scene.cameras.main.width / 9
-        ) {
-          this.autoDeath();
-        }
-      },
-      callbackScope: this,
-      repeat: -1,
-    });
-
-    if(bigShot){
-      this.sprite.setScale(1.5);
-    }
-
+    scn.sound.play("laserSound", { volume: bigShot ? 1 : 0.8 });
   }
 
-  autoDeath() {
-    console.log("dead");
-    this.scene.bullets.remove(this.sprite);
-    this.sprite.destroy();
-    this.destructionCheck.destroy();
+  preUpdate(time, delta) {
+    super.preUpdate(time, delta);
+    if (!this.active) return;
+    const cam = this.scene.cameras.main;
+    if (
+      this.x < cam.scrollX - 48 ||
+      this.x > cam.scrollX + cam.width + 48 ||
+      this.y < cam.scrollY - 64 ||
+      this.y > cam.scrollY + cam.height + 64
+    ) {
+      this.destroy();
+    }
+  }
+
+  hit(enemy) {
+    if (!this.active) return;
+    if (enemy && !enemy.dead && !enemy.invincible && typeof enemy.takeDamage === "function") {
+      enemy.takeDamage(this.damage);
+    }
+    this.destroy();
   }
 }

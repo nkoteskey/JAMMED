@@ -1,0 +1,57 @@
+# Publishes the game to GitHub Pages so it is playable at
+# https://nkoteskey.github.io/JAMMED/
+#
+# Runs on every push to main (and on the improvement branch while its pull
+# request is open), or by hand from the Actions tab. The first run enables
+# Pages for the repository with "GitHub Actions" as the source; if that step
+# is refused, enable it once under Settings -> Pages -> Source: GitHub Actions.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - claude/modest-galileo-5mklc8
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Stage site files
+        # The game is static: ship everything except source art (.xcf) and
+        # Tiled project files the browser never loads.
+        run: |
+          mkdir -p _site
+          rsync -a --exclude '.git' --exclude '.github' --exclude '_site' \
+            --exclude '*.xcf' --exclude '*.tmx' --exclude '*.tmj' \
+            ./ _site/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

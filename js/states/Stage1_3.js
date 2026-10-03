@@ -33,7 +33,7 @@ class Stage1_3 extends Phaser.Scene {
     this.jammy.sprite.setDepth(100);
     this.children.bringToTop(this.jammy.sprite);
     this.cameras.main.startFollow(this.jammy.sprite, true);
-    this.cameras.main.setBounds(0, -240, this.map.widthInPixels, this.map.heightInPixels + 240);
+    this.cameras.main.setBounds(0, -320, this.map.widthInPixels, this.map.heightInPixels + 320);
 
     LevelCommon.wireCollisions(this);
     // Cactus needles
@@ -117,17 +117,18 @@ class Stage1_3 extends Phaser.Scene {
     floor(171, 215);
     // E: cactus
     floor(216, 250);
-    // F: fruit platforms over pits, snappers between
-    floor(251, 256);
-    pit(257, 266);
-    floor(267, 272);
-    pit(273, 284);
-    floor(285, 290);
-    // G: pineapples + finale (a raised ledge for the near-miss lesson)
-    floor(291, 350);
+    // F: fruit planks over the ground, snappers down in the pits between
+    floor(251, 260);
+    pit(261, 267);
+    floor(268, 282);
+    pit(283, 289);
+    // G: pineapples + finale (a raised ledge for the near-miss lesson,
+    // and a mound with a snapper on top)
+    floor(290, 350);
     floor(302, 305, 8);
+    floor(326, 329, 9);
 
-    this.pitCols = [[53, 66], [257, 266], [273, 284]];
+    this.pitCols = [[53, 66], [261, 267], [283, 289]];
 
     const mk = (data) => {
       const map = this.make.tilemap({ data, tileWidth: 16, tileHeight: 16 });
@@ -192,33 +193,40 @@ class Stage1_3 extends Phaser.Scene {
     const heal = new PowerUp(this, X(249), 150);
     heal.setData("powerUpType", "heal");
 
-    // --- F: fruit platforms + snappers ---
-    this._buildFruitPlatform({ x: X(261), y: 86, w: 74, amp: 16, period: 2400,
-      fruits: [{ ox: -22, len: 30 }, { ox: 18, len: 42 }] }, 0);
-    new WatermelonSnapper(this, X(270), 170);
-    this._buildFruitPlatform({ x: X(276), y: 90, w: 74, amp: 20, period: 2800,
-      fruits: [{ ox: -24, len: 36 }, { ox: 0, len: 58 }, { ox: 24, len: 40 }] }, 1);
-    this._buildFruitPlatform({ x: X(282), y: 60, w: 60, amp: 18, period: 2200,
-      fruits: [{ ox: -14, len: 48 }, { ox: 16, len: 30 }] }, 2);
-    new WatermelonSnapper(this, X(288), 170);
-    // Lost Jam: high above the first fruit platform — plank, then Rocket Axe
-    new LostRecord(this, X(261), -14, "Stage1_3");
+    // --- F: horned-fruit planks + snappers ---
+    // The planks hang high over the ground: walk under and the fruit
+    // drops on you; climb them for the tokens and the Lost Jam above.
+    // The pits between hold Watermelon Snappers that lunge at anything
+    // crossing, so the hop needs height.
+    this._buildFruitPlatform({ x: X(256), y: 68, w: 74, amp: 10, period: 2400,
+      fruits: [{ ox: -22, len: 44 }, { ox: 18, len: 56 }] }, 0);
+    [254, 258].forEach((c) => new AntToken(this, X(c), 42));
+    // Lost Jam: high above the first plank — plank, then Rocket Axe
+    new LostRecord(this, X(256), -16, "Stage1_3");
+    new WatermelonSnapper(this, X(264), 204);
+    this._buildFruitPlatform({ x: X(272), y: 72, w: 74, amp: 12, period: 2800,
+      fruits: [{ ox: -24, len: 40 }, { ox: 0, len: 56 }, { ox: 24, len: 46 }] }, 1);
+    this._buildFruitPlatform({ x: X(279), y: 40, w: 60, amp: 10, period: 2200,
+      fruits: [{ ox: -14, len: 50 }, { ox: 16, len: 36 }] }, 2);
+    [270, 274].forEach((c) => new AntToken(this, X(c), 46));
+    [277, 281].forEach((c) => new AntToken(this, X(c), 14));
+    new WatermelonSnapper(this, X(286), 204);
 
     // --- G: pineapples and the finale ---
-    new Pineapple(this, X(297), FLOOR);
+    new Pineapple(this, X(296), FLOOR);
     new Pineapple(this, X(304), 112); // on the ledge: the blast just misses it
     new SeedAmmoPickup(this, X(308), 150);
     new BushZomberry(this, X(313), 176);
     new Bush(this, X(318), 176);
-    this.cactuses.push(new NeedleCactus(this, X(323), 158));
-    new WatermelonSnapper(this, X(328), 170);
-    new CloudBlueberry(this, X(330), 54);
-    [316, 326].forEach((c) => new AntToken(this, X(c), 128));
+    this.cactuses.push(new NeedleCactus(this, X(322), 158));
+    // A mound with a snapper on top: get over both
+    new WatermelonSnapper(this, X(328), 144);
+    new CloudBlueberry(this, X(332), 54);
+    [316, 338].forEach((c) => new AntToken(this, X(c), 128));
     // Final fruit platform with the secret exit high above it
-    this._buildFruitPlatform({ x: X(334), y: 62, w: 92, amp: 22, period: 2200,
+    this._buildFruitPlatform({ x: X(336), y: 62, w: 92, amp: 22, period: 2200,
       fruits: [{ ox: -30, len: 60 }, { ox: 0, len: 36 }, { ox: 30, len: 50 }] }, 3);
-    this._buildSecretExit(X(334));
-    new AntToken(this, X(340), 136);
+    this._buildSecretExit(X(336));
     this._buildExitPortal(X(345), 158);
   }
 
@@ -565,18 +573,18 @@ class Stage1_3 extends Phaser.Scene {
   }
 
   _buildSecretExit(x) {
-    // A zig-zag of hard clouds above the last fruit platform: rocket
-    // LEFT off the platform onto the low cloud, then rocket RIGHT onto
-    // the high cloud, which carries the portal. The Rocket Axe always
-    // launches sideways, so a straight-up portal was visible but not
-    // reachable. Tokens trace each hop.
+    // A zig-zag of three hard clouds above the last fruit platform:
+    // rocket LEFT off the platform onto the low cloud, RIGHT onto the
+    // middle one, LEFT again onto the top one, which carries the
+    // portal. The Rocket Axe always launches sideways, so a straight-up
+    // portal was visible but not reachable. Tokens trace each hop.
     const a = { x: x - 170, y: -40 };
     const b = { x: x + 10, y: -136 };
-    LevelCommon.addCloudPlatform(this, a.x, a.y, 1);
-    LevelCommon.addCloudPlatform(this, b.x, b.y, 1);
-    [[x - 70, -6], [x - 120, -48], [a.x + 50, -110], [b.x - 60, -150]]
+    const c = { x: x - 170, y: -232 };
+    [a, b, c].forEach((p) => LevelCommon.addCloudPlatform(this, p.x, p.y, 1));
+    [[x - 70, -6], [x - 120, -48], [a.x + 50, -110], [b.x - 60, -150], [b.x - 70, -206], [c.x + 60, -248]]
       .forEach(([tx, ty]) => new AntToken(this, tx, ty));
-    LevelCommon.addSecretExit(this, b.x, b.y - 24, "Stage1_S", "1-S");
+    LevelCommon.addSecretExit(this, c.x, c.y - 24, "Stage1_S", "1-S");
   }
 
   _buildExitPortal(x, y) {

@@ -31,11 +31,8 @@ class EndCredits extends Phaser.Scene {
     this.textBlocks = [
       { topLine: "Executive Producer", bottomLine: "Nicholas Koteskey" },
       { topLine: "Producer", bottomLine: "Jim Kulakowski" },
-      { topLine: "Programmers\n", bottomLine: " Dustin McMurry \n Jim Kulakowski" },
-      {
-        topLine: "Level Design\n\n",
-        bottomLine: "\nNicholas Koteskey \n  Jim Kulakowski \n  Dustin McMurry",
-      },
+      { topLine: "Programmers", bottomLine: "Dustin McMurry\nJim Kulakowski" },
+      { topLine: "Level Design", bottomLine: "Nicholas Koteskey\nJim Kulakowski\nDustin McMurry" },
       { topLine: "Music Composer / Sound Engineer", bottomLine: "Jim Kulakowski" },
       { topLine: "Artist", bottomLine: "Jim Kulakowski" },
       { topLine: "Storyboard Art", bottomLine: "Nicholas Koteskey" },
@@ -43,10 +40,12 @@ class EndCredits extends Phaser.Scene {
       { topLine: "Coming soon from the JAMS crew", bottomLine: "SUPER JAMMED - A 16-BIT SEQUEL" },
     ];
 
+    // Credit blocks sit in the upper half: the title hangs above the
+    // names line, and names with several lines grow downward from it,
+    // so nothing overlaps. The Encore Jam plays out below.
     const centerX = this.cameras.main.centerX;
-    const centerY = this.cameras.main.centerY;
-    this.textTopLine = this.add.bitmapText(centerX, centerY - 8, "8-bit-mono", "", 12).setOrigin(0.5).setAlpha(0);
-    this.textBottomLine = this.add.bitmapText(centerX, centerY + 8, "8-bit-mono", "", 12).setOrigin(0.5).setAlpha(0);
+    this.textTopLine = this.add.bitmapText(centerX, 66, "8-bit-mono", "", 12).setOrigin(0.5, 1).setCenterAlign().setAlpha(0);
+    this.textBottomLine = this.add.bitmapText(centerX, 76, "8-bit-mono", "", 12).setOrigin(0.5, 0).setCenterAlign().setAlpha(0);
 
     this.skipHint = this.add
       .bitmapText(
@@ -289,13 +288,17 @@ class EndCredits extends Phaser.Scene {
   }
 
   rollCredits() {
-    this.skipHint.setAlpha(0.5);
     this.textBlockIndex = 0;
     this.textTopLine.setText(this.textBlocks[0].topLine);
     this.textBottomLine.setText(this.textBlocks[0].bottomLine);
 
-    this.input.once("pointerdown", () => this.restartGame());
-    this.input.keyboard.once("keydown", () => this.restartGame());
+    // Skipping is deliberate now (the play keys drive the Encore Jam)
+    const touch = isTouchDevice();
+    this.skipHint.setText(touch ? "TAP HERE TO SKIP" : "ESC / ENTER TO SKIP").setAlpha(0.6);
+    this.skipHint.setInteractive(new Phaser.Geom.Rectangle(-150, -16, 160, 20), Phaser.Geom.Rectangle.Contains);
+    this.skipHint.on("pointerdown", () => this.restartGame());
+    addKeys(this.input.keyboard, ["ESC", "ENTER", "P"]).forEach((k) => k.once("down", () => this.restartGame()));
+    if (!touch) this._startEncoreJam();
 
     this.textTween = this.tweens.add({
       targets: this.textTopLine,
@@ -331,9 +334,123 @@ class EndCredits extends Phaser.Scene {
     });
   }
 
+  // ---------------------------------------------------------------
+  // Encore Jam: a little playable bow while the credits roll. Jammy on
+  // a stage at the bottom of the screen, berries drifting over; run,
+  // jump and shoot them for an encore tally. Nothing is at stake.
+  // ---------------------------------------------------------------
+  _startEncoreJam() {
+    const W = this.cameras.main.width;
+    const FLOOR = 214;
+    this.add.rectangle(W / 2, FLOOR + 13, W, 26, 0x2a1838).setDepth(5);
+    this.add.rectangle(W / 2, FLOOR, W, 2, 0x5a3a5e).setDepth(5);
+    for (let x = 12; x < W; x += 48) this.add.rectangle(x, FLOOR + 6, 2, 2, 0xffd9a0, 0.8).setDepth(5);
+    const floor = this.add.rectangle(W / 2, FLOOR + 13, W, 26, 0x000000, 0);
+    this.physics.add.existing(floor, true);
+    this.physics.world.setBounds(0, -40, W, FLOOR + 40);
+
+    const j = this.physics.add.sprite(70, FLOOR - 15, "jammy", "resting-right2").setDepth(10);
+    j.body.setSize(18, 28, true);
+    j.setCollideWorldBounds(true);
+    this.physics.add.collider(j, floor);
+    this.jam = { j, facing: 1, kills: 0, nextShot: 0 };
+
+    const kb = this.input.keyboard;
+    this.jamKeys = {
+      left: addKeys(kb, controls.left),
+      right: addKeys(kb, controls.right),
+      jump: addKeys(kb, controls.jump),
+      shoot: addKeys(kb, controls.shoot),
+    };
+    this.jamKeys.jump.forEach((k) =>
+      k.on("down", () => {
+        if (!this.jam || !(j.body.blocked.down || j.body.touching.down)) return;
+        j.setVelocityY(-300);
+        this.sound.play("jumpSound", { volume: 0.6 });
+      })
+    );
+    this.jamKeys.shoot.forEach((k) => k.on("down", () => this._jamShoot()));
+
+    this.jamBullets = this.physics.add.group({ allowGravity: false });
+    this.jamBerries = this.physics.add.group({ allowGravity: false });
+    this.physics.add.overlap(this.jamBullets, this.jamBerries, (a, b) => {
+      const bullet = this.jamBullets.contains(a) ? a : b;
+      const berry = bullet === a ? b : a;
+      this._jamHit(bullet, berry);
+    });
+    if (!this.anims.exists("credits-berry")) {
+      this.anims.create({
+        key: "credits-berry",
+        frames: this.anims.generateFrameNames("blueberry", { prefix: "oscillating-left", start: 1, end: 8 }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    }
+    this.add.bitmapText(8, FLOOR + 10, "tempFont", "ENCORE JAM   A/D MOVE   SPACE JUMP   Q SHOOT", 8)
+      .setTintFill(0x9a8aa8).setDepth(6);
+    this.jamScore = this.add.bitmapText(8, 6, "tempFont", "ENCORE x0", 8).setTintFill(0xffee88).setDepth(6);
+    this.jamSpawner = this.time.addEvent({ delay: 1400, loop: true, callback: () => this._jamSpawn() });
+  }
+
+  _jamShoot() {
+    if (!this.jam) return;
+    const now = this.time.now;
+    if (now < this.jam.nextShot) return;
+    this.jam.nextShot = now + 220;
+    const { j, facing } = this.jam;
+    const b = this.jamBullets.create(j.x + facing * 14, j.y, "audio-wave");
+    b.setDepth(9).setFlipX(facing === -1);
+    b.body.setVelocityX(facing * 480);
+    this.sound.play("laserSound", { volume: 0.5 });
+  }
+
+  _jamSpawn() {
+    if (!this.jam || this.jamBerries.countActive(true) >= 5) return;
+    const W = this.cameras.main.width;
+    const fromRight = Math.random() < 0.7;
+    const y = 96 + Math.random() * 90;
+    const e = this.jamBerries.create(fromRight ? W + 16 : -16, y, "blueberry", "oscillating-left1");
+    e.setDepth(8).setFlipX(!fromRight).play("credits-berry");
+    e.body.setVelocityX((fromRight ? -1 : 1) * (45 + Math.random() * 40));
+    this.tweens.add({ targets: e, y: y + 14, duration: 700 + Math.random() * 500, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+  }
+
+  _jamHit(bullet, berry) {
+    if (!bullet.active || !berry.active) return;
+    bullet.destroy();
+    this.jam.kills += 1;
+    this.jamScore.setText("ENCORE x" + this.jam.kills);
+    this.sound.play("enemyDeathSound", { volume: 0.5 });
+    this.tweens.killTweensOf(berry);
+    berry.body.setEnable(false);
+    const pop = this.add.bitmapText(berry.x, berry.y - 10, "tempFont", "+100", 8).setOrigin(0.5).setTintFill(0xffee88).setDepth(9);
+    this.tweens.add({ targets: pop, y: pop.y - 20, alpha: 0, duration: 600, onComplete: () => pop.destroy() });
+    this.tweens.add({ targets: berry, scaleX: 1.8, scaleY: 1.8, alpha: 0, duration: 200, onComplete: () => berry.destroy() });
+  }
+
+  update() {
+    if (!this.jam || this._restarting) return;
+    const { j } = this.jam;
+    if (!j.active) return;
+    const left = anyKeyDown(this.jamKeys.left);
+    const right = anyKeyDown(this.jamKeys.right);
+    const grounded = j.body.blocked.down || j.body.touching.down;
+    j.setVelocityX(left ? -125 : right ? 125 : 0);
+    if (left) this.jam.facing = -1;
+    else if (right) this.jam.facing = 1;
+    const dir = this.jam.facing === 1 ? "right" : "left";
+    if (!grounded) j.play("jumping-" + dir, true);
+    else if (left || right) j.play("running-" + dir, true);
+    else j.play("resting-" + dir, true);
+    const W = this.cameras.main.width;
+    this.jamBerries.getChildren().forEach((e) => { if (e.x < -40 || e.x > W + 40) e.destroy(); });
+    this.jamBullets.getChildren().forEach((b) => { if (b.x < -40 || b.x > W + 40) b.destroy(); });
+  }
+
   restartGame() {
     if (this._restarting) return;
     this._restarting = true;
+    if (this.jamSpawner) this.jamSpawner.remove(false);
     if (this.bottomTextTween) this.bottomTextTween.stop();
     if (this.textTween) this.textTween.stop();
     this.tweens.add({ targets: this.bgMusic, volume: 0, duration: 1000, ease: "Cubic" });

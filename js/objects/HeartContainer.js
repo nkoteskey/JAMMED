@@ -1,6 +1,7 @@
 // Heart Container: a golden jam jar with a heart on the label. Grabbing
-// it raises Jammy's max HP by one for the rest of the run and tops him
-// up. There is one in the game, hidden above Cloud Nine's summit.
+// it raises Jammy's max HP by one and tops him up. The blessing lasts
+// through The Jam Works and fades at the Canning Floor. There is one in
+// the game, hidden above Cloud Nine's summit.
 class HeartContainer extends Phaser.Physics.Arcade.Sprite {
   static ensureTexture(scn) {
     if (scn.textures.exists("heart-container")) return;
@@ -63,7 +64,7 @@ class HeartContainer extends Phaser.Physics.Arcade.Sprite {
 
     const t1 = scn.add.bitmapText(213, 150, "tempFont", "HEART CONTAINER!", 16)
       .setOrigin(0.5).setScrollFactor(0).setDepth(300).setTintFill(0xffd066);
-    const t2 = scn.add.bitmapText(213, 170, "tempFont", "MAX HP UP FOR THE REST OF THE RUN", 8)
+    const t2 = scn.add.bitmapText(213, 170, "tempFont", "MAX HP UP THROUGH THE JAM WORKS", 8)
       .setOrigin(0.5).setScrollFactor(0).setDepth(300).setTintFill(0xffffff);
     scn.tweens.add({ targets: [t1, t2], alpha: 0, delay: 2600, duration: 500, onComplete: () => { t1.destroy(); t2.destroy(); } });
 

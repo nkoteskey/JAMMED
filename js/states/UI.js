@@ -48,6 +48,11 @@ class UIScene extends Phaser.Scene {
     this.weaponAmmoText = this.add
       .bitmapText(374, 2, "tempFont", "", 8)
       .setTintFill(0xffffff);
+    // Rocket Axe toggle state (DOWN flips it)
+    this.axeLabel = this.add
+      .bitmapText(422, 32, "tempFont", "", 8)
+      .setOrigin(1, 0)
+      .setTintFill(0xffb347);
 
     // --- Riff combo (top, right of the score so the two never overlap) ---
     this.combo = 0;
@@ -103,6 +108,7 @@ class UIScene extends Phaser.Scene {
       const n = run && run.tokens ? run.tokens[key] || 0 : 0;
       const txt = "x" + n;
       if (this.tokenText.text !== txt) this.tokenText.setText(txt);
+      this._refreshAxe(jammy);
     }
     if (this.gamepad) this.gamepad.update(jammy);
 
@@ -188,6 +194,18 @@ class UIScene extends Phaser.Scene {
     this.scene.pause(key);
     this.scene.launch("GuitarRack", { key });
     this.scene.pause("UIScene");
+  }
+
+  refreshAxe() {
+    this._refreshAxe(this._activeJammy());
+  }
+
+  _refreshAxe(jammy) {
+    if (!this.axeLabel) return;
+    const txt = jammy && jammy.rocketAxe ? (jammy.rocketArmed ? "ROCKET" : "HOP ONLY") : "";
+    if (this.axeLabel.text === txt) return;
+    this.axeLabel.setText(txt);
+    this.axeLabel.setTintFill(jammy && jammy.rocketArmed ? 0xffb347 : 0x9a8aa8);
   }
 
   cycleWeapon() {

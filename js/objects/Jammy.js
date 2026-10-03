@@ -25,6 +25,10 @@ class Jammy {
     // Rocket Axe double-jump is unlocked from Stage 1-3; before that the
     // second jump is a plain mid-air hop.
     this.rocketAxe = !!(run && run.rocketAxe);
+    // Tap DOWN to switch the second jump between the Rocket Axe boost
+    // and a plain hop; the HUD shows which is armed.
+    this.rocketArmed = !run || run.rocketArmed !== false;
+    this._downHeld = false;
     // A short grace window after walking off a ledge where a jump still
     // counts, and a short buffer so a jump pressed just before landing
     // fires on touchdown — both make the controls feel far less "sticky".
@@ -74,6 +78,8 @@ class Jammy {
     this.jumpKeys = addKeys(kb, controls.jump);
     this.shootKeys = addKeys(kb, controls.shoot);
     this.downKeys = addKeys(kb, controls.down || ["S", "DOWN"]);
+    // A tap of DOWN (not while moving) flips the Rocket Axe on or off
+    onKeys(this.downKeys, "down", () => this._tryToggleRocket(), this);
     this.touch.down = false;
     this.sliding = false;
     this.slideUntil = 0;
@@ -155,6 +161,9 @@ class Jammy {
     const right = input && (anyKeyDown(this.rightKeys) || this.touch.right);
     this.up = input && (anyKeyDown(this.aimKeys) || this.touch.up);
     const down = input && (anyKeyDown(this.downKeys) || this.touch.down);
+    // Touch: the joystick pushed straight down (no sideways) toggles
+    if (this.touch.down && !this._downHeld && !left && !right) this._tryToggleRocket();
+    this._downHeld = !!this.touch.down;
 
     // --- Glacier Slide: power slide and grind rails ---
     const slideGuitar = this.currentWeapon === "slide";
@@ -457,10 +466,9 @@ class Jammy {
       this._groundJump();
     } else if (this.canDoubleJump && !this.rocketBoostActive) {
       this.canDoubleJump = false;
-      // Hold DOWN on the second jump for a plain short hop — handy under
-      // low ceilings and for tight landings where the rocket overshoots.
-      const wantHop = anyKeyDown(this.downKeys) || this.touch.down;
-      if (this.rocketAxe && !wantHop) {
+      // A plain short hop when the Rocket Axe is toggled off (tap DOWN):
+      // handy under low ceilings and for tight landings.
+      if (this.rocketAxe && this.rocketArmed) {
         // Rocket Axe — Jammy kicks off his guitar and the boosters fire,
         // propelling him up and forward in a long arc.
         this._rocketAxeBoost();
@@ -499,6 +507,27 @@ class Jammy {
       duration: 220,
       onComplete: () => ring.destroy(),
     });
+  }
+
+  _tryToggleRocket() {
+    if (!this.rocketAxe || !this.controlsEnabled || !this.alive) return;
+    if (anyKeyDown(this.leftKeys) || anyKeyDown(this.rightKeys) || this.touch.left || this.touch.right) return;
+    this.toggleRocket();
+  }
+
+  toggleRocket() {
+    this.rocketArmed = !this.rocketArmed;
+    const run = getRunState();
+    if (run) run.rocketArmed = this.rocketArmed;
+    scene.sound.play("antTokenCollectSound", { volume: 0.4, rate: this.rocketArmed ? 1.6 : 0.8 });
+    const label = scene.add
+      .bitmapText(this.sprite.x, this.sprite.y - 26, "tempFont", this.rocketArmed ? "ROCKET AXE ON" : "ROCKET AXE OFF", 8)
+      .setOrigin(0.5)
+      .setDepth(380)
+      .setTintFill(this.rocketArmed ? 0xffb347 : 0xc0b0c8);
+    scene.tweens.add({ targets: label, y: label.y - 16, alpha: 0, duration: 900, onComplete: () => label.destroy() });
+    const ui = scene.scene.get("UIScene");
+    if (ui && ui.refreshAxe) ui.refreshAxe();
   }
 
   _rocketAxeBoost() {

@@ -84,10 +84,7 @@ class Blubert {
     // which can miss the next drone that's already in play.
     if (this.trackedEnemy) {
       const e = this.trackedEnemy;
-      if (e.dead || !e.active ||
-          !this.scene.cameras.main.worldView.contains(e.x, e.y)) {
-        this.trackedEnemy = null;
-      }
+      if (e.dead || !e.active || !this._inReach(e)) this.trackedEnemy = null;
     }
 
     let targetX, targetY, tilting = false;
@@ -161,10 +158,13 @@ class Blubert {
     let spotted = false;
     for (const e of enemies) {
       if (!e || e.dead || !e.active) continue;
-      // Only care about enemies currently on screen.
-      if (!cam.worldView.contains(e.x, e.y)) continue;
       const d = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, e.x, e.y);
       if (d > this.scanRange) continue;
+      // Enemies in the open only matter once they are on screen; a
+      // hidden one is scouted as soon as it is in Blubert's range, so
+      // the eyes show up at the edge of the screen and a seed thrown at
+      // them has a mark to fly to.
+      if (!this._inReach(e)) continue;
       if (e.hidden && typeof e.detect === "function" && !e.detected) {
         e.detect();
         spotted = true;
@@ -186,15 +186,25 @@ class Blubert {
     this.trackedEnemy = nearest;
   }
 
+  // On screen, or a scouted hidden enemy just beyond the edge of it
+  _inReach(e) {
+    const cam = this.scene.cameras.main;
+    if (cam.worldView.contains(e.x, e.y)) return true;
+    if (!e.hidden || !this.sprite) return false;
+    return Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, e.x, e.y) <= this.scanRange;
+  }
+
   // What Blubert will mark for the Seedcaster: anything alive on screen
   // that a shot could actually hurt. Hidden enemies wait until he has
   // revealed them; machinery and liquid jam (targetable = false, or
   // invincible with no HP to lose) are never targets.
   static canLock(e) {
     if (!e || e.dead || !e.active) return false;
-    if (e.body && e.body.enable === false) return false;
     if (e.targetable === false) return false;
     if (e.hidden && !e.detected) return false;
+    // Hidden enemies keep their body off until they emerge; anything
+    // else with its body switched off is out of play.
+    if (!e.hidden && e.body && e.body.enable === false) return false;
     if (e.invincible && typeof e.hp !== "number") return false;
     return true;
   }

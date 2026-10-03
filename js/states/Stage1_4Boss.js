@@ -28,6 +28,9 @@ class Stage1_4Boss extends Phaser.Scene {
     this.jammy = new Jammy(60, 150);
     this.jammy.sprite.setDepth(100);
     this.jammy.sprite.setCollideWorldBounds(true);
+    // The Heart Container's blessing carried Jammy through the factory;
+    // the boss is fought on base hearts.
+    LevelCommon.retireHeartBonus(this);
     this.physics.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, 240);
 

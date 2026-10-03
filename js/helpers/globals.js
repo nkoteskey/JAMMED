@@ -65,6 +65,7 @@ function resetRunState() {
     deaths: 0,
     secretExits: 0,
     maxHpBonus: 0, // heart containers found this run
+    rocketArmed: true, // DOWN toggles the Rocket Axe between boost and hop
     hard: false,
     startTime: 0,
   };

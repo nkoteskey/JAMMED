@@ -43,8 +43,8 @@ class Stage2_1 extends Phaser.Scene {
     this._spawnEnemies();
     this._spawnPickups();
 
-    // Lost Jam: on the high shelf above the icicle cave
-    new LostRecord(this, 1480, 20, "Stage2_1");
+    // Lost Jam: in the recess above the icicle cave's high shelf
+    new LostRecord(this, 1540, 24, "Stage2_1");
 
     this.blubert = new Blubert(this, this.jammy);
     this.blubertRevivesLeft = 1;
@@ -201,9 +201,12 @@ class Stage2_1 extends Phaser.Scene {
     fill(ground, 89, 10, 89, 14, E);
     fill(death, 88, 14, 89, 14, DEEP);
     fill(ground, 88, 11, 89, 13, CAVE);
-    // High shelf above the cave for the Lost Jam (reach via the left ledge)
-    fill(ground, 88, 4, 97, 4, SNOW);
-    fill(ground, 88, 5, 97, 5, ROCK);
+    // High shelf for the Lost Jam, under a recess cut into the cave roof
+    // so there is headroom to stand on it. Rocket Axe up from the floor
+    // of the yeti's arena, starting under the recess.
+    fill(ground, 84, 1, 103, 3, E);
+    fill(ground, 92, 4, 103, 4, SNOW);
+    fill(ground, 92, 5, 103, 5, ROCK);
     fill(ground, 66, 6, 69, 6, SNOW);
 
     // Section 4: frozen lake (cols 111-150) — floes carry you across
@@ -228,8 +231,9 @@ class Stage2_1 extends Phaser.Scene {
     fill(ground, 200, 5, 200, 8, WOOD);
     fill(ground, 208, 5, 208, 8, WOOD);
     fill(change, 206, 5, 207, 8, ROCK);
-    // enemy fences
-    [15, 44, 71, 110, 151, 196].forEach((c) => (stops[11][c] = ROCK));
+    // Enemy fences: only at the pit and cave mouths, so the Frostberries
+    // chase across the ice patches instead of stopping at their edges
+    [44, 71, 110, 151].forEach((c) => (stops[11][c] = ROCK));
     [57, 63].forEach((c) => (stops[9][c] = ROCK));
 
     // Deterministic snow sparkle: swap a few snow tops for ice-free tops (none) — keep simple

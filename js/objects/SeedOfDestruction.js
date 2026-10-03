@@ -18,7 +18,7 @@ class SeedOfDestruction extends Phaser.Physics.Arcade.Sprite {
     this.stunRadius = 52;
     // Lock-on: Blubert's tracked target first, otherwise the nearest
     // visible enemy near Jammy. The seed curves toward it in flight.
-    this.lockRange = 150;
+    this.lockRange = 220;
     this.target = this._pickTarget(x, y);
     this.fuseMs = 1800;
     this.exploded = false;
@@ -57,8 +57,20 @@ class SeedOfDestruction extends Phaser.Physics.Arcade.Sprite {
     // after seeing eyes appear can still clear the bush ahead.
     const dir = direction === "left" ? -1 : 1;
     // Aim-up lob climbs ~150px: enough to reach drones hiding in clouds
-    const speedX = (aimUp ? 150 : 300) * dir;
+    let speedX = (aimUp ? 150 : 300) * dir;
     const speedY = aimUp ? -520 : -340;
+    // With a lock ahead of Jammy, pitch the throw to land on it: solve
+    // the arc for the target's distance so a bush Blubert marked at the
+    // edge of the screen is still hit, not undershot.
+    const t = this.target;
+    if (t && !aimUp && Math.sign(t.x - x) === dir && Math.abs(t.x - x) > 40) {
+      const dy = t.y - y;
+      const disc = speedY * speedY + 2 * 900 * dy;
+      if (disc > 0) {
+        const flight = (-speedY + Math.sqrt(disc)) / 900;
+        speedX = Phaser.Math.Clamp(Math.abs(t.x - x) / flight, 160, 640) * dir;
+      }
+    }
     this.body.setVelocityX(speedX);
     this.body.setVelocityY(speedY);
   }
@@ -83,21 +95,30 @@ class SeedOfDestruction extends Phaser.Physics.Arcade.Sprite {
 
   static ensureTexture(scene) {
     if (scene.textures.exists("seed-teardrop")) return;
-    // 14x8 tan tear-drop — compact, fat end on the right.
+    // 14x8 lit seed: a dark striped melon seed, point forward, with a
+    // sputtering ember at the blunt end.
     const g = scene.make.graphics({ x: 0, y: 0, add: false });
-    g.fillStyle(0xd4a676, 1);
-    g.fillEllipse(10, 4, 8, 7);
-    g.fillTriangle(10, 1, 10, 7, 0, 4);
-    g.lineStyle(1, 0x7e5a34, 1);
-    g.strokeEllipse(10, 4, 8, 7);
-    g.beginPath();
-    g.moveTo(10, 1);
-    g.lineTo(0, 4);
-    g.lineTo(10, 7);
-    g.closePath();
-    g.strokePath();
-    g.fillStyle(0xf0c899, 1);
-    g.fillEllipse(11, 3, 3, 1.5);
+    const rows = [[2, 7], [1, 10], [0, 12], [0, 13], [0, 13], [0, 12], [1, 10], [2, 7]];
+    rows.forEach(([a, b], r) => {
+      g.fillStyle(0x1c1008, 1);
+      g.fillRect(a, r, b - a + 1, 1);
+    });
+    const inner = [null, [2, 8], [1, 11], [1, 12], [1, 12], [1, 11], [2, 8], null];
+    inner.forEach((e, r) => {
+      if (!e) return;
+      g.fillStyle(0x4a2c18, 1);
+      g.fillRect(e[0], r, e[1] - e[0] + 1, 1);
+    });
+    g.fillStyle(0xe0d0a8, 1);
+    g.fillRect(3, 2, 7, 1);
+    g.fillRect(3, 5, 7, 1);
+    g.fillStyle(0x8a5a38, 1);
+    g.fillRect(3, 1, 4, 1);
+    // Ember
+    g.fillStyle(0xff8a40, 1);
+    g.fillRect(0, 3, 2, 2);
+    g.fillStyle(0xffd080, 1);
+    g.fillRect(0, 3, 1, 1);
     g.generateTexture("seed-teardrop", 14, 8);
     g.destroy();
   }

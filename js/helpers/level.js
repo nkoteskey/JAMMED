@@ -347,6 +347,25 @@ const LevelCommon = {
 
   // The Rocket Axe double-jump is a Stage 1-3+ ability. First time it's
   // granted, show a banner so the player knows to jump again mid-air.
+  // The Heart Container from Cloud Nine adds a heart through The Jam
+  // Works only. Called by the boss stage: drop the bonus and say so.
+  retireHeartBonus(scn) {
+    const run = getRunState();
+    if (!run || !(run.maxHpBonus > 0) || !scn.jammy) return;
+    run.maxHpBonus = 0;
+    const j = scn.jammy;
+    j.maxHP = run.hard ? 3 : 5;
+    j.hp = Math.min(j.hp, j.maxHP);
+    const t = scn.add
+      .bitmapText(scn.cameras.main.width / 2, 200, "tempFont", "THE HEART CONTAINER'S POWER FADES HERE", 8)
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(300)
+      .setTintFill(0xffd066)
+      .setAlpha(0);
+    scn.tweens.add({ targets: t, alpha: 1, delay: 2400, duration: 300, yoyo: true, hold: 2200, onComplete: () => t.destroy() });
+  },
+
   unlockRocketAxe(scn) {
     const run = getRunState();
     if (!run) return;

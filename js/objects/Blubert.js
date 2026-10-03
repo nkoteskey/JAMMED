@@ -155,6 +155,7 @@ class Blubert {
 
     const enemies = this.scene.enemies.getChildren();
     const cam = this.scene.cameras.main;
+    const jx = this.jammy.sprite.x, jy = this.jammy.sprite.y;
     let nearest = null;
     let nearestDist = Infinity;
     let spotted = false;
@@ -168,12 +169,13 @@ class Blubert {
         e.detect();
         spotted = true;
       }
-      // Track the nearest detected zomberry threatening Jammy
-      if (e.detected || e.inPursuit) {
-        if (d < nearestDist) {
-          nearestDist = d;
-          nearest = e;
-        }
+      if (!Blubert.canLock(e)) continue;
+      // Mark whatever threatens Jammy most: the closest live target to
+      // him, not to Blubert, who flies well ahead.
+      const dj = Phaser.Math.Distance.Between(jx, jy, e.x, e.y);
+      if (dj < nearestDist) {
+        nearestDist = dj;
+        nearest = e;
       }
     }
     // Audio cue only when a hidden enemy is newly revealed, or when the
@@ -182,6 +184,19 @@ class Blubert {
       this.scene.sound.play("laserSound", { volume: 0.15, rate: 2.5 });
     }
     this.trackedEnemy = nearest;
+  }
+
+  // What Blubert will mark for the Seedcaster: anything alive on screen
+  // that a shot could actually hurt. Hidden enemies wait until he has
+  // revealed them; machinery and liquid jam (targetable = false, or
+  // invincible with no HP to lose) are never targets.
+  static canLock(e) {
+    if (!e || e.dead || !e.active) return false;
+    if (e.body && e.body.enable === false) return false;
+    if (e.targetable === false) return false;
+    if (e.hidden && !e.detected) return false;
+    if (e.invincible && typeof e.hp !== "number") return false;
+    return true;
   }
 
   stun() {

@@ -1,9 +1,10 @@
 // Stage 1-4 — THE JAM WORKS. The fortress stage of World 1: a dark
-// preserves factory beyond the sky fields of 1-3. Boiling jam vats
-// stand in for lava (with leaping JamBubbles for Podoboos), JamPresses
-// for Thwomps, conveyor belts, cherry bats on the rafters, and jam-jar
-// sentries on the floor. Everything here is drawn at runtime — the
-// tileset, enemies, and door are generated 8-bit pixel art.
+// preserves factory beyond the sky fields of 1-3, where Baron Pectin
+// presses the stolen jams into bootleg records. Boiling jam vats with
+// leaping JamBubbles, Record Presses stamping on their own beat and
+// rolling hot vinyl at Jammy, conveyor belts, cherry bats on the
+// rafters, and jam-jar sentries on the floor. Everything here is drawn
+// at runtime — the tileset, enemies, and door are generated pixel art.
 class Stage1_4 extends Phaser.Scene {
   constructor() {
     super({ key: "Stage1_4" });
@@ -67,12 +68,18 @@ class Stage1_4 extends Phaser.Scene {
       new JamBubble(this, x, 208, { period, delay });
     });
 
-    // Jam presses — corridor trio, trench pair over the belts, final pair
+    // Record presses — a corridor trio stamping in sequence, a pair over
+    // the trench belts (no die plate: the belt is the anvil), and a
+    // final pair before the canning line. Each stamp rolls a hot record
+    // at Jammy, so the corridors are a rhythm of "wait for green, run,
+    // hop the vinyl".
     [
-      [1224, 176], [1368, 176], [1512, 176],
-      [2056, 144], [2224, 144],
-      [2536, 176], [2648, 176],
-    ].forEach(([x, slamY]) => new JamPress(this, x, 48, slamY));
+      [1224, 192, 0], [1368, 192, 650], [1512, 192, 1300],
+      [2536, 192, 0], [2648, 192, 800],
+    ].forEach(([x, floorY, phase]) => new RecordPress(this, x, floorY, { phase }));
+    [[2056, 160, 0], [2224, 160, 900]].forEach(
+      ([x, floorY, phase]) => new RecordPress(this, x, floorY, { phase, plate: false })
+    );
 
     // Cherry bats on the rafters
     [944, 1056, 1300, 2176, 2592, 2848].forEach((x) => new CherryBat(this, x, 44));
@@ -80,9 +87,8 @@ class Stage1_4 extends Phaser.Scene {
     // Jar sentries on patrol
     [296, 608, 1440, 2464, 2816].forEach((x) => new JarSentry(this, x, 150));
 
-    // Hot Pineapples straight off the canning line; the row before the
-    // exit door is packed so tightly that one blast sets off the rest
-    [1300, 2700].forEach((x) => new HotPineapple(this, x, 150));
+    // The canning line: a row of Hot Pineapples before the exit door,
+    // packed so tightly that one blast sets off the rest
     [2990, 3050, 3110, 3170].forEach((x) => new HotPineapple(this, x, 150));
 
     // --- Pickups ---

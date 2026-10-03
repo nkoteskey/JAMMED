@@ -111,7 +111,7 @@ class SeedOfDestruction extends Phaser.Physics.Arcade.Sprite {
     if (!scn.enemies) return null;
     let best = null, bestD = this.lockRange;
     for (const e of scn.enemies.getChildren()) {
-      if (!e || e.dead || !e.active || e.hidden || !e.body) continue;
+      if (!e || !e.body || !Blubert.canLock(e)) continue;
       const d = Phaser.Math.Distance.Between(x, y, e.x, e.y);
       if (d < bestD) { bestD = d; best = e; }
     }

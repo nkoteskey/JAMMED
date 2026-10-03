@@ -224,7 +224,28 @@ class Jammy {
       }
     }
 
-    if (this.rocketBoostActive) return; // boost owns the sprite
+    if (this.rocketBoostActive) {
+      // Low ceiling (the Jam Works): the boosters keep pushing forward,
+      // so the Rocket Axe becomes a dash. Clang once so it reads.
+      if (body.blocked.up && !this._rocketBonked) {
+        this._rocketBonked = true;
+        scene.sound.play("enemyHitSound", { volume: 0.35, rate: 1.9 });
+        for (let i = 0; i < 3; i++) {
+          const spark = scene.add.rectangle(
+            this.sprite.x + Phaser.Math.Between(-6, 6), body.top, 2, 2, 0xffe066
+          ).setDepth(99);
+          scene.tweens.add({
+            targets: spark,
+            x: spark.x + Phaser.Math.Between(-10, 10),
+            y: spark.y + Phaser.Math.Between(4, 12),
+            alpha: 0,
+            duration: 220,
+            onComplete: () => spark.destroy(),
+          });
+        }
+      }
+      return; // boost owns the sprite
+    }
 
     const dir = this.facing;
     if (!grounded) {
@@ -486,6 +507,7 @@ class Jammy {
     this.jumping = true;
     this.falling = false;
     this.rocketBoostActive = true;
+    this._rocketBonked = false;
 
     const s = scene;
     const boostMs = 520;

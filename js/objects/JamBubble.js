@@ -36,6 +36,7 @@ class JamBubble extends Phaser.Physics.Arcade.Sprite {
     this.periodMs = opts.period || 2400;
     this.dead = false;
     this.invincible = true; // liquid jam — sonic waves splash through it
+    this.targetable = false; // nothing for Blubert or a seed to lock onto
     this.inFlight = false;
     this._lastTrail = 0;
 

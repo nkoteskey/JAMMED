@@ -112,8 +112,8 @@ class NeedleCactus extends Phaser.Physics.Arcade.Sprite {
     this.hp = 3;
     this.dead = false;
     this.state = "idle"; // idle -> puff -> cooldown -> idle
-    this.proximityRange = 78;
-    this.fuseMs = 1100;
+    this.proximityRange = 96;
+    this.fuseMs = 650;
     this._closeSince = 0;
     this._nextIdleSwap = 0;
     this._idleFrame = false;

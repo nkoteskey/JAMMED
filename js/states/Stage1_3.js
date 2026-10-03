@@ -123,8 +123,9 @@ class Stage1_3 extends Phaser.Scene {
     floor(267, 272);
     pit(273, 284);
     floor(285, 290);
-    // G: pineapples + finale
+    // G: pineapples + finale (a raised ledge for the near-miss lesson)
     floor(291, 350);
+    floor(302, 305, 8);
 
     this.pitCols = [[53, 66], [257, 266], [273, 284]];
 
@@ -211,9 +212,9 @@ class Stage1_3 extends Phaser.Scene {
     new LostRecord(this, X(261), -14, "Stage1_3");
 
     // --- G: pineapples and the finale ---
-    this._sign(X(292), "PINEAPPLES LIGHT UP CLOSE", "RUN, OR SHOOT FROM AFAR");
+    this._sign(X(292), "PINEAPPLES LIGHT UP CLOSE", "SHRAPNEL CAN LIGHT OTHERS");
     new Pineapple(this, X(297), FLOOR);
-    new Pineapple(this, X(304), FLOOR);
+    new Pineapple(this, X(304), 112); // on the ledge: the blast just misses it
     new SeedAmmoPickup(this, X(308), 150);
     new BushZomberry(this, X(313), 176);
     new Bush(this, X(318), 176);

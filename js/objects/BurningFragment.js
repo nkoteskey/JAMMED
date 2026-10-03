@@ -37,6 +37,21 @@ class BurningFragment extends Phaser.Physics.Arcade.Sprite {
 			}
 		  }, null, this);
 
+		// Shrapnel sets off other pineapples (chain reaction) and singes
+		// anything else it touches.
+		this._burned = new Set();
+		if (scene.enemies) {
+			this.scene.physics.add.overlap(this, scene.enemies, (frag, e) => {
+				if (!e || !e.active || e.dead || this._burned.has(e)) return;
+				this._burned.add(e);
+				if (typeof e.igniteFromBlast === "function") {
+					if (e.alive) e.igniteFromBlast();
+				} else if (!e.invincible && typeof e.takeDamage === "function") {
+					e.takeDamage(1);
+				}
+			});
+		}
+
 		this.autoDestroyTimer = scene.time.addEvent({
 			delay: 2000,
 			callback: () => { if (this.active) this.destroy(); },

@@ -436,7 +436,10 @@ class Jammy {
       this._groundJump();
     } else if (this.canDoubleJump && !this.rocketBoostActive) {
       this.canDoubleJump = false;
-      if (this.rocketAxe) {
+      // Hold DOWN on the second jump for a plain short hop — handy under
+      // low ceilings and for tight landings where the rocket overshoots.
+      const wantHop = anyKeyDown(this.downKeys) || this.touch.down;
+      if (this.rocketAxe && !wantHop) {
         // Rocket Axe — Jammy kicks off his guitar and the boosters fire,
         // propelling him up and forward in a long arc.
         this._rocketAxeBoost();

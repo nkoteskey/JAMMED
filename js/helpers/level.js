@@ -46,6 +46,11 @@ const LevelCommon = {
     scn.cloudPlatforms = null;
     scn.grindRails = null;
     scn.blubert = null;
+    // The death fade-out leaves the camera's overlay black until a fade-in
+    // runs. Start it here, first thing, so a stage never comes back from
+    // a restart as a black screen even if something later in create fails.
+    scn.cameras.main.resetFX();
+    scn.cameras.main.fadeIn(400, 0, 0, 0);
     scn.bullets = scn.physics.add.group();
     // Physics groups apply their defaults to every body added, which
     // used to switch gravity back on for tokens and pickups placed in
@@ -117,7 +122,6 @@ const LevelCommon = {
     scn.stageStartTime = scn.time.now;
     const ui = scn.scene.get("UIScene");
     if (ui && ui.resetCombo) ui.resetCombo();
-    scn.cameras.main.fadeIn(400, 0, 0, 0);
   },
 
   // A one-way floating platform drawn with the pixel-cloud art.
@@ -359,7 +363,7 @@ const LevelCommon = {
       .setTintFill(0xffb347)
       .setAlpha(0);
     const t2 = scn.add
-      .bitmapText(cx, 166, "tempFont", "JUMP AGAIN IN MID-AIR TO BLAST OFF", 8)
+      .bitmapText(cx, 166, "tempFont", "JUMP AGAIN IN MID-AIR TO BLAST OFF - HOLD DOWN FOR A SHORT HOP", 8)
       .setOrigin(0.5)
       .setScrollFactor(0)
       .setDepth(300)

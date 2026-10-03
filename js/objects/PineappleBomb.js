@@ -158,6 +158,24 @@ class Pineapple extends Phaser.Physics.Arcade.Sprite {
     this.burningDown = true;
   }
 
+  // Lit by another pineapple's shrapnel: a much shorter fuse, so a row
+  // of them goes off like a string of firecrackers.
+  igniteFromBlast() {
+    if (this.burningDown || this.dead) return;
+    ["burn-down-left", "burn-down-right"].forEach((k) => {
+      const a = this.anims.get(k);
+      if (a) {
+        a.frameRate = 24;
+        a.msPerFrame = 1000 / 24;
+      }
+    });
+    this.setTint(0xffffff);
+    this.scene.time.delayedCall(60, () => {
+      if (this.active && !this.dead) this.clearTint();
+    });
+    this.burnDown();
+  }
+
   takeDamage() {
     if (!this.invincible) {
       this.invincible = true;

@@ -128,9 +128,9 @@ class EndCredits extends Phaser.Scene {
     else idx = 5;
     items.push(
       this.add
-        .bitmapText(cx, 170, "8-bit-mono", this.awardStatements[idx], 12)
+        .bitmapText(cx, 172, "8-bit-mono", this.awardStatements[idx], 10)
         .setOrigin(0.5)
-        .setMaxWidth(360)
+        .setMaxWidth(400)
         .setTint(0xd8f878)
     );
     if (!run.hard) {

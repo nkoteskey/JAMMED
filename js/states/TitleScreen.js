@@ -30,10 +30,10 @@ class TitleScreen extends Phaser.Scene {
     const label = touch ? "TAP TO START" : "PRESS ANY KEY TO START";
 
     this.startTextShadow = this.add
-      .bitmapText(centerX + 2, centerY + 2, "8-bit-mono", label, 15)
+      .bitmapText(centerX + 2, centerY + 2, "8-bit-mono", label, 16)
       .setOrigin(0.5)
       .setTint(0x000000);
-    this.startText = this.add.bitmapText(centerX, centerY, "8-bit-mono", label, 15).setOrigin(0.5);
+    this.startText = this.add.bitmapText(centerX, centerY, "8-bit-mono", label, 16).setOrigin(0.5);
     this.blinkTween = this.tweens.add({
       targets: [this.startText, this.startTextShadow],
       alpha: 0,
@@ -49,7 +49,7 @@ class TitleScreen extends Phaser.Scene {
     LOST_JAM_IDS.forEach((id, i) => {
       const found = !!save.lostJams[id];
       this.add
-        .image(70 + i * 20, 232, found ? "lost-record-sleeve" : "lost-record")
+        .image(78 + i * 20, 232, found ? "lost-record-sleeve" : "lost-record")
         .setScale(0.8)
         .setAlpha(found ? 1 : 0.3);
     });

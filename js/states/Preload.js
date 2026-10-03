@@ -15,17 +15,7 @@ class Preload extends Phaser.Scene {
       loadingBar.setCrop(0, 0, value * loadingBar.width, loadingBar.height);
     });
 
-    // Load fonts
-    this.load.bitmapFont(
-      "8-bit-mono",
-      "assets/fonts/8-bit-mono.png",
-      "assets/fonts/8-bit-mono.fnt"
-    );
-    this.load.bitmapFont(
-      "tempFont",
-      "assets/fonts/tempFont.png",
-      "assets/fonts/tempFont.fnt"
-    );
+    // Fonts are drawn in code (js/helpers/pixelfont.js) — see create()
 
     // Backgrounds and storyboards
     this.load.image(
@@ -286,6 +276,10 @@ class Preload extends Phaser.Scene {
     this.load.plugin("rexvirtualjoystickplugin", url, true);
   }
   create() {
+    // One clean pixel font for everything, under both historical names
+    installPixelFont(this, "tempFont");
+    installPixelFont(this, "8-bit-mono");
+
     // Jammy's guitar changes finish with the equipped weapon: build the
     // recoloured sprite sheets, then one animation set per finish.
     buildJammySkins(this);

@@ -28,17 +28,19 @@ class StoryScene extends Phaser.Scene {
       .setAlpha(0)
       .setOrigin(0);
 
+    // The pixel font is wider than the old one: size 10 wraps a caption
+    // into four or five lines inside the storyboard's lower band.
     this.textContentShadow = this.add
-      .bitmapText(this.cameras.main.centerX + 1, 181, "8-bit-mono", cfg.text, 12)
+      .bitmapText(this.cameras.main.centerX + 1, 183, "8-bit-mono", cfg.text, 10)
       .setOrigin(0.5)
-      .setMaxWidth(330)
+      .setMaxWidth(380)
       .setTint(0x000000)
       .setAlpha(0);
 
     this.textContent = this.add
-      .bitmapText(this.cameras.main.centerX, 180, "8-bit-mono", cfg.text, 12)
+      .bitmapText(this.cameras.main.centerX, 182, "8-bit-mono", cfg.text, 10)
       .setOrigin(0.5)
-      .setMaxWidth(330)
+      .setMaxWidth(380)
       .setTint(0xd8f878)
       .setAlpha(0);
 

@@ -64,6 +64,7 @@ function resetRunState() {
     stageTimes: {},
     deaths: 0,
     secretExits: 0,
+    maxHpBonus: 0, // heart containers found this run
     hard: false,
     startTime: 0,
   };

@@ -9,7 +9,7 @@ class Jammy {
 
     this.bulletLimit = 3;
     // Hard mode: three hearts instead of five
-    this.maxHP = run && run.hard ? 3 : 5;
+    this.maxHP = (run && run.hard ? 3 : 5) + ((run && run.maxHpBonus) || 0);
     this.hp = Phaser.Math.Clamp(hp || (run ? run.hp : this.maxHP) || this.maxHP, 1, this.maxHP);
     this.walkSpeed = 125;
     this.invincible = false;

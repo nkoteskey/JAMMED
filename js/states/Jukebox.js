@@ -17,7 +17,8 @@ class Jukebox extends Phaser.Scene {
       { key: "Jammed", name: "JAMMED", sub: "TITLE THEME" },
       { key: "Level1MusicLoop", name: "SURF'S UP", sub: "LOS JAMGELES / SUNSET MESA" },
       { key: "BossBattle", name: "BOSS BATTLE", sub: "THE THEATER / THE JAM WORKS" },
-    ];
+      { key: "CloudWaltz", name: "CLOUD WALTZ", sub: "CLOUD NINE" },
+    ].filter((t) => this.cache.audio.exists(t.key));
     this.selected = 0;
     this.current = null;
 

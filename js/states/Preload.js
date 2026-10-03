@@ -279,6 +279,8 @@ class Preload extends Phaser.Scene {
     // One clean pixel font for everything, under both historical names
     installPixelFont(this, "tempFont");
     installPixelFont(this, "8-bit-mono");
+    // Code-written chiptunes (Cloud Waltz) render in the background
+    CHIPTUNE.install(this);
 
     // Jammy's guitar changes finish with the equipped weapon: build the
     // recoloured sprite sheets, then one animation set per finish.

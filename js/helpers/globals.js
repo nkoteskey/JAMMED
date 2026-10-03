@@ -3,6 +3,10 @@
 // scene assigns it in preload()/init().
 var scene;
 
+// Testing aid: shows STAGE SELECT on the title menu. Flip to false for
+// release builds.
+var STAGE_SELECT_ENABLED = true;
+
 // Keyboard layout. Each action lists every key that triggers it.
 var controls = {
   shoot: ["Q", "N", "SHIFT", "X"],

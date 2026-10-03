@@ -107,6 +107,9 @@ class TitleScreen extends Phaser.Scene {
     if (save.hardUnlocked) this.menuItems.push({ label: "HARD MODE", action: () => this.startGame(true) });
     if (allLostJamsFound()) this.menuItems.push({ label: "JAMS PLAYER", action: () => this._openJukebox() });
     this.menuItems.push({ label: "HIGH SCORES", action: () => this._setScores(true) });
+    if (typeof STAGE_SELECT_ENABLED !== "undefined" && STAGE_SELECT_ENABLED) {
+      this.menuItems.push({ label: "STAGE SELECT", action: () => this._openStageSelect() });
+    }
 
     this.menuGroup = this.add.container(0, 0).setVisible(false).setDepth(10);
     const h = this.menuItems.length * 18 + 20;
@@ -255,6 +258,16 @@ class TitleScreen extends Phaser.Scene {
     const showWorld = open && hasWorld && this.scoresPage === 1;
     this.scoresGroup.setVisible(open && !showWorld);
     if (this.worldGroup) this.worldGroup.setVisible(showWorld);
+  }
+
+  _openStageSelect() {
+    if (this._starting) return;
+    this._starting = true;
+    this.cameras.main.fadeOut(300, 0, 0, 0);
+    this.cameras.main.once("camerafadeoutcomplete", () => {
+      this.sound.stopAll();
+      this.scene.start("StageSelect");
+    });
   }
 
   _openJukebox() {

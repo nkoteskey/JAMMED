@@ -31,6 +31,7 @@ window.addEventListener("DOMContentLoaded", function () {
       Stage2_1,
       CutSceneToBeContinued,
       Jukebox,
+      StageSelect,
       EndCredits,
     ],
     physics: {

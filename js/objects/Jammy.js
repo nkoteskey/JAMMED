@@ -52,6 +52,12 @@ class Jammy {
     this.seedAmmo = run ? Math.max(1, run.seedAmmo || 1) : 1;
     this.seedAmmoMax = 12;
     this.lastDryClickTime = 0;
+    // Cold stages ice over every guitar but the Glacier Slide: after a
+    // shot the strings need this long to thaw before the next one.
+    this.thawMs = 1500;
+    this.thawAt = 0;
+    this._lastFrozenClick = 0;
+    this._lastFrozenLabel = 0;
     this.controlsEnabled = true;
     this.alive = true;
     this.walkingLeft = false;
@@ -323,9 +329,10 @@ class Jammy {
   }
 
   fireSlide() {
-    if (scene.bullets.countActive(true) >= this.bulletLimit) return;
+    if (scene.bullets.countActive(true) >= this.bulletLimit) return false;
     const dir = this.facing === "right" ? 1 : -1;
     new EchoNote(scene, this.sprite.x + dir * 10, this.sprite.y - 4, this.facing, this.up);
+    return true;
   }
 
   // ---------------------------------------------------------------
@@ -381,27 +388,93 @@ class Jammy {
 
   shoot() {
     if (!this.alive || !this.controlsEnabled) return;
-    if (this.currentWeapon === "seed") {
-      this.fireSeed();
-    } else if (this.currentWeapon === "bass") {
-      this.fireBass();
-    } else if (this.currentWeapon === "slide") {
-      this.fireSlide();
-    } else {
-      this.fireSonic();
+    const now = scene.time.now;
+    const iced = this.weaponIced();
+    if (iced && now < this.thawAt) {
+      this._frozenClick(now);
+      return;
     }
+    let fired = false;
+    if (this.currentWeapon === "seed") {
+      fired = this.fireSeed();
+    } else if (this.currentWeapon === "bass") {
+      fired = this.fireBass();
+    } else if (this.currentWeapon === "slide") {
+      fired = this.fireSlide();
+    } else {
+      fired = this.fireSonic();
+    }
+    if (iced && fired) this._iceOver(now);
     this.playShootingPose();
+  }
+
+  // True on a cold stage with any guitar but the Glacier Slide equipped.
+  weaponIced() {
+    return !!(scene && scene.coldStage && this.currentWeapon !== "slide");
+  }
+
+  // The shot got off, but the strings frost over behind it.
+  _iceOver(now) {
+    this.thawAt = now + this.thawMs;
+    this._frostPuff(3, 0x9ad8ff);
+    const ui = scene.scene.get("UIScene");
+    if (ui && ui.refreshFrost) ui.refreshFrost();
+  }
+
+  // Trigger pulled on a frozen guitar: a dull clink and ice dust, no shot.
+  _frozenClick(now) {
+    if (now - this._lastFrozenClick < 160) return;
+    this._lastFrozenClick = now;
+    scene.sound.play("enemyHitSound", { volume: 0.25, rate: 0.3 });
+    this._frostPuff(2, 0xd8f0ff);
+    if (now - this._lastFrozenLabel > 700) {
+      this._lastFrozenLabel = now;
+      const label = scene.add
+        .bitmapText(this.sprite.x, this.sprite.y - 26, "tempFont", "FROZEN", 8)
+        .setOrigin(0.5)
+        .setDepth(380)
+        .setTintFill(0x9ad8ff);
+      scene.tweens.add({ targets: label, y: label.y - 14, alpha: 0, duration: 700, onComplete: () => label.destroy() });
+    }
+    const run = getRunState();
+    if (run && !run.frostHintShown) {
+      run.frostHintShown = true;
+      const t = scene.add
+        .bitmapText(scene.cameras.main.width / 2, 200, "tempFont", "THE COLD ICES OVER YOUR OTHER GUITARS - THE GLACIER SLIDE DOESN'T MIND", 8)
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(300)
+        .setTintFill(0x9ad8ff)
+        .setAlpha(0);
+      scene.tweens.add({ targets: t, alpha: 1, duration: 300, yoyo: true, hold: 2600, onComplete: () => t.destroy() });
+    }
+  }
+
+  _frostPuff(n, color) {
+    const dir = this.facing === "right" ? 1 : -1;
+    for (let i = 0; i < n; i++) {
+      const c = scene.add.rectangle(this.sprite.x + dir * 12, this.sprite.y + 4, 2, 2, color).setDepth(101);
+      scene.tweens.add({
+        targets: c,
+        x: c.x + dir * Phaser.Math.Between(4, 14),
+        y: c.y + Phaser.Math.Between(-10, 6),
+        alpha: 0,
+        duration: 320,
+        onComplete: () => c.destroy(),
+      });
+    }
   }
 
   fireBass() {
     const now = scene.time.now;
-    if (now - this.lastBassTime < this.bassCooldownMs) return;
+    if (now - this.lastBassTime < this.bassCooldownMs) return false;
     this.lastBassTime = now;
     new BassWave(scene, this.sprite.x, this.sprite.y + 8, this.facing);
     // Low rumble: pitched-down laser + a soft thump
     scene.sound.play("laserSound", { volume: 0.9, rate: 0.45 });
     scene.time.delayedCall(60, () => scene.sound.play("shortWave", { rate: 0.5, volume: 0.6 }));
     scene.cameras.main.shake(90, 0.0028);
+    return true;
   }
 
   playShootingPose() {
@@ -417,8 +490,10 @@ class Jammy {
   }
 
   fireSonic() {
-    if (scene.bullets.countActive(true) >= this.bulletLimit) return;
-    new AudioWave(scene, this.sprite.x, this.sprite.y + 5, this.facing, this.up, this.bigShot);
+    if (scene.bullets.countActive(true) >= this.bulletLimit) return false;
+    const wave = new AudioWave(scene, this.sprite.x, this.sprite.y + 5, this.facing, this.up, this.bigShot);
+    // In the cold the wave frosts over and shatters a short way out
+    if (scene.coldStage) wave.freezeAfter(300);
     if (this.bigShot) {
       this.bigShot = false;
       this.sprite.clearTint();
@@ -427,18 +502,19 @@ class Jammy {
         if (this.sprite && this.sprite.active) this.sprite.resetPipeline();
       });
     }
+    return true;
   }
 
   fireSeed() {
     const now = scene.time.now;
-    if (now - this.lastSeedTime < this.seedCooldownMs) return;
+    if (now - this.lastSeedTime < this.seedCooldownMs) return false;
     if (this.seedAmmo <= 0) {
       // Dry-fire click — throttled so it doesn't machine-gun
       if (now - this.lastDryClickTime > 180) {
         this.lastDryClickTime = now;
         scene.sound.play("enemyHitSound", { volume: 0.1, rate: 0.35 });
       }
-      return;
+      return false;
     }
     this.lastSeedTime = now;
     this.seedAmmo -= 1;
@@ -447,6 +523,7 @@ class Jammy {
     if (SeedOfDestruction.playFireSound) SeedOfDestruction.playFireSound(scene);
     const ui = scene.scene.get("UIScene");
     if (ui && ui.setSeedAmmo) ui.setSeedAmmo(this.seedAmmo);
+    return true;
   }
 
   addSeedAmmo(n) {

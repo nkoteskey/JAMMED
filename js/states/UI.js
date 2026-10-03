@@ -53,6 +53,10 @@ class UIScene extends Phaser.Scene {
       .bitmapText(422, 32, "tempFont", "", 8)
       .setOrigin(1, 0)
       .setTintFill(0xffb347);
+    // Thaw meter beside the weapon icon on cold stages: fills with
+    // frost after a shot and drains as the guitar thaws.
+    this.frostBarBg = this.add.rectangle(422, 6, 3, 16, 0x203050, 0.85).setOrigin(0, 0).setVisible(false);
+    this.frostBar = this.add.rectangle(422, 6, 3, 16, 0x9ad8ff).setOrigin(0, 0).setVisible(false);
 
     // --- Riff combo (top, right of the score so the two never overlap) ---
     this.combo = 0;
@@ -109,6 +113,7 @@ class UIScene extends Phaser.Scene {
       const txt = "x" + n;
       if (this.tokenText.text !== txt) this.tokenText.setText(txt);
       this._refreshAxe(jammy);
+      this._refreshFrost(jammy);
     }
     if (this.gamepad) this.gamepad.update(jammy);
 
@@ -198,6 +203,30 @@ class UIScene extends Phaser.Scene {
 
   refreshAxe() {
     this._refreshAxe(this._activeJammy());
+  }
+
+  refreshFrost() {
+    this._refreshFrost(this._activeJammy());
+  }
+
+  _refreshFrost(jammy) {
+    if (!this.frostBar) return;
+    const iced = !!(jammy && jammy.weaponIced && jammy.weaponIced());
+    if (!iced) {
+      if (this.frostBarBg.visible) {
+        this.frostBarBg.setVisible(false);
+        this.frostBar.setVisible(false);
+        this.weaponIcon.clearTint();
+      }
+      return;
+    }
+    const left = Math.max(0, jammy.thawAt - this.time.now);
+    const frac = Phaser.Math.Clamp(left / (jammy.thawMs || 1), 0, 1);
+    this.frostBarBg.setVisible(true);
+    this.frostBar.setVisible(frac > 0);
+    this.frostBar.height = Math.max(1, Math.round(16 * frac));
+    this.frostBar.y = 6 + (16 - this.frostBar.height);
+    this.weaponIcon.setTint(frac > 0 ? 0x6aa8e0 : 0xcfe8ff);
   }
 
   _refreshAxe(jammy) {

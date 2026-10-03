@@ -18,6 +18,7 @@ class Jukebox extends Phaser.Scene {
       { key: "Level1MusicLoop", name: "SURF'S UP", sub: "LOS JAMGELES / SUNSET MESA" },
       { key: "BossBattle", name: "BOSS BATTLE", sub: "THE THEATER / THE JAM WORKS" },
       { key: "CloudWaltz", name: "CLOUD WALTZ", sub: "CLOUD NINE" },
+      { key: "Frostbite", name: "FROSTBITE", sub: "THE BERRY MOUNTAINS" },
     ].filter((t) => this.cache.audio.exists(t.key));
     this.selected = 0;
     this.current = null;
@@ -34,16 +35,16 @@ class Jukebox extends Phaser.Scene {
     this.add.circle(96, 130, 4, 0x2e2838);
     this.arm = this.add.rectangle(150, 98, 4, 52, 0xb8c2da).setOrigin(0.5, 0).setAngle(-28);
 
-    // VU bars
+    // VU bars under the turntable
     this.bars = [];
     for (let i = 0; i < 12; i++) {
-      const b = this.add.rectangle(180 + i * 10, 190, 6, 4, 0x8ce070).setOrigin(0.5, 1);
+      const b = this.add.rectangle(52 + i * 8, 206, 6, 4, 0x8ce070).setOrigin(0.5, 1);
       this.bars.push(b);
     }
 
-    // Track list
+    // Track list (five rows fit between the header and the hint)
     this.rows = this.tracks.map((t, i) => {
-      const y = 76 + i * 34;
+      const y = 60 + i * 30;
       const name = this.add.bitmapText(196, y, "tempFont", t.name, 12).setTintFill(0xffffff);
       const sub = this.add.bitmapText(196, y + 14, "tempFont", t.sub, 8).setTintFill(0x8a7a92);
       const cursor = this.add.bitmapText(184, y, "tempFont", ">", 12).setTintFill(0xffd066);

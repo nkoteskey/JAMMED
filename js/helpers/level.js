@@ -382,7 +382,7 @@ const LevelCommon = {
       .setTintFill(0xffb347)
       .setAlpha(0);
     const t2 = scn.add
-      .bitmapText(cx, 166, "tempFont", "JUMP AGAIN IN MID-AIR TO BLAST OFF - HOLD DOWN FOR A SHORT HOP", 8)
+      .bitmapText(cx, 166, "tempFont", "JUMP AGAIN IN MID-AIR TO BLAST OFF - TAP DOWN TO SWITCH TO A SHORT HOP", 8)
       .setOrigin(0.5)
       .setScrollFactor(0)
       .setDepth(300)

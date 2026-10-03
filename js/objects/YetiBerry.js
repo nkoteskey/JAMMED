@@ -5,8 +5,11 @@
 //   POUND   — slams the floor: shockwaves both ways, and the ceiling
 //             drops fresh icicles over Jammy's head
 //   THROW   — lobs two big snowballs
-// 14 HP. Every weapon works; the Glacier Slide's power slide and echo
-// notes both deal 2. Beating him shatters the ice wall.
+// 20 HP (26 in hard mode). At half health he goes berserk: faster
+// wind-ups, charges that rebound straight back at you, three icicles
+// per pound and three snowballs per throw. The cold ices over every
+// guitar but the Glacier Slide, whose power slide and echo notes both
+// deal 2. Beating him shatters the ice wall.
 class YetiBerry extends Phaser.Physics.Arcade.Sprite {
   static ensureTextures(scn) {
     if (scn.textures.exists("yeti-idle")) return;
@@ -73,8 +76,11 @@ class YetiBerry extends Phaser.Physics.Arcade.Sprite {
     scn.physics.add.existing(this);
 
     this.score = 4000;
-    this.maxHP = 14;
+    const run = typeof getRunState === "function" ? getRunState() : null;
+    this.maxHP = run && run.hard ? 26 : 20;
     this.hp = this.maxHP;
+    this.enraged = false;
+    this._rebound = false;
     this.dead = false;
     this.alive = true;
     this.invincible = false;
@@ -118,10 +124,20 @@ class YetiBerry extends Phaser.Physics.Arcade.Sprite {
     if (this.state === "idle") {
       this.setFlipX(dx < 0);
       // shuffle toward Jammy slowly between moves
-      this.body.setVelocityX(Phaser.Math.Clamp(dx, -40, 40) * this.speedScale);
+      const shuffle = this.enraged ? 60 : 40;
+      this.body.setVelocityX(Phaser.Math.Clamp(dx, -shuffle, shuffle) * this.speedScale);
       if (now >= this.nextActionAt) this._nextMove(dx);
     } else if (this.state === "charge") {
-      if (this.body.blocked.left || this.body.blocked.right || now >= this._chargeUntil) this._endMove(600);
+      if (this.body.blocked.left || this.body.blocked.right || now >= this._chargeUntil) {
+        // Berserk: most charges turn straight around for a second pass
+        if (this.enraged && !this._rebound && Math.random() < 0.65) {
+          this._rebound = true;
+          this._charge();
+        } else {
+          this._rebound = false;
+          this._endMove(600);
+        }
+      }
     }
   }
 
@@ -154,7 +170,7 @@ class YetiBerry extends Phaser.Physics.Arcade.Sprite {
     this.body.setVelocityX(0);
     this.setTexture("yeti-roar");
     this.scene.sound.play("enemyHitSound", { rate: 0.4, volume: 0.6 });
-    this.scene.time.delayedCall(420, () => {
+    this.scene.time.delayedCall(this.enraged ? 280 : 420, () => {
       if (this.dead) return;
       if (pick === "charge") this._charge();
       else if (pick === "pound") this._pound();
@@ -168,8 +184,9 @@ class YetiBerry extends Phaser.Physics.Arcade.Sprite {
     this.setFlipX(dir < 0);
     this.setTexture("yeti-idle");
     this.state = "charge";
-    this.body.setVelocityX(dir * 190 * this.speedScale);
-    this._chargeUntil = this.scene.time.now + 1100;
+    if (this._chargeDust) this._chargeDust.remove(false);
+    this.body.setVelocityX(dir * (this.enraged ? 250 : 190) * this.speedScale);
+    this._chargeUntil = this.scene.time.now + (this.enraged ? 1000 : 1100);
     // Snow kicked up behind him
     this._chargeDust = this.scene.time.addEvent({
       delay: 60,
@@ -192,9 +209,9 @@ class YetiBerry extends Phaser.Physics.Arcade.Sprite {
       s.cameras.main.shake(200, 0.008);
       s.sound.play("watermelonBossLandingSound", { volume: 0.7 });
       [-1, 1].forEach((dir) => this._shockwave(dir));
-      // Icicles over Jammy's head
+      // Icicles over Jammy's head (a third one when berserk)
       const jx = s.jammy.sprite.x;
-      [-20, 12].forEach((off, i) => {
+      (this.enraged ? [-30, -4, 22] : [-20, 12]).forEach((off, i) => {
         s.time.delayedCall(150 + i * 120, () => {
           if (this.dead || typeof Icicle === "undefined") return;
           const ic = new Icicle(s, Phaser.Math.Clamp(jx + off, this.arenaL + 8, this.arenaR - 8), this.ceilingY);
@@ -222,7 +239,7 @@ class YetiBerry extends Phaser.Physics.Arcade.Sprite {
     s.enemyProjectiles.add(w);
     w.body.setAllowGravity(false);
     w.body.setSize(12, 10);
-    w.body.setVelocityX(dir * 160 * this.speedScale);
+    w.body.setVelocityX(dir * (this.enraged ? 205 : 160) * this.speedScale);
     w.invincible = true;
     w.die = () => w.destroy();
     s.time.delayedCall(1100, () => {
@@ -236,7 +253,7 @@ class YetiBerry extends Phaser.Physics.Arcade.Sprite {
     this.setTexture("yeti-roar");
     if (typeof Snowberry !== "undefined") Snowberry.ensureTextures(s);
     const j = s.jammy;
-    [0, 260].forEach((delay, i) => {
+    (this.enraged ? [0, 220, 440] : [0, 260]).forEach((delay, i) => {
       s.time.delayedCall(delay, () => {
         if (this.dead) return;
         const dx = j.sprite.x - this.x;
@@ -259,7 +276,7 @@ class YetiBerry extends Phaser.Physics.Arcade.Sprite {
         s.sound.play("blueberryBombDropSound", { volume: 0.5, rate: 0.8 });
       });
     });
-    this._endMove(1000);
+    this._endMove(this.enraged ? 1100 : 1000);
   }
 
   _endMove(delayMs) {
@@ -270,7 +287,34 @@ class YetiBerry extends Phaser.Physics.Arcade.Sprite {
     this.body.setVelocityX(0);
     this.setTexture("yeti-idle");
     this.state = "idle";
-    this.nextActionAt = this.scene.time.now + delayMs / this.speedScale;
+    this.nextActionAt = this.scene.time.now + delayMs / this.speedScale / (this.enraged ? 1.5 : 1);
+  }
+
+  // Half health: a roar, a frost flash, and every move gets meaner.
+  _enrage() {
+    if (this.enraged || this.dead) return;
+    this.enraged = true;
+    const s = this.scene;
+    this.setTexture("yeti-roar");
+    s.cameras.main.shake(300, 0.008);
+    s.sound.play("watermelonBossLandingSound", { volume: 0.6, rate: 0.6 });
+    const t = s.add
+      .bitmapText(this.x, this.y - 34, "tempFont", "BERSERK!", 8)
+      .setOrigin(0.5)
+      .setDepth(300)
+      .setTintFill(0x9ad8ff);
+    s.tweens.add({ targets: t, y: t.y - 18, alpha: 0, duration: 1100, onComplete: () => t.destroy() });
+    for (let i = 0; i < 10; i++) {
+      const c = s.add.rectangle(this.x, this.y, 2, 2, 0xd8f4ff).setDepth(80);
+      s.tweens.add({
+        targets: c,
+        x: this.x + Phaser.Math.Between(-30, 30),
+        y: this.y + Phaser.Math.Between(-30, 20),
+        alpha: 0,
+        duration: 420,
+        onComplete: () => c.destroy(),
+      });
+    }
   }
 
   takeDamage(val = 1) {
@@ -278,8 +322,11 @@ class YetiBerry extends Phaser.Physics.Arcade.Sprite {
     this.hp -= Math.max(1, val || 1);
     this.setTint(0xff6666);
     this.scene.time.delayedCall(60, () => {
-      if (this.active) this.clearTint();
+      if (!this.active) return;
+      if (this.enraged) this.setTint(0xc8ecff);
+      else this.clearTint();
     });
+    if (this.hp > 0 && !this.enraged && this.hp <= Math.ceil(this.maxHP / 2)) this._enrage();
     this.scene.sound.play("enemyHitSound");
     this.invincible = true;
     this.scene.time.delayedCall(120, () => {

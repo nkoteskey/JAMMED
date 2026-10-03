@@ -14,8 +14,11 @@ class Stage2_1 extends Phaser.Scene {
   create() {
     this._changing = false;
     this.sound.stopAll();
-    this.sound.play("Level1MusicLoop", { loop: true, volume: 0.9 });
+    this.sound.play(this.cache.audio.exists("Frostbite") ? "Frostbite" : "Level1MusicLoop", { loop: true, volume: 0.9 });
     this.cameras.main.setBackgroundColor("#1a2a5a");
+    // The cold ices over every guitar but the Glacier Slide: each shot
+    // from the others needs a thaw, and sonic waves freeze solid.
+    this.coldStage = true;
 
     this._buildTilesetTexture();
     this._buildLevel();
@@ -226,9 +229,10 @@ class Stage2_1 extends Phaser.Scene {
     floor(181, 188, 10);
     ice(189, 196, 9);
     floor(197, 208, 9);
-    // lodge
+    // lodge: roof, a back wall, and a front wall with the doorway open
+    // at floor level so Jammy can walk in to the door
     fill(ground, 200, 4, 208, 4, WOOD);
-    fill(ground, 200, 5, 200, 8, WOOD);
+    fill(ground, 200, 5, 200, 6, WOOD);
     fill(ground, 208, 5, 208, 8, WOOD);
     fill(change, 206, 5, 207, 8, ROCK);
     // Enemy fences: only at the pit and cave mouths, so the Frostberries
@@ -290,14 +294,10 @@ class Stage2_1 extends Phaser.Scene {
           const t = (this.time.now - start) / 1000;
           const targetX = x + Math.sin(t * omega) * dx;
           const vx = dx * omega * Math.cos(t * omega) + (targetX - plat.x) * 2;
+          // Arcade carries riders on an immovable moving body itself
+          // (body.friction.x), so no manual nudge: doing both slid
+          // Jammy off the far edge.
           plat.body.setVelocityX(vx);
-          // Arcade doesn't carry riders sideways: do it by hand
-          if (this.jammy.alive && this.jammy.sprite.body.touching.down) {
-            const jb = this.jammy.sprite.body;
-            if (Math.abs(jb.bottom - plat.body.top) < 4 && jb.right > plat.body.left && jb.left < plat.body.right) {
-              this.jammy.sprite.x += (vx * this.game.loop.delta) / 1000;
-            }
-          }
         },
       });
     };

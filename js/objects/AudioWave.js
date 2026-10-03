@@ -40,6 +40,30 @@ class AudioWave extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  // In the cold the wave frosts over and, after a short flight, freezes
+  // solid and falls apart (see Jammy.fireSonic on cold stages).
+  freezeAfter(ms) {
+    this.setTint(0xb8e4ff);
+    this.scene.time.delayedCall(ms, () => {
+      if (!this.active) return;
+      const s = this.scene;
+      for (let i = 0; i < 5; i++) {
+        const c = s.add.rectangle(this.x, this.y, 2, 3, i % 2 ? 0xffffff : 0xbfe8ff).setDepth(98);
+        s.tweens.add({
+          targets: c,
+          x: this.x + Phaser.Math.Between(-8, 8),
+          y: this.y + Phaser.Math.Between(12, 30),
+          alpha: 0,
+          duration: 340,
+          ease: "Quad.easeIn",
+          onComplete: () => c.destroy(),
+        });
+      }
+      s.sound.play("enemyHitSound", { rate: 2.2, volume: 0.25 });
+      this.destroy();
+    });
+  }
+
   hit(enemy) {
     if (!this.active) return;
     if (enemy && !enemy.dead && !enemy.invincible && typeof enemy.takeDamage === "function") {

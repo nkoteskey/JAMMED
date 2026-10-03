@@ -34,6 +34,38 @@ const CHIPTUNE_SONGS = {
       "A4:1 C5:1 E5:1 | F5:1 A5:1 C6:1 | B5:2 A5:1 | G5:3 |",
     // Bars (1-based, inclusive ranges) that get the eighth-note arpeggio
     arpeggioBars: [[17, 32]],
+    gain: 1,
+  },
+
+  // "Frostbite": the Berry Mountains theme. A brisk 4/4 in A minor with
+  // a walking triangle bass and off-beat stabs, cold and determined.
+  // The B section runs in eighths over a glittering arpeggio.
+  Frostbite: {
+    bpm: 138,
+    beatsPerBar: 4,
+    sampleRate: 22050,
+    drive: true,
+    gain: 1,
+    chords: [
+      ["A2", "min"], ["A2", "min"], ["F2", "maj"], ["F2", "maj"],
+      ["C3", "maj"], ["C3", "maj"], ["G2", "maj"], ["G2", "maj"],
+      ["A2", "min"], ["A2", "min"], ["F2", "maj"], ["F2", "maj"],
+      ["E2", "maj"], ["E2", "maj"], ["A2", "min"], ["A2", "min"],
+      ["D2", "min"], ["D2", "min"], ["A2", "min"], ["A2", "min"],
+      ["F2", "maj"], ["F2", "maj"], ["E2", "maj"], ["E2", "maj"],
+      ["D2", "min"], ["D2", "min"], ["F2", "maj"], ["F2", "maj"],
+      ["G2", "maj"], ["G2", "maj"], ["E2", "maj"], ["E2", "maj"],
+    ],
+    melody:
+      "A4:1 C5:1 E5:1 D5:1 | C5:2 A4:2 | F4:1 A4:1 C5:1 D5:1 | C5:3 r:1 |" +
+      "E5:1 G5:1 E5:1 C5:1 | D5:2 B4:2 | G4:1 B4:1 D5:1 E5:1 | D5:4 |" +
+      "A4:1 C5:1 E5:1 A5:1 | G5:2 E5:2 | F5:1 E5:1 D5:1 C5:1 | D5:3 r:1 |" +
+      "E5:1 D5:1 C5:1 B4:1 | G#4:2 B4:2 | C5:1 B4:1 A4:1 G#4:1 | A4:4 |" +
+      "D5:.5 E5:.5 F5:.5 E5:.5 D5:1 A4:1 | F5:2 E5:2 | C5:.5 D5:.5 E5:.5 D5:.5 C5:1 A4:1 | E5:3 r:1 |" +
+      "A5:.5 G5:.5 F5:.5 E5:.5 F5:1 D5:1 | F5:2 A5:2 | G#5:.5 F5:.5 E5:.5 D5:.5 E5:1 B4:1 | E5:4 |" +
+      "D5:1 F5:1 A5:1 F5:1 | E5:2 C5:2 | F5:1 A5:1 C6:1 A5:1 | G5:3 r:1 |" +
+      "B4:1 D5:1 G5:1 B5:1 | A5:2 G5:2 | E5:.5 F5:.5 G#5:.5 B5:.5 E6:1 B5:1 | G#5:1 B5:1 E5:2 |",
+    arpeggioBars: [[17, 32]],
   },
 };
 
@@ -74,7 +106,7 @@ const CHIPTUNE = {
     const total = bars * song.beatsPerBar * beatSec;
     const ctx = new OfflineAudioContext(1, Math.ceil(total * sr), sr);
     const master = ctx.createGain();
-    master.gain.value = 0.8;
+    master.gain.value = song.gain || 0.8;
     master.connect(ctx.destination);
 
     const tone = (type, midi, t0, dur, vol, opts = {}) => {
@@ -129,10 +161,30 @@ const CHIPTUNE = {
 
     const inArp = (bar) => (song.arpeggioBars || []).some(([a, b]) => bar >= a && bar <= b);
 
-    // Oom-pah-pah
+    // Accompaniment. "drive" songs get a walking bass on every beat,
+    // stabs on the off-beats and a hat on every eighth; the default is
+    // the waltz oom-pah-pah.
     song.chords.forEach(([root, quality], i) => {
       const tones = CHIPTUNE.chordTones(root, quality);
       const barT = i * song.beatsPerBar * beatSec;
+      if (song.drive) {
+        const walk = [tones[0] - 12, tones[0], tones[2] - 12, tones[0]];
+        for (let b = 0; b < song.beatsPerBar; b++) {
+          const t0 = barT + b * beatSec;
+          tone("triangle", walk[b % walk.length], t0, beatSec * 0.9, b % 2 === 0 ? 0.42 : 0.3, { sustain: 0.8, release: 0.05 });
+          if (b % 2 === 1) tones.forEach((m) => tone("square", m + 12, t0, beatSec * 0.4, 0.055, { sustain: 0.6 }));
+          hat(t0, 0.1);
+          hat(t0 + beatSec * 0.5, 0.05);
+        }
+        if (inArp(i + 1)) {
+          const pattern = [0, 1, 2, 1, 0, 1, 2, 1];
+          pattern.forEach((p, k) => {
+            const t0 = barT + k * beatSec * 0.5;
+            tone("square", tones[p] + 24, t0, beatSec * 0.26, 0.035, { sustain: 0.5 });
+          });
+        }
+        return;
+      }
       // Beat 1: deep triangle root, plus a soft octave thump
       tone("triangle", tones[0] - 12, barT, beatSec * 0.95, 0.42, { sustain: 0.8, release: 0.05 });
       tone("triangle", tones[0], barT, beatSec * 0.3, 0.18);

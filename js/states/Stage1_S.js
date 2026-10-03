@@ -20,7 +20,7 @@ class Stage1_S extends Phaser.Scene {
     this.sound.stopAll();
     this.sound.play(this.cache.audio.exists("CloudWaltz") ? "CloudWaltz" : "Jammed", {
       loop: true,
-      volume: 0.8,
+      volume: 1,
     });
 
     this.cameras.main.setBackgroundColor("#5ec8f0");

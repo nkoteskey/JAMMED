@@ -213,16 +213,21 @@ class Icicle extends Phaser.Physics.Arcade.Sprite {
     g.destroy();
   }
 
+  // Hangs until Jammy walks under it, then shivers and drops. Any shot
+  // shatters it (hanging or falling) for a small score, once. It is
+  // scenery rather than prey: Blubert and the Seedcaster never lock on.
   constructor(scn, x, y) {
     Icicle.ensureTexture(scn);
     super(scn, x, y, "icicle");
     scn.add.existing(this);
     scn.physics.add.existing(this);
-    this.score = 200;
+    this.score = 100;
     this.hp = 1;
     this.dead = false;
     this.dropped = false;
+    this.falling = false;
     this.invincible = false;
+    this.targetable = false;
     this.body.setAllowGravity(false);
     this.body.setSize(8, 20, true);
     this.setDepth(57);
@@ -236,12 +241,17 @@ class Icicle extends Phaser.Physics.Arcade.Sprite {
     if (!j || !j.alive) return;
     const dx = Math.abs(j.sprite.x - this.x);
     const dyBelow = j.sprite.y - this.y;
-    // Tremble a moment before the drop
     if (dx < 16 && dyBelow > 10 && dyBelow < 170) this.drop();
   }
 
+  preUpdate(time, delta) {
+    super.preUpdate(time, delta);
+    // Whatever it lands on (floor, ledge, a floe), it breaks.
+    if (this.falling && !this.dead && this.body && this.body.blocked.down) this.shatter();
+  }
+
   drop() {
-    if (this.dropped) return;
+    if (this.dropped || this.dead) return;
     this.dropped = true;
     this.scene.tweens.add({
       targets: this,
@@ -251,6 +261,7 @@ class Icicle extends Phaser.Physics.Arcade.Sprite {
       repeat: 4,
       onComplete: () => {
         if (this.dead || !this.body) return;
+        this.falling = true;
         this.body.setAllowGravity(true);
         this.body.setVelocityY(120);
         this.jammyOverlap = this.scene.physics.add.overlap(this, this.scene.jammy.sprite, () => {
@@ -262,34 +273,41 @@ class Icicle extends Phaser.Physics.Arcade.Sprite {
         if (this.scene.groundLayer) {
           this.scene.physics.add.collider(this, this.scene.groundLayer, () => this.shatter());
         }
+        // Safety net: nothing stays stuck in the floor
+        this._fallTimer = this.scene.time.delayedCall(2600, () => this.shatter());
       },
     });
   }
 
-  shatter() {
+  shatter(shot = false) {
     if (this.dead) return;
     this.dead = true;
     const s = this.scene;
-    for (let i = 0; i < 5; i++) {
-      const c = s.add.rectangle(this.x, this.y + 6, 2, 3, 0xbfe8ff).setDepth(80);
+    if (this._fallTimer) this._fallTimer.remove(false);
+    const n = shot ? 7 : 5;
+    for (let i = 0; i < n; i++) {
+      const c = s.add.rectangle(this.x, this.y + (shot ? 0 : 6), 2, 3, i % 3 === 0 ? 0xffffff : 0xbfe8ff).setDepth(80);
       s.tweens.add({
         targets: c,
         x: this.x + Phaser.Math.Between(-12, 12),
-        y: this.y + Phaser.Math.Between(-10, 6),
+        // Shot shards tumble down; a landing just sprays sideways
+        y: this.y + (shot ? Phaser.Math.Between(14, 34) : Phaser.Math.Between(-10, 6)),
+        angle: Phaser.Math.Between(-90, 90),
         alpha: 0,
-        duration: 260,
+        duration: shot ? 380 : 260,
+        ease: shot ? "Quad.easeIn" : "Linear",
         onComplete: () => c.destroy(),
       });
     }
-    s.sound.play("enemyHitSound", { rate: 1.6, volume: 0.5 });
+    s.sound.play("enemyHitSound", { rate: shot ? 1.9 : 1.6, volume: 0.5 });
+    if (this.jammyOverlap) this.jammyOverlap.destroy();
     this.body.setEnable(false);
     this.destroy();
   }
 
   takeDamage() {
     if (this.dead) return;
-    // Shooting it makes it drop early — handy for clearing the path
     awardScore(this.scene, this.score, this.x, this.y);
-    this.drop();
+    this.shatter(true);
   }
 }

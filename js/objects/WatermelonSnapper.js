@@ -84,9 +84,13 @@ class WatermelonSnapper extends Phaser.Physics.Arcade.Sprite {
     this.reachX = 38;
     this.reachY = 26;
     this.detectX = 92;
-    this.score = 600;
-    this.hp = 3;
+    this.score = 1200;
+    // Thick rind: shots only count while the mouth is open mid-lunge,
+    // so jumping it is the real answer and a kill is a stubborn bonus.
+    this.hp = 6;
+    this.targetable = false; // Blubert and the Seedcaster don't bother
     this.dead = false;
+    this._lastClink = 0;
     this.state = "idle";
     this.cooldownUntil = 0;
     this.facing = -1;
@@ -272,6 +276,28 @@ class WatermelonSnapper extends Phaser.Physics.Arcade.Sprite {
 
   takeDamage(val = 1) {
     if (this.dead) return;
+    if (this.state !== "lunge" && this.state !== "snap") {
+      // Rind armor: the shot glances off
+      const now = this.scene.time.now;
+      if (now - this._lastClink > 120) {
+        this._lastClink = now;
+        this.scene.sound.play("enemyHitSound", { volume: 0.35, rate: 1.7 });
+        this.setTint(0xffffff);
+        this.scene.time.delayedCall(50, () => { if (this.active && !this.dead) this.clearTint(); });
+        for (let i = 0; i < 3; i++) {
+          const sp = this.scene.add.rectangle(this.headX, this.headY - 6, 2, 2, 0xffe080).setDepth(60);
+          this.scene.tweens.add({
+            targets: sp,
+            x: sp.x + Phaser.Math.Between(-12, 12),
+            y: sp.y + Phaser.Math.Between(-14, 2),
+            alpha: 0,
+            duration: 220,
+            onComplete: () => sp.destroy(),
+          });
+        }
+      }
+      return;
+    }
     this.hp -= val;
     this.setTint(0xff6666);
     this.scene.time.delayedCall(60, () => { if (this.active) this.clearTint(); });

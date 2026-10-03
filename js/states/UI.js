@@ -245,16 +245,16 @@ class UIScene extends Phaser.Scene {
     this.currentWeapon = weapon;
     if (!this.weaponIcon) return;
     if (weapon === "seed") {
-      // Use the same generated teardrop texture the projectile uses.
+      // Same upright seed art as the ammo pickup.
       if (
-        !this.textures.exists("seed-teardrop") &&
-        typeof SeedOfDestruction !== "undefined" &&
-        SeedOfDestruction.ensureTexture
+        !this.textures.exists("seed-kernel") &&
+        typeof SeedAmmoPickup !== "undefined" &&
+        SeedAmmoPickup.ensureTexture
       ) {
-        SeedOfDestruction.ensureTexture(this);
+        SeedAmmoPickup.ensureTexture(this);
       }
-      this.weaponIcon.setTexture("seed-teardrop");
-      this.weaponIcon.setDisplaySize(18, 12);
+      this.weaponIcon.setTexture("seed-kernel");
+      this.weaponIcon.setDisplaySize(12, 16);
       this.weaponLabel.setText("SEEDS");
       this.weaponLabel.setTintFill(0xff9966);
     } else if (weapon === "slide") {

@@ -1,0 +1,11 @@
+# Cloudflare Worker config for the JAMMED leaderboard.
+# The deploy-leaderboard GitHub workflow fills in the KV namespace id;
+# for a manual deploy replace __KV_ID__ with the id printed by
+#   wrangler kv namespace create SCORES
+name = "jammed-leaderboard"
+main = "leaderboard-worker.js"
+compatibility_date = "2025-01-01"
+
+[[kv_namespaces]]
+binding = "SCORES"
+id = "__KV_ID__"

@@ -1,0 +1,62 @@
+{
+	"textures": [
+		{
+			"image": "power-up.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 36,
+				"h": 16
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "still1",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 16,
+						"h": 14
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 16,
+						"h": 14
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 16,
+						"h": 14
+					}
+				},
+				{
+					"filename": "still2",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 16,
+						"h": 14
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 16,
+						"h": 14
+					},
+					"frame": {
+						"x": 19,
+						"y": 1,
+						"w": 16,
+						"h": 14
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:f5ed8f07cd3e204edbb0d04c65c48928:2c23e1a07d3752efef7a316573bd9f59:ddd1c615976e997fe5d70a63da18c7e6$"
+	}
+}

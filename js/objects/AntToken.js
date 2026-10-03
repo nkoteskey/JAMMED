@@ -7,6 +7,7 @@ class AntToken extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         this.scene.physics.add.existing(this);
         this.body.setAllowGravity(false);
+        this.setDepth(58);
         this.setDisplaySize(16, 16);
         this.play("ant-token-spin");
 

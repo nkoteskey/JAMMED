@@ -13,6 +13,7 @@ class SeedAmmoPickup extends Phaser.Physics.Arcade.Sprite {
     scn.add.existing(this);
     scn.physics.add.existing(this);
     this.body.setAllowGravity(false);
+    this.setDepth(58);
     this.setScale(0.9);
     this.setRotation(-0.2);
     this.setTint(0xffd188);

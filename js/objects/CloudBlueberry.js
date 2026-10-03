@@ -121,6 +121,19 @@ class CloudBlueberry extends Blueberry {
     }
   }
 
+  // A seed blast reaches the cloud: the drone is flushed out and killed
+  explodeInBush() {
+    if (this.dead) return;
+    if (this.hidden) this.emerge();
+    // Puff of cloud
+    for (let i = 0; i < 6; i++) {
+      const p = this.scene.add.circle(this.x + Phaser.Math.Between(-12, 12), this.y + Phaser.Math.Between(-8, 8), 3, 0xffffff, 0.9).setDepth(60);
+      this.scene.tweens.add({ targets: p, scale: 2, alpha: 0, duration: 320, onComplete: () => p.destroy() });
+    }
+    this.hp = 0;
+    this.die();
+  }
+
   detect() {
     if (this.detected || !this.hidden || this.dead) return;
     this.detected = true;
@@ -129,6 +142,9 @@ class CloudBlueberry extends Blueberry {
 
   emerge() {
     this.hidden = false;
+    // Once out, it's a live threat: let Blubert lock on so seeds home in
+    this.detected = true;
+    this.inPursuit = true;
     this.setVisible(true);
     this.body.setEnable(true);
     this.lastAction = this.scene.time.now;

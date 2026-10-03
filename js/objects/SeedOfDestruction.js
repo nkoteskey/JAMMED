@@ -48,8 +48,9 @@ class SeedOfDestruction extends Phaser.Physics.Arcade.Sprite {
     // Shorter range: ~260-300px to ground so a player who stopped
     // after seeing eyes appear can still clear the bush ahead.
     const dir = direction === "left" ? -1 : 1;
-    const speedX = (aimUp ? 160 : 300) * dir;
-    const speedY = aimUp ? -440 : -340;
+    // Aim-up lob climbs ~150px: enough to reach drones hiding in clouds
+    const speedX = (aimUp ? 150 : 300) * dir;
+    const speedY = aimUp ? -520 : -340;
     this.body.setVelocityX(speedX);
     this.body.setVelocityY(speedY);
   }
@@ -96,6 +97,17 @@ class SeedOfDestruction extends Phaser.Physics.Arcade.Sprite {
   preUpdate(time, delta) {
     super.preUpdate(time, delta);
     if (this.exploded || !this.body) return;
+    // Hidden enemies have no physics body, so check them by distance:
+    // a seed passing a bush or a cloud with something inside goes off.
+    if (this.scene.enemies) {
+      for (const e of this.scene.enemies.getChildren()) {
+        if (!e || e.dead || !e.hidden || !e.active) continue;
+        if (Phaser.Math.Distance.Between(this.x, this.y, e.x, e.y) < 26) {
+          this.explode();
+          return;
+        }
+      }
+    }
     const vx = this.body.velocity.x;
     const vy = this.body.velocity.y;
     if (vx !== 0 || vy !== 0) {

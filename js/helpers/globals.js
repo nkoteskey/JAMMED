@@ -10,6 +10,7 @@ var controls = {
   left: ["A", "LEFT"],
   right: ["D", "RIGHT"],
   aim: ["W", "UP"],
+  down: ["S", "DOWN"],
   cycleWeapon: ["C"],
   guitarRack: ["G"],
   pause: ["E", "P", "ESC"],

@@ -29,14 +29,14 @@ class GuitarRack extends Phaser.Scene {
 
     // Slot frames + contents
     this.slots = this.ids.map((id, i) => {
-      const x = cx + (i - (this.ids.length - 1) / 2) * 118;
+      const x = cx + (i - (this.ids.length - 1) / 2) * 92;
       const y = cy - 14;
-      const frame = this.add.rectangle(x, y, 100, 104, 0x2a1838, 1);
+      const frame = this.add.rectangle(x, y, 84, 104, 0x2a1838, 1);
       frame.setStrokeStyle(2, 0x5a3a5e, 1);
       const cat = GUITAR_CATALOG[id];
       const owned = coll.owned.includes(id);
 
-      const img = this.add.image(x, y - 8, "guitar-" + id).setScale(1.6);
+      const img = this.add.image(x, y - 8, "guitar-" + id).setScale(1.5);
       frame.setInteractive({ useHandCursor: true });
       frame.on("pointerdown", () => {
         if (this.cursor === i) this._equip();

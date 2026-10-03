@@ -15,6 +15,11 @@ class Pineapple extends Phaser.Physics.Arcade.Sprite {
     this.invincible = false;
     this.invincibilityTime = 50;
     this.awareDistance = 400;
+    // Lights the fuse once Jammy is this close — far enough that the
+    // player sees it start and has a beat to clear out.
+    this.fuseRange = 60;
+    this.fragmentCount = 5;
+    this.fragmentSpeed = 400;
     this.burningDown = false;
 
     // Physics settings
@@ -99,7 +104,7 @@ class Pineapple extends Phaser.Physics.Arcade.Sprite {
             this.y,
             j.sprite.x,
             j.sprite.y
-          ) < 18
+          ) < this.fuseRange
         ) {
           this.burnDown();
         }
@@ -167,15 +172,25 @@ class Pineapple extends Phaser.Physics.Arcade.Sprite {
   }
 
   launchFragments() {
-    let velocity = 400;
-    let verticalOffset = 4;
-    let fragments = [
-      { vx: -velocity, vy: 0 },
-      { vx: -velocity * 0.75, vy: -velocity * 0.75 },
-      { vx: 0, vy: -velocity },
-      { vx: velocity, vy: 0 },
-      { vx: velocity * 0.75, vy: -velocity * 0.75 },
-    ];
+    const velocity = this.fragmentSpeed;
+    const verticalOffset = 4;
+    let fragments;
+    if (this.fragmentCount > 5) {
+      // Full ring for the hot variant
+      fragments = [];
+      for (let i = 0; i < this.fragmentCount; i++) {
+        const a = (i / this.fragmentCount) * Math.PI * 2;
+        fragments.push({ vx: Math.cos(a) * velocity, vy: Math.sin(a) * velocity });
+      }
+    } else {
+      fragments = [
+        { vx: -velocity, vy: 0 },
+        { vx: -velocity * 0.75, vy: -velocity * 0.75 },
+        { vx: 0, vy: -velocity },
+        { vx: velocity, vy: 0 },
+        { vx: velocity * 0.75, vy: -velocity * 0.75 },
+      ];
+    }
     fragments.forEach((f) => {
       new BurningFragment(
         this.scene,
@@ -199,5 +214,33 @@ class Pineapple extends Phaser.Physics.Arcade.Sprite {
     this.visible = false;
     this.body.setEnable(false);
     this.destroy();
+  }
+}
+
+// Hot Pineapple — the Jam Works' canned variety. Shorter fuse, faster
+// waddle, and a full ring of eight burning fragments.
+class HotPineapple extends Pineapple {
+  constructor(scene, x, y) {
+    super(scene, x, y);
+    this.score = 800;
+    this.roamSpeed = 60 * enemySpeedScale();
+    this.fuseRange = 70;
+    this.fragmentCount = 8;
+    this.fragmentSpeed = 340;
+    this.setTint(0xff9070);
+    ["burn-down-left", "burn-down-right"].forEach((k) => {
+      const a = this.anims.get(k);
+      if (a) {
+        a.frameRate = 14;
+        a.msPerFrame = 1000 / 14;
+      }
+    });
+  }
+
+  flashOnce() {
+    this.setTint(0xffffff);
+    this.scene.time.delayedCall(50, () => {
+      if (this.active) this.setTint(0xff9070);
+    });
   }
 }

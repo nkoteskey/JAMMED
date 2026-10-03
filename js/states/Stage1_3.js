@@ -114,6 +114,9 @@ class Stage1_3 extends Phaser.Scene {
       new Bush(this, 2280, 176),
     ];
 
+    // A pair of pineapple grenades waddling the mesa floor
+    [1180, 2020].forEach((x) => new Pineapple(this, x, 160));
+
     // Needle cactuses — goofy-eyed sentries that blast needles in
     // every direction if Jammy lingers too close. Shoot them out or
     // Rocket-Axe over the top; the last one guards the exit portal.

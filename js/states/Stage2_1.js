@@ -307,17 +307,77 @@ class Stage2_1 extends Phaser.Scene {
     [300, 560, 2560, 2900].forEach((x) => new Frostberry(this, x, 160));
     new Frostberry(this, 1400, 120);
     // Snowberry turrets on ledges
-    [[312, 128], [560, 112], [1070, 132], [2250, 112], [3000, 112]].forEach(([x, y]) => new Snowberry(this, x, y));
+    [[560, 112], [1070, 132], [2250, 112], [3000, 112]].forEach(([x, y]) => new Snowberry(this, x, y));
+    // The Abominable Blueberry guards the back of the icicle cave behind
+    // an ice wall; beating him shatters it.
+    this._buildIceWall(104);
+    this.yeti = new YetiBerry(this, 1560, 140, {
+      arenaL: 85 * 16,
+      arenaR: 104 * 16,
+      ceilingY: 58,
+      wakeRange: 200,
+      onDefeated: () => this._shatterIceWall(),
+    });
     // Icicles across the cave ceiling
     for (let c = 76; c <= 108; c += 3) {
-      if (c === 88 || c === 91) continue;
+      if (c === 88 || c === 91 || c >= 94) continue; // the yeti's arena gets its own
       new Icicle(this, c * 16 + 8, 58);
     }
+    // Pineapple grenades on the final climb — explosions on ice are a treat
+    [2650, 2960].forEach((x) => new Pineapple(this, x, 140));
+
     // Clouds of drones over the lake
     [1950, 2200].forEach((x) => new Blueberry(this, x, 100).setPosition(x, 100));
   }
 
+  _buildIceWall(col) {
+    this.iceWallCol = col;
+    for (let r = 4; r <= 9; r++) this.groundLayer.putTileAt(this.ICE, col, r);
+    this.groundLayer.setCollision([1, 2, this.ICE, 4, 7]);
+    this.iceWallSign = this.add
+      .bitmapText(col * 16 + 8, 52, "tempFont", "ICE WALL", 8)
+      .setOrigin(0.5)
+      .setTintFill(0x9ad8ff)
+      .setDepth(5);
+  }
+
+  _shatterIceWall() {
+    const col = this.iceWallCol;
+    for (let r = 4; r <= 9; r++) {
+      this.groundLayer.removeTileAt(col, r);
+      for (let i = 0; i < 3; i++) {
+        const c = this.add.rectangle(col * 16 + 8, r * 16 + 8, 3, 3, 0xbfe8ff).setDepth(80);
+        this.tweens.add({
+          targets: c,
+          x: c.x + Phaser.Math.Between(-30, 30),
+          y: c.y + Phaser.Math.Between(10, 50),
+          alpha: 0,
+          duration: 600,
+          onComplete: () => c.destroy(),
+        });
+      }
+    }
+    if (this.iceWallSign) this.iceWallSign.destroy();
+    this.sound.play("enemyHitSound", { rate: 0.5, volume: 0.9 });
+    const t = this.add
+      .bitmapText(213, 100, "tempFont", "THE WAY IS CLEAR", 12)
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(300)
+      .setTintFill(0x8ce070);
+    this.tweens.add({ targets: t, alpha: 0, delay: 1400, duration: 400, onComplete: () => t.destroy() });
+  }
+
   _spawnPickups() {
+    // The Glacier Slide waits on the first ledge — grab it before the ice
+    new GuitarPickup(this, 312, 118, "glacier-slide");
+
+    // Grind rails: one shortcut over the lake (Rocket Axe up to it), one
+    // down the final climb toward the lodge.
+    LevelCommon.addGrindRail(this, 1776, 2400, 96, 1);
+    [1840, 1920, 2000, 2080, 2160, 2240, 2320].forEach((x) => new AntToken(this, x, 80));
+    LevelCommon.addGrindRail(this, 2600, 2880, 130, 1);
+
     [
       [250, 150], [280, 150], [310, 150],
       [560, 110], [590, 110],

@@ -25,6 +25,12 @@ const GUITAR_CATALOG = {
     labelColor: 0xb08cff,
     desc: ["GROUND QUAKE WAVE", "PIERCES ENEMIES"],
   },
+  "glacier-slide": {
+    name: "GLACIER SLIDE",
+    weapon: "slide",
+    labelColor: 0x9ad8ff,
+    desc: ["BOUNCING ECHO NOTES", "DOWN+MOVE: POWER SLIDE / GRIND RAILS"],
+  },
 };
 
 function getGuitarCollection() {
@@ -137,5 +143,36 @@ function ensureGuitarTextures(scn) {
   g.fillRect(10, 24, 1, 8);
   g.fillRect(12, 24, 1, 8);
   g.generateTexture("guitar-royal-bass", 22, 40);
+  g.destroy();
+
+  // Glacier Slide — an icy lap-steel. 22x38, frosted body, chrome bar.
+  g = scn.make.graphics({ x: 0, y: 0, add: false });
+  g.fillStyle(0x2a3450, 1);
+  g.fillRect(8, 0, 6, 6);
+  g.fillStyle(0xd8f4ff, 1);
+  g.fillRect(6, 1, 2, 2);
+  g.fillRect(14, 1, 2, 2);
+  g.fillStyle(0x4a5a80, 1);
+  g.fillRect(9, 6, 4, 12);
+  g.fillStyle(0x9ad8ff, 1);
+  g.fillRect(9, 9, 4, 1);
+  g.fillRect(9, 13, 4, 1);
+  // slab body, rounded bottom
+  g.fillStyle(0x8ed8f8, 1);
+  g.fillRect(3, 18, 16, 14);
+  g.fillCircle(11, 32, 8);
+  g.fillStyle(0xd8f4ff, 1);
+  g.fillRect(4, 19, 3, 12);
+  g.fillRect(5, 21, 10, 1);
+  // chrome slide bar + pickup
+  g.fillStyle(0xf4fbff, 1);
+  g.fillRect(2, 24, 18, 3);
+  g.fillStyle(0x1c2438, 1);
+  g.fillRect(6, 30, 10, 2);
+  // strings
+  g.fillStyle(0xffffff, 1);
+  g.fillRect(10, 18, 1, 14);
+  g.fillRect(12, 18, 1, 14);
+  g.generateTexture("guitar-glacier-slide", 22, 40);
   g.destroy();
 }

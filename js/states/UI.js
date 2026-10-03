@@ -239,6 +239,12 @@ class UIScene extends Phaser.Scene {
       this.weaponIcon.setDisplaySize(18, 12);
       this.weaponLabel.setText("SEEDS");
       this.weaponLabel.setTintFill(0xff9966);
+    } else if (weapon === "slide") {
+      if (!this.textures.exists("echo-note") && typeof EchoNote !== "undefined") EchoNote.ensureTexture(this);
+      this.weaponIcon.setTexture("echo-note");
+      this.weaponIcon.setDisplaySize(14, 16);
+      this.weaponLabel.setText("SLIDE");
+      this.weaponLabel.setTintFill(0x9ad8ff);
     } else if (weapon === "bass") {
       if (
         !this.textures.exists("bass-wave") &&

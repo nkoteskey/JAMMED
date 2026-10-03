@@ -29,7 +29,7 @@ On phones and tablets an on-screen joystick, JUMP and SHOOT buttons, a pause but
 * **Stage 1-S Cloud Nine** (secret): a sky run across drifting clouds, packed with Bread Tokens. No falling damage.
 * **Stage 1-4 The Jam Works**: the **Royal Bass** sits on the staircase plateau. Its quake wave rolls along the floor and pierces every enemy in a row, ideal for the jar sentries patrolling the factory.
 * **Stage 1-5 The Canning Floor**: the factory's master, the **Canning Colossus**, a two-phase boss. Crack the glass, then deal with what's inside. Afterwards the villain behind it all is revealed.
-* **World 2: The Berry Mountains**. **Stage 2-1** takes the fight into the snow: ice floors Jammy skids across, an icicle cave, Snowberry turrets lobbing snowballs, frostbitten Zomberries, and a frozen lake crossed on drifting ice floes. It ends at the Baron's lodge... to be continued.
+* **World 2: The Berry Mountains**. **Stage 2-1** takes the fight into the snow: ice floors Jammy skids across, an icicle cave guarded by the **Abominable Blueberry** mid-boss behind an ice wall, Snowberry turrets lobbing snowballs, frostbitten Zomberries, and a frozen lake crossed on drifting ice floes. The **Glacier Slide** guitar waits on the first ledge: its echo notes ricochet off floors and walls, and with it equipped DOWN+MOVE is a power slide (hurts enemies, fits under gaps, goes further on ice) and Jammy auto-grinds the stage's rails. It ends at the Baron's lodge... to be continued.
 
 HP and seed ammo carry from stage to stage; dying restarts the current stage with full health.
 
@@ -44,15 +44,16 @@ HP and seed ammo carry from stage to stage; dying restarts the current stage wit
 
 Everything is saved in the browser (localStorage).
 
-## Online leaderboard (optional)
+## Online leaderboard (optional, free)
 
-The game ships with a local top-10. To add a world leaderboard, deploy the tiny API in `server/leaderboard-worker.js` (a Cloudflare Worker with one KV namespace; the file header has the five-step setup) and paste its URL into `index.html`:
+The game ships with a local top-10. The world leaderboard is a tiny Cloudflare Worker (`server/leaderboard-worker.js`) with one KV namespace; Cloudflare's free plan covers it, no card needed. One-time setup:
 
-```html
-<script>window.JAMMED_LEADERBOARD_URL = "https://jammed-leaderboard.<you>.workers.dev";</script>
-```
+1. Cloudflare dashboard: My Profile, API Tokens, Create Token, use the "Edit Cloudflare Workers" template.
+2. Cloudflare dashboard: Workers & Pages, copy the Account ID.
+3. GitHub: repo Settings, Secrets and variables, Actions: add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+4. GitHub: Actions tab, "Deploy leaderboard", Run workflow.
 
-Scores entered on the credits screen are then uploaded, and the title screen's high-score board alternates between the local and world top-10.
+The workflow creates the KV namespace, deploys the worker, and commits `leaderboard.json` with its URL; the next Pages publish makes it live. Scores entered on the credits screen are then uploaded, and the title screen's high-score board alternates between the local and world top-10. (Manual alternative: `wrangler deploy` from `server/` and paste the URL into `index.html` or `leaderboard.json`.)
 
 ## Running locally
 

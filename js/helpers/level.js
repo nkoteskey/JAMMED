@@ -80,9 +80,13 @@ const LevelCommon = {
 
     // Jammy's shots vs enemies — one overlap for the whole stage instead
     // of a collider per bullet (which leaked colliders and timers).
-    scn.physics.add.overlap(scn.bullets, scn.enemies, (bullet, enemy) => {
+    // Phaser passes group-vs-group pairs in either order, so pick the
+    // projectile by its hit() method rather than by position.
+    scn.physics.add.overlap(scn.bullets, scn.enemies, (a, b) => {
+      const bullet = typeof a.hit === "function" ? a : b;
+      const enemy = bullet === a ? b : a;
       if (!bullet.active || !enemy.active || enemy.dead) return;
-      if (bullet.hit) bullet.hit(enemy);
+      bullet.hit(enemy);
     });
   },
 
@@ -128,6 +132,46 @@ const LevelCommon = {
     img.body.setAllowGravity(false);
     img.body.setImmovable(true);
     return img;
+  },
+
+  // Grind rail: a thin one-way platform. With the Glacier Slide
+  // equipped, Jammy auto-grinds along it in railDir at speed.
+  addGrindRail(scn, x0, x1, y, railDir = 1) {
+    if (!scn.textures.exists("grind-rail")) {
+      const g = scn.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0x8c96b0, 1);
+      g.fillRect(0, 0, 16, 2);
+      g.fillStyle(0xdde4f0, 1);
+      g.fillRect(0, 0, 16, 1);
+      g.fillStyle(0x5d6680, 1);
+      g.fillRect(0, 2, 16, 2);
+      g.fillRect(7, 4, 2, 4);
+      g.generateTexture("grind-rail", 16, 8);
+      g.destroy();
+    }
+    const w = Math.abs(x1 - x0);
+    const rail = scn.add.tileSprite((x0 + x1) / 2, y, w, 8, "grind-rail").setDepth(55);
+    scn.physics.add.existing(rail);
+    rail.body.setAllowGravity(false);
+    rail.body.setImmovable(true);
+    rail.body.setSize(w, 4);
+    rail.body.setOffset(0, 0);
+    rail.body.checkCollision.down = false;
+    rail.body.checkCollision.left = false;
+    rail.body.checkCollision.right = false;
+    rail.railDir = railDir;
+    scn.physics.add.collider(scn.jammy.sprite, rail);
+    // Posts every 64px
+    for (let x = Math.min(x0, x1) + 8; x < Math.max(x0, x1); x += 64) {
+      scn.add.rectangle(x, y + 10, 3, 14, 0x5d6680).setDepth(54);
+    }
+    // Direction arrows
+    for (let x = Math.min(x0, x1) + 24; x < Math.max(x0, x1) - 8; x += 48) {
+      scn.add.bitmapText(x, y - 10, "tempFont", railDir > 0 ? ">" : "<", 8).setOrigin(0.5).setTintFill(0xffee88).setAlpha(0.8).setDepth(55);
+    }
+    if (!scn.grindRails) scn.grindRails = [];
+    scn.grindRails.push(rail);
+    return rail;
   },
 
   // Secret exit portal: a second way out of a stage, Super-Mario-World

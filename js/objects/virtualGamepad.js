@@ -75,5 +75,6 @@ class VirtualGamepad {
     jammy.touch.left = k.left.isDown;
     jammy.touch.right = k.right.isDown;
     jammy.touch.up = k.up.isDown;
+    jammy.touch.down = k.down.isDown;
   }
 }

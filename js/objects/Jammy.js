@@ -1,3 +1,8 @@
+// Is the tile under Jammy's feet ice? (stages that have ice define isIceAt)
+function onIceCheck(j) {
+  return !!(typeof scene.isIceAt === "function" && scene.isIceAt(j.sprite.x, j.sprite.body.bottom + 2));
+}
+
 class Jammy {
   constructor(x, y, hp, facing = "right") {
     const run = getRunState();
@@ -68,6 +73,12 @@ class Jammy {
     this.aimKeys = addKeys(kb, controls.aim);
     this.jumpKeys = addKeys(kb, controls.jump);
     this.shootKeys = addKeys(kb, controls.shoot);
+    this.downKeys = addKeys(kb, controls.down || ["S", "DOWN"]);
+    this.touch.down = false;
+    this.sliding = false;
+    this.slideUntil = 0;
+    this.slideCooldownUntil = 0;
+    this.grinding = false;
     this.cycleKeys = addKeys(kb, controls.cycleWeapon);
     // Keep SPACE / arrows from scrolling the page
     kb.addCapture([
@@ -143,6 +154,51 @@ class Jammy {
     const left = input && (anyKeyDown(this.leftKeys) || this.touch.left);
     const right = input && (anyKeyDown(this.rightKeys) || this.touch.right);
     this.up = input && (anyKeyDown(this.aimKeys) || this.touch.up);
+    const down = input && (anyKeyDown(this.downKeys) || this.touch.down);
+
+    // --- Glacier Slide: power slide and grind rails ---
+    const slideGuitar = this.currentWeapon === "slide";
+    const railDir = grounded && slideGuitar ? this._railUnderfoot() : 0;
+    if (railDir !== 0) {
+      // Grinding: the rail carries him at speed, sparks fly
+      if (!this.grinding) {
+        this.grinding = true;
+        this._startSlidePose();
+        scene.sound.play("laserSound", { volume: 0.5, rate: 2.2 });
+      }
+      this.facing = railDir > 0 ? "right" : "left";
+      body.setVelocityX(railDir * 240);
+      if (now > (this._sparkAt || 0)) {
+        this._sparkAt = now + 50;
+        const sp = scene.add.rectangle(this.sprite.x - railDir * 8, body.bottom, 2, 2, 0xffee88).setDepth(99);
+        scene.tweens.add({ targets: sp, x: sp.x - railDir * 10, y: sp.y - 6 + Math.random() * 10, alpha: 0, duration: 200, onComplete: () => sp.destroy() });
+      }
+      return;
+    } else if (this.grinding) {
+      this.grinding = false;
+      this._endSlidePose();
+      this.slideUntil = now + 160; // short carry-over so hopping off a rail feels fast
+      this.sliding = true;
+    }
+    if (slideGuitar && grounded && !this.sliding && down && (left || right) && now >= this.slideCooldownUntil) {
+      this._powerSlide(left ? -1 : 1, onIceCheck(this));
+    }
+    if (this.sliding) {
+      if (now >= this.slideUntil || (!grounded && body.velocity.y > 60)) {
+        this.sliding = false;
+        this._endSlidePose();
+        this.slideCooldownUntil = now + 220;
+      } else {
+        const dir = this.facing === "right" ? 1 : -1;
+        if (!this.rocketBoostActive) body.setVelocityX(dir * 250);
+        if (now > (this._sparkAt || 0)) {
+          this._sparkAt = now + 60;
+          const sp = scene.add.rectangle(this.sprite.x - dir * 8, body.bottom - 1, 2, 2, 0xd8f4ff).setDepth(99);
+          scene.tweens.add({ targets: sp, y: sp.y - 8, alpha: 0, duration: 220, onComplete: () => sp.destroy() });
+        }
+        return;
+      }
+    }
 
     this.walkingLeft = left && !right;
     this.walkingRight = right && !left;
@@ -183,6 +239,66 @@ class Jammy {
   }
 
   // ---------------------------------------------------------------
+  // Glacier Slide moves
+  // ---------------------------------------------------------------
+  _railUnderfoot() {
+    const rails = scene.grindRails;
+    if (!rails) return 0;
+    const b = this.sprite.body;
+    for (const r of rails) {
+      if (!r.active) continue;
+      const rb = r.body;
+      if (Math.abs(b.bottom - rb.top) <= 3 && b.right > rb.left && b.left < rb.right) return r.railDir;
+    }
+    return 0;
+  }
+
+  _powerSlide(dir, onIce) {
+    this.sliding = true;
+    this.facing = dir > 0 ? "right" : "left";
+    this.slideUntil = scene.time.now + (onIce ? 700 : 420);
+    this.sprite.body.setVelocityX(dir * 250);
+    this._startSlidePose();
+    scene.sound.play("jumpSound", { rate: 0.7, volume: 0.6 });
+  }
+
+  _startSlidePose() {
+    if (this._slidePose) return;
+    this._slidePose = true;
+    // Lying-down frame doubles as a slide pose; low body so he fits under gaps
+    this.sprite.setTexture("jammy", this.facing === "right" ? "dead-right1" : "dead-left1");
+    this.sprite.anims.stop();
+    this.sprite.body.setSize(18, 14, true);
+    this.sprite.body.setOffset(this.sprite.body.offset.x, this.sprite.height - 14 - 2);
+    // Sliding hurts enemies, not Jammy
+    this._slideInvincible = true;
+    if (!this._slideOverlap && scene.enemies) {
+      this._slideOverlap = scene.physics.add.overlap(this.sprite, scene.enemies, (js, e) => {
+        if (!this._slidePose || !e.active || e.dead || e.invincible) return;
+        if (this._slideHit && this._slideHit.has(e)) return;
+        if (!this._slideHit) this._slideHit = new Set();
+        this._slideHit.add(e);
+        if (typeof e.takeDamage === "function") e.takeDamage(2);
+      });
+    }
+    this._slideHit = new Set();
+  }
+
+  _endSlidePose() {
+    if (!this._slidePose) return;
+    this._slidePose = false;
+    this._slideInvincible = false;
+    this.sprite.body.setSize(18, 28, true);
+    this.sprite.play(this.isGrounded() ? "resting-" + this.facing : "jumping-" + this.facing, true);
+  }
+
+  fireSlide() {
+    if (scene.bullets.countActive(true) >= this.bulletLimit) return;
+    const dir = this.facing === "right" ? 1 : -1;
+    new EchoNote(scene, this.sprite.x + dir * 10, this.sprite.y - 4, this.facing, this.up);
+  }
+
+  // ---------------------------------------------------------------
   // Weapons
   // ---------------------------------------------------------------
   cycleWeapon() {
@@ -192,6 +308,11 @@ class Jammy {
     const i = coll.owned.indexOf(coll.equipped);
     coll.equipped = coll.owned[(i + 1) % coll.owned.length];
     this.currentWeapon = GUITAR_CATALOG[coll.equipped].weapon;
+    if (this.sliding || this.grinding) {
+      this.sliding = false;
+      this.grinding = false;
+      this._endSlidePose();
+    }
     const ui = scene.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.currentWeapon);
     scene.sound.play("antTokenCollectSound", { volume: 0.35, rate: 1.6 });
@@ -203,6 +324,8 @@ class Jammy {
       this.fireSeed();
     } else if (this.currentWeapon === "bass") {
       this.fireBass();
+    } else if (this.currentWeapon === "slide") {
+      this.fireSlide();
     } else {
       this.fireSonic();
     }
@@ -402,7 +525,7 @@ class Jammy {
   // sourceX (optional): world x of whatever hurt Jammy, so the knockback
   // pushes him away from it.
   takeDamage(sourceX) {
-    if (!this.alive || this.invincible) return;
+    if (!this.alive || this.invincible || this._slideInvincible) return;
     this.hp--;
     if (typeof sourceX === "number") {
       this.hitDirection = sourceX > this.sprite.x ? -1 : 1;

@@ -80,6 +80,9 @@ class Stage1_4 extends Phaser.Scene {
     // Jar sentries on patrol
     [296, 608, 1440, 2464, 2816].forEach((x) => new JarSentry(this, x, 150));
 
+    // Hot Pineapples straight off the canning line
+    [1300, 2700, 3140].forEach((x) => new HotPineapple(this, x, 150));
+
     // --- Pickups ---
 
     [

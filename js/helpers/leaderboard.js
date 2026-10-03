@@ -12,6 +12,21 @@ function leaderboardUrl() {
   return typeof u === "string" ? u.replace(/\/+$/, "") : "";
 }
 
+// leaderboard.json next to index.html (committed by the deploy-leaderboard
+// workflow) overrides the inline setting when present.
+(function loadLeaderboardConfig() {
+  if (typeof window === "undefined" || typeof fetch !== "function") return;
+  if (window.JAMMED_LEADERBOARD_URL) return;
+  fetch("leaderboard.json", { cache: "no-store" })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((j) => {
+      if (j && typeof j.url === "string" && /^https:\/\//.test(j.url)) {
+        window.JAMMED_LEADERBOARD_URL = j.url;
+      }
+    })
+    .catch(() => {});
+})();
+
 function leaderboardEnabled() {
   return leaderboardUrl().length > 0 && typeof fetch === "function";
 }

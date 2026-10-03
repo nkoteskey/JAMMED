@@ -87,9 +87,9 @@ class Level1 extends Phaser.Scene {
     // "walk left first" secret.
     new LostRecord(this, 40, 84, "Level1");
 
-    // Blubert companion — follows Jammy, locks onto threats
-    this.blubert = new Blubert(this, this.jammy);
-    this.blubertRevivesLeft = 1;
+    // No Blubert yet — Jammy frees him from the Watermelon after 1-2
+    this.blubert = null;
+    this.blubertRevivesLeft = 0;
 
     // Dev teleport portals (only with ?dev in the URL)
     if (this.game.devMode) {

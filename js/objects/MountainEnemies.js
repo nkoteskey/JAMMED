@@ -112,7 +112,7 @@ class Snowberry extends Phaser.Physics.Arcade.Sprite {
     this.score = 550;
     this.hp = 2;
     this.dead = false;
-    this.range = 280;
+    this.range = 220;
     this.nextThrow = 0;
     this.body.setAllowGravity(true);
     this.body.setImmovable(true);

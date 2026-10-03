@@ -5,7 +5,7 @@ class CutSceneWatermelonDefeated extends StoryScene {
       music: "Level1MusicLoop",
       musicVolume: 0.8,
       text:
-        "Jammy defeated the mighty, evil Watermelon and the city is safe... for now. Blubert sniffs out a trail of Zomberries heading for the mesa beyond town, so Jammy bolts boosters onto his guitar: the ROCKET AXE is ready for liftoff!",
+        "Jammy defeated the mighty, evil Watermelon and freed its prisoner: a little blueberry drone named BLUBERT, who can sniff out hidden Zomberries! Blubert picks up a trail heading for the mesa beyond town, so Jammy bolts boosters onto his guitar: the ROCKET AXE is ready for liftoff!",
       next: "Stage1_3",
       stopMusicOnExit: true,
     });

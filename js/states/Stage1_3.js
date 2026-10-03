@@ -274,12 +274,17 @@ class Stage1_3 extends Phaser.Scene {
     const phase = index * 600;
     const startTime = this.time.now - phase;
     const baseY = y;
+    const omega = (Math.PI * 2) / (period / 1000);
     this.hornedRigs.push({
       update: () => {
-        const t = (this.time.now - startTime) / period;
-        const py = baseY + Math.sin(t * Math.PI * 2) * amp;
-        plat.y = py;
-        if (plat.body && typeof plat.body.updateFromGameObject === "function") plat.body.updateFromGameObject();
+        // Drive the bob with velocity so the physics step moves the
+        // platform and Jammy rides it instead of flickering between
+        // "standing" and "falling" every frame.
+        const t = (this.time.now - startTime) / 1000;
+        const targetY = baseY + Math.sin(t * omega) * amp;
+        const vy = amp * omega * Math.cos(t * omega) + (targetY - plat.y) * 2;
+        plat.body.setVelocityY(vy);
+        const py = plat.y;
         vineGfx.clear();
         for (const { hf, ox, len } of hfs) {
           if (!hf || !hf.scene) continue;

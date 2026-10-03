@@ -124,7 +124,8 @@ class GuitarRack extends Phaser.Scene {
     // Update the live (paused) gameplay scene's Jammy + HUD
     const level = this.scene.get(this.gameScene);
     if (level && level.jammy) {
-      level.jammy.currentWeapon = cat.weapon;
+      if (level.jammy.setWeapon) level.jammy.setWeapon(cat.weapon);
+      else level.jammy.currentWeapon = cat.weapon;
     }
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(cat.weapon);

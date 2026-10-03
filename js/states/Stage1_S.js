@@ -62,6 +62,7 @@ class Stage1_S extends Phaser.Scene {
     this.enemies.getChildren().forEach((e) => {
       if (e.update) e.update();
     });
+    if (this.cloudRigs) this.cloudRigs.forEach((fn) => fn());
 
     // Fell off the clouds: whisk Jammy back to the last checkpoint cloud
     if (this.jammy.alive && this.jammy.sprite.y > this.worldH + 20 && !this._respawning) {
@@ -110,17 +111,17 @@ class Stage1_S extends Phaser.Scene {
       [2300, 320, 1],
     ];
     this.checkpoints = [];
+    this.cloudRigs = [];
+    const start = this.time.now;
     layout.forEach(([x, y, v]) => {
       const c = LevelCommon.addCloudPlatform(this, x, y, v);
-      // Gentle drift so the platforms feel alive (and a touch trickier)
-      this.tweens.add({
-        targets: c,
-        y: y - 8,
-        duration: 1800 + (x % 700),
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-        onUpdate: () => c.body.updateFromGameObject(),
+      // Gentle drift, driven by velocity so Jammy rides it smoothly
+      const omega = (Math.PI * 2) / ((3600 + (x % 1400)) / 1000);
+      const amp = 6;
+      this.cloudRigs.push(() => {
+        const t = (this.time.now - start) / 1000;
+        const targetY = y - amp + Math.sin(t * omega) * amp;
+        c.body.setVelocityY(amp * omega * Math.cos(t * omega) + (targetY - c.y) * 2);
       });
       if (v === 1) this.checkpoints.push({ x, y });
     });

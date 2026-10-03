@@ -61,8 +61,8 @@ class Jammy {
 
     this.jumpSound = scene.sound.add("jumpSound");
 
-    this.sprite = scene.physics.add.sprite(x, y, "jammy", "resting-right2");
-    this.sprite.play("resting-right");
+    this.sprite = scene.physics.add.sprite(x, y, this.skinTex, "resting-right2");
+    this.sprite.play(this._anim("resting-right"));
     this.sprite.parentObject = this;
     this.sprite.body.setSize(18, 28, true);
 
@@ -146,7 +146,7 @@ class Jammy {
     // Stunned: drift away from whatever hit us and show the hurt frame
     if (this.takingDamage) {
       body.setVelocityX(this.hitDirection * 30);
-      this.sprite.play(this.facing === "right" ? "taking-damage-right" : "taking-damage-left", true);
+      this.sprite.play(this._anim(this.facing === "right" ? "taking-damage-right" : "taking-damage-left"), true);
       return;
     }
 
@@ -228,13 +228,13 @@ class Jammy {
 
     const dir = this.facing;
     if (!grounded) {
-      this.sprite.play("jumping-" + dir, true);
+      this.sprite.play(this._anim("jumping-" + dir), true);
     } else if (this.walkingLeft || this.walkingRight) {
-      this.sprite.play("running-" + dir, true);
+      this.sprite.play(this._anim("running-" + dir), true);
     } else if (!this.shootingPoseActive) {
       // Skidding on ice keeps the run frame until he actually stops
-      if (onIce && Math.abs(body.velocity.x) > 20) this.sprite.play("running-" + dir, true);
-      else this.sprite.play("resting-" + dir, true);
+      if (onIce && Math.abs(body.velocity.x) > 20) this.sprite.play(this._anim("running-" + dir), true);
+      else this.sprite.play(this._anim("resting-" + dir), true);
     }
   }
 
@@ -266,7 +266,7 @@ class Jammy {
     if (this._slidePose) return;
     this._slidePose = true;
     // Lying-down frame doubles as a slide pose; low body so he fits under gaps
-    this.sprite.setTexture("jammy", this.facing === "right" ? "dead-right1" : "dead-left1");
+    this.sprite.setTexture(this.skinTex, this.facing === "right" ? "dead-right1" : "dead-left1");
     this.sprite.anims.stop();
     this.sprite.body.setSize(18, 14, true);
     this.sprite.body.setOffset(this.sprite.body.offset.x, this.sprite.height - 14 - 2);
@@ -289,7 +289,7 @@ class Jammy {
     this._slidePose = false;
     this._slideInvincible = false;
     this.sprite.body.setSize(18, 28, true);
-    this.sprite.play(this.isGrounded() ? "resting-" + this.facing : "jumping-" + this.facing, true);
+    this.sprite.play(this._anim(this.isGrounded() ? "resting-" + this.facing : "jumping-" + this.facing), true);
   }
 
   fireSlide() {
@@ -299,22 +299,53 @@ class Jammy {
   }
 
   // ---------------------------------------------------------------
-  // Weapons
+  // Weapons / guitar finish
   // ---------------------------------------------------------------
+  // The guitar Jammy holds is drawn in the equipped guitar's finish.
+  get skin() {
+    const w = this.currentWeapon;
+    return w === "seed" || w === "bass" || w === "slide" ? w : "";
+  }
+  get skinTex() {
+    return this.skin && scene.textures.exists("jammy-" + this.skin) ? "jammy-" + this.skin : "jammy";
+  }
+  get skinRocketTex() {
+    return this.skin && scene.textures.exists("jammy-rocketaxe-" + this.skin)
+      ? "jammy-rocketaxe-" + this.skin
+      : "jammy-rocketaxe";
+  }
+  _anim(name) {
+    const prefix = this.skinTex === "jammy" ? "" : this.skin + ":";
+    return prefix + name;
+  }
+
+  // Switch weapon and repaint the guitar without interrupting the pose
+  setWeapon(weapon) {
+    this.currentWeapon = weapon;
+    if (!this.sprite || !this.sprite.active) return;
+    const anim = this.sprite.anims.currentAnim ? this.sprite.anims.currentAnim.key.replace(/^[a-z]+:/, "") : null;
+    const frameName = this.sprite.frame.name;
+    const tex = this.rocketBoostActive ? this.skinRocketTex : this.skinTex;
+    if (this.sprite.texture.key !== tex) {
+      this.sprite.setTexture(tex, frameName);
+      if (anim && this.sprite.anims.isPlaying) this.sprite.play(this._anim(anim), true);
+    }
+    const ui = scene.scene.get("UIScene");
+    if (ui && ui.setWeapon) ui.setWeapon(this.currentWeapon);
+  }
+
   cycleWeapon() {
     if (!this.alive || !this.controlsEnabled) return;
     const coll = getGuitarCollection();
     if (coll.owned.length <= 1) return;
     const i = coll.owned.indexOf(coll.equipped);
     coll.equipped = coll.owned[(i + 1) % coll.owned.length];
-    this.currentWeapon = GUITAR_CATALOG[coll.equipped].weapon;
     if (this.sliding || this.grinding) {
       this.sliding = false;
       this.grinding = false;
       this._endSlidePose();
     }
-    const ui = scene.scene.get("UIScene");
-    if (ui && ui.setWeapon) ui.setWeapon(this.currentWeapon);
+    this.setWeapon(GUITAR_CATALOG[coll.equipped].weapon);
     scene.sound.play("antTokenCollectSound", { volume: 0.35, rate: 1.6 });
   }
 
@@ -348,7 +379,7 @@ class Jammy {
     const stationary = !this.walkingLeft && !this.walkingRight && this.isGrounded();
     if (!stationary) return;
     this.shootingPoseActive = true;
-    this.sprite.play(this.facing === "right" ? "shooting-right" : "shooting-left", true);
+    this.sprite.play(this._anim(this.facing === "right" ? "shooting-right" : "shooting-left"), true);
     if (this._shootPoseTimer) this._shootPoseTimer.remove(false);
     this._shootPoseTimer = scene.time.delayedCall(320, () => {
       this.shootingPoseActive = false;
@@ -424,14 +455,14 @@ class Jammy {
     this.coyoteUntil = 0;
     this.canDoubleJump = true;
     if (!this.jumpSound.isPlaying) this.jumpSound.play();
-    this.sprite.play(this.facing === "right" ? "jumping-right" : "jumping-left", true);
+    this.sprite.play(this._anim(this.facing === "right" ? "jumping-right" : "jumping-left"), true);
   }
 
   _doubleJump() {
     this.sprite.body.setVelocityY(this.doubleJumpVelocity);
     this.jumping = true;
     this.falling = false;
-    this.sprite.play(this.facing === "right" ? "jumping-right" : "jumping-left", true);
+    this.sprite.play(this._anim(this.facing === "right" ? "jumping-right" : "jumping-left"), true);
     scene.sound.play("jumpSound", { rate: 1.25, volume: 0.9 });
     // Little dust ring under his feet so the second jump reads
     const ring = scene.add.circle(this.sprite.x, this.sprite.y + 12, 6, 0xffffff, 0.6);
@@ -458,9 +489,9 @@ class Jammy {
 
     // Swap Jammy's sprite to the hand-composited rocket-axe atlas
     // (body + guitar-under-feet + flame).
-    this.sprite.setTexture("jammy-rocketaxe", "rocketaxe-right1");
+    this.sprite.setTexture(this.skinRocketTex, "rocketaxe-right1");
     this.sprite.setFlipX(dirX === -1);
-    this.sprite.play("jammy-rocketaxe-right", true);
+    this.sprite.play(this._anim("jammy-rocketaxe-right"), true);
 
     // Launch sfx
     s.sound.play("laserSound", { volume: 1.0, rate: 0.55 });
@@ -502,7 +533,7 @@ class Jammy {
     if (this._rocketPuffTimer) this._rocketPuffTimer.remove(false);
     if (!this.sprite || !this.sprite.active || !this.alive) return;
     this.sprite.setFlipX(false);
-    this.sprite.play(this.isGrounded() ? "resting-" + this.facing : "jumping-" + this.facing, true);
+    this.sprite.play(this._anim(this.isGrounded() ? "resting-" + this.facing : "jumping-" + this.facing), true);
   }
 
   // ---------------------------------------------------------------
@@ -625,7 +656,7 @@ class Jammy {
     this.sprite.body.setVelocity(0, 0);
     this.sprite.body.setSize(16, 12, true);
     this.sprite.body.checkCollision.none = false;
-    this.sprite.play(this.facing === "right" ? "dead-right" : "dead-left");
+    this.sprite.play(this._anim(this.facing === "right" ? "dead-right" : "dead-left"));
 
     // Fade and restart the stage after a short pause
     // A stage that is already ending (e.g. the boss fell to Jammy's

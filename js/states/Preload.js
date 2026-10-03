@@ -286,160 +286,12 @@ class Preload extends Phaser.Scene {
     this.load.plugin("rexvirtualjoystickplugin", url, true);
   }
   create() {
-    scene.anims.create({
-      key: "resting-right",
-      frames: scene.anims.generateFrameNames("jammy", {
-        start: 1,
-        end: 4,
-        zeroPad: 0,
-        prefix: "resting-right",
-        suffix: "",
-      }),
-      frameRate: 4,
-      repeat: -1,
-    });
-    scene.anims.create({
-      key: "jammy-rocketaxe-right",
-      frames: scene.anims.generateFrameNames("jammy-rocketaxe", {
-        start: 1,
-        end: 4,
-        prefix: "rocketaxe-right",
-      }),
-      frameRate: 14,
-      repeat: -1,
-    });
-    scene.anims.create({
-      key: "resting-left",
-      frames: scene.anims.generateFrameNames("jammy", {
-        start: 1,
-        end: 4,
-        zeroPad: 0,
-        prefix: "resting-left",
-        suffix: "",
-      }),
-      frameRate: 4,
-      repeat: -1,
-    });
-    scene.anims.create({
-      key: "running-right",
-      frames: scene.anims.generateFrameNames("jammy", {
-        start: 1,
-        end: 8,
-        zeroPad: 0,
-        prefix: "running-right",
-        suffix: "",
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-    scene.anims.create({
-      key: "running-left",
-      frames: scene.anims.generateFrameNames("jammy", {
-        start: 1,
-        end: 8,
-        zeroPad: 0,
-        prefix: "running-left",
-        suffix: "",
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-    scene.anims.create({
-      key: "jumping-right",
-      frames: scene.anims.generateFrameNames("jammy", {
-        start: 2,
-        end: 2,
-        zeroPad: 0,
-        prefix: "running-right",
-        suffix: "",
-      }),
-      frameRate: 1,
-      repeat: -1,
-    });
-    scene.anims.create({
-      key: "jumping-left",
-      frames: scene.anims.generateFrameNames("jammy", {
-        start: 2,
-        end: 2,
-        zeroPad: 0,
-        prefix: "running-left",
-        suffix: "",
-      }),
-      frameRate: 1,
-      repeat: -1,
-    });
-    scene.anims.create({
-      key: "shooting-right",
-      frames: scene.anims.generateFrameNames("jammy", {
-        start: 1,
-        end: 1,
-        zeroPad: 0,
-        prefix: "shooting-right",
-        suffix: "",
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-
-    scene.anims.create({
-      key: "shooting-left",
-      frames: scene.anims.generateFrameNames("jammy", {
-        start: 1,
-        end: 1,
-        zeroPad: 0,
-        prefix: "shooting-left",
-        suffix: "",
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-    scene.anims.create({
-      key: "taking-damage-left",
-      frames: scene.anims.generateFrameNames("jammy", {
-        start: 1,
-        end: 1,
-        zeroPad: 0,
-        prefix: "taking-damage-left",
-        suffix: "",
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-    scene.anims.create({
-      key: "taking-damage-right",
-      frames: scene.anims.generateFrameNames("jammy", {
-        start: 1,
-        end: 1,
-        zeroPad: 0,
-        prefix: "taking-damage-right",
-        suffix: "",
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-    scene.anims.create({
-      key: "dead-right",
-      frames: scene.anims.generateFrameNames("jammy", {
-        start: 1,
-        end: 1,
-        zeroPad: 0,
-        prefix: "dead-right",
-        suffix: "",
-      }),
-      frameRate: 1,
-      repeat: -1,
-    });
-    scene.anims.create({
-      key: "dead-left",
-      frames: scene.anims.generateFrameNames("jammy", {
-        start: 1,
-        end: 1,
-        zeroPad: 0,
-        prefix: "dead-left",
-        suffix: "",
-      }),
-      frameRate: 1,
-      repeat: -1,
+    // Jammy's guitar changes finish with the equipped weapon: build the
+    // recoloured sprite sheets, then one animation set per finish.
+    buildJammySkins(this);
+    createJammyAnims(this, "jammy", "jammy-rocketaxe", "");
+    Object.keys(JAMMY_SKINS).forEach((skin) => {
+      createJammyAnims(this, "jammy-" + skin, "jammy-rocketaxe-" + skin, skin + ":");
     });
 
     scene.anims.create({
@@ -479,4 +331,110 @@ class Preload extends Phaser.Scene {
 
     this.scene.start("TitleScreen");
   }
+}
+
+// The Flying V's red body (two NES reds) is swapped for each guitar's
+// finish: sand for the Seedcaster, purple for the Royal Bass, ice for
+// the Glacier Slide. Everything else about Jammy stays the same.
+const JAMMY_SKINS = {
+  seed: { f83800: [0xd8, 0xa8, 0x68], f83500: [0xb0, 0x82, 0x4c] },
+  bass: { f83800: [0x50, 0x28, 0xa0], f83500: [0x3a, 0x1c, 0x78] },
+  slide: { f83800: [0x8e, 0xd8, 0xf8], f83500: [0x5a, 0xb0, 0xe0] },
+};
+
+function buildJammySkins(scene) {
+  // Only the guitar changes colour: for each frame, flood-fill from the
+  // neck (ac7c00) through guitar colours and repaint just those pixels.
+  // Jammy's shoes and hat use the same red and must stay red.
+  const GUITAR = { ac7c00: 1, ae7d00: 1, f83800: 1, f83500: 1, e40058: 1 };
+  const recolor = (srcKey, dstKey, map) => {
+    if (scene.textures.exists(dstKey)) return;
+    const base = scene.textures.get(srcKey);
+    const img = base.getSourceImage();
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+    try {
+      const W = canvas.width;
+      const id = ctx.getImageData(0, 0, W, canvas.height);
+      const d = id.data;
+      const hexAt = (i) =>
+        d[i].toString(16).padStart(2, "0") + d[i + 1].toString(16).padStart(2, "0") + d[i + 2].toString(16).padStart(2, "0");
+      base.getFrameNames().forEach((n) => {
+        const f = base.get(n);
+        const x0 = f.cutX, y0 = f.cutY, x1 = x0 + f.cutWidth, y1 = y0 + f.cutHeight;
+        const seen = new Set();
+        const stack = [];
+        for (let y = y0; y < y1; y++) {
+          for (let x = x0; x < x1; x++) {
+            const i = (y * W + x) * 4;
+            if (d[i + 3] > 0 && (hexAt(i) === "ac7c00" || hexAt(i) === "ae7d00")) stack.push(y * W + x);
+          }
+        }
+        while (stack.length) {
+          const p = stack.pop();
+          if (seen.has(p)) continue;
+          seen.add(p);
+          const x = p % W, y = (p - x) / W;
+          const i = p * 4;
+          if (d[i + 3] === 0) continue;
+          const hex = hexAt(i);
+          if (!GUITAR[hex]) continue;
+          const to = map[hex];
+          if (to) {
+            d[i] = to[0];
+            d[i + 1] = to[1];
+            d[i + 2] = to[2];
+          }
+          if (x > x0) stack.push(p - 1);
+          if (x < x1 - 1) stack.push(p + 1);
+          if (y > y0) stack.push(p - W);
+          if (y < y1 - 1) stack.push(p + W);
+        }
+      });
+      ctx.putImageData(id, 0, 0);
+    } catch (e) {
+      // Canvas tainted (e.g. file://): keep the plain copy
+    }
+    const tex = scene.textures.addCanvas(dstKey, canvas);
+    tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
+    base.getFrameNames().forEach((n) => {
+      const f = base.get(n);
+      tex.add(n, 0, f.cutX, f.cutY, f.cutWidth, f.cutHeight);
+    });
+  };
+  Object.keys(JAMMY_SKINS).forEach((skin) => {
+    const map = Object.assign({ e40058: JAMMY_SKINS[skin].f83500 }, JAMMY_SKINS[skin]);
+    recolor("jammy", "jammy-" + skin, map);
+    recolor("jammy-rocketaxe", "jammy-rocketaxe-" + skin, map);
+  });
+}
+
+// One full animation set for a Jammy sprite sheet. `prefix` namespaces
+// the keys ("" for the base Flying V, "seed:" etc. for finishes).
+function createJammyAnims(scene, tex, rocketTex, prefix) {
+  const mk = (key, cfg) => {
+    if (scene.anims.exists(prefix + key)) return;
+    scene.anims.create(Object.assign({ key: prefix + key }, cfg));
+  };
+  const names = (p, start, end) => scene.anims.generateFrameNames(tex, { start, end, prefix: p });
+  mk("resting-right", { frames: names("resting-right", 1, 4), frameRate: 4, repeat: -1 });
+  mk("resting-left", { frames: names("resting-left", 1, 4), frameRate: 4, repeat: -1 });
+  mk("running-right", { frames: names("running-right", 1, 8), frameRate: 10, repeat: -1 });
+  mk("running-left", { frames: names("running-left", 1, 8), frameRate: 10, repeat: -1 });
+  mk("jumping-right", { frames: names("running-right", 2, 2), frameRate: 1, repeat: -1 });
+  mk("jumping-left", { frames: names("running-left", 2, 2), frameRate: 1, repeat: -1 });
+  mk("shooting-right", { frames: names("shooting-right", 1, 1), frameRate: 10, repeat: -1 });
+  mk("shooting-left", { frames: names("shooting-left", 1, 1), frameRate: 10, repeat: -1 });
+  mk("taking-damage-left", { frames: names("taking-damage-left", 1, 1), frameRate: 10, repeat: -1 });
+  mk("taking-damage-right", { frames: names("taking-damage-right", 1, 1), frameRate: 10, repeat: -1 });
+  mk("dead-right", { frames: names("dead-right", 1, 1), frameRate: 1, repeat: -1 });
+  mk("dead-left", { frames: names("dead-left", 1, 1), frameRate: 1, repeat: -1 });
+  mk("jammy-rocketaxe-right", {
+    frames: scene.anims.generateFrameNames(rocketTex, { start: 1, end: 4, prefix: "rocketaxe-right" }),
+    frameRate: 14,
+    repeat: -1,
+  });
 }

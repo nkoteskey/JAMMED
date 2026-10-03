@@ -62,7 +62,8 @@ class GuitarPickup extends Phaser.Physics.Arcade.Sprite {
     // Re-arm Jammy with the new model immediately
     if (scene.jammy) {
       scene.jammy.availableWeapons = coll.owned.map((id) => GUITAR_CATALOG[id].weapon);
-      scene.jammy.currentWeapon = cat.weapon;
+      if (scene.jammy.setWeapon) scene.jammy.setWeapon(cat.weapon);
+      else scene.jammy.currentWeapon = cat.weapon;
     }
     const ui = scene.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(cat.weapon);

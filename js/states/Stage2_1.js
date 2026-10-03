@@ -280,18 +280,18 @@ class Stage2_1 extends Phaser.Scene {
       plat.body.checkCollision.right = false;
       this.physics.add.collider(this.jammy.sprite, plat);
       const start = this.time.now;
+      const omega = (Math.PI * 2) / (period / 1000);
       this.floes.push({
         update: () => {
-          const t = ((this.time.now - start) / period) * Math.PI * 2;
-          const nx = x + Math.sin(t) * dx;
-          const vx = ((nx - plat.x) * 1000) / Math.max(1, this.game.loop.delta);
-          plat.x = nx;
-          plat.body.updateFromGameObject();
-          // Carry Jammy along when he's standing on it
+          const t = (this.time.now - start) / 1000;
+          const targetX = x + Math.sin(t * omega) * dx;
+          const vx = dx * omega * Math.cos(t * omega) + (targetX - plat.x) * 2;
+          plat.body.setVelocityX(vx);
+          // Arcade doesn't carry riders sideways: do it by hand
           if (this.jammy.alive && this.jammy.sprite.body.touching.down) {
             const jb = this.jammy.sprite.body;
             if (Math.abs(jb.bottom - plat.body.top) < 4 && jb.right > plat.body.left && jb.left < plat.body.right) {
-              this.jammy.sprite.x += nx - plat.x + (vx * this.game.loop.delta) / 1000;
+              this.jammy.sprite.x += (vx * this.game.loop.delta) / 1000;
             }
           }
         },

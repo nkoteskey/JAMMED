@@ -233,10 +233,11 @@ class Stage1_3 extends Phaser.Scene {
   _sign(x, line1, line2, groundY) {
     const gy = typeof groundY === "number" ? groundY : 176;
     this.add.rectangle(x, gy - 10, 3, 20, 0x8c5a34).setDepth(3);
-    const w = Math.max(line1.length, (line2 || "").length) * 5 + 10;
-    this.add.rectangle(x, gy - 26, w, line2 ? 20 : 12, 0xd8a868).setStrokeStyle(1, 0x6e4527).setDepth(3);
-    this.add.bitmapText(x, gy - (line2 ? 30 : 26), "tempFont", line1, 6).setOrigin(0.5).setTintFill(0x3a2818).setDepth(4);
-    if (line2) this.add.bitmapText(x, gy - 22, "tempFont", line2, 6).setOrigin(0.5).setTintFill(0x6e4527).setDepth(4);
+    const w = Math.max(line1.length, (line2 || "").length) * 6 + 12;
+    const h = line2 ? 24 : 14;
+    this.add.rectangle(x, gy - 20 - h / 2, w, h, 0xd8a868).setStrokeStyle(1, 0x6e4527).setDepth(3);
+    this.add.bitmapText(x, gy - 20 - h / 2 - (line2 ? 5 : 0), "tempFont", line1, 8).setOrigin(0.5).setTintFill(0x3a2818).setDepth(4);
+    if (line2) this.add.bitmapText(x, gy - 20 - h / 2 + 5, "tempFont", line2, 8).setOrigin(0.5).setTintFill(0x6e4527).setDepth(4);
   }
 
   _blubertBanner() {

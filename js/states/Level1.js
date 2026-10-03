@@ -98,6 +98,7 @@ class Level1 extends Phaser.Scene {
       LevelCommon.addDevPortal(this, 260, 168, "Level1BossFight", "DEV->BOSS", 0xff6b6b);
       LevelCommon.addDevPortal(this, 320, 168, "Stage1_S", "DEV->1-S", 0x8ce070);
       LevelCommon.addDevPortal(this, 380, 168, "Stage1_4Boss", "DEV->1-5", 0xff8fb3);
+      LevelCommon.addDevPortal(this, 440, 168, "Stage2_1", "DEV->2-1", 0x9ad8ff);
     }
 
     LevelCommon.registerStage(this);

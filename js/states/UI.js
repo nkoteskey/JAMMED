@@ -15,7 +15,7 @@ class UIScene extends Phaser.Scene {
 
   create() {
     this.newScore = this.score;
-    this.gameplaySceneKeys = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_S", "Stage1_4", "Stage1_4Boss"];
+    this.gameplaySceneKeys = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_S", "Stage1_4", "Stage1_4Boss", "Stage2_1"];
     this.currentWeapon = "sonic";
 
     // --- Score (top-left) ---

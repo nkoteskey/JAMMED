@@ -37,12 +37,17 @@
 		}
 	</style>
 
+	<!-- Online leaderboard: set to your deployed server/leaderboard-worker.js URL
+	     (see server/ and README). Leave empty for local-only high scores. -->
+	<script>window.JAMMED_LEADERBOARD_URL = "";</script>
+
 	<!-- JS Libraries -->
 	<script type="text/javascript" src="includes/phaser-core/3.87.0/phaser.min.js"></script>
 
 	<!-- Helpers (loaded first so scenes and objects can use them) -->
 	<script type="text/javascript" src="js/helpers/globals.js"></script>
 	<script type="text/javascript" src="js/helpers/save.js"></script>
+	<script type="text/javascript" src="js/helpers/leaderboard.js"></script>
 	<script type="text/javascript" src="js/helpers/guitars.js"></script>
 	<script type="text/javascript" src="js/helpers/shader.js"></script>
 	<script type="text/javascript" src="js/helpers/level.js"></script>
@@ -63,6 +68,8 @@
 	<script type="text/javascript" src="js/states/Stage1_4Boss.js"></script>
 	<script type="text/javascript" src="js/states/CutSceneBaronPectin.js"></script>
 	<script type="text/javascript" src="js/states/Jukebox.js"></script>
+	<script type="text/javascript" src="js/states/WorldTwoScenes.js"></script>
+	<script type="text/javascript" src="js/states/Stage2_1.js"></script>
 	<script type="text/javascript" src="js/states/CutSceneWatermelonDefeated.js"></script>
 	<script type="text/javascript" src="js/states/EndCredits.js"></script>
 	<script type="text/javascript" src="js/states/PauseScene.js"></script>
@@ -102,6 +109,7 @@
 	<script type="text/javascript" src="js/objects/AntToken.js"></script>
 	<script type="text/javascript" src="js/objects/LostRecord.js"></script>
 	<script type="text/javascript" src="js/objects/CanningColossus.js"></script>
+	<script type="text/javascript" src="js/objects/MountainEnemies.js"></script>
 
 	<!-- Game JS -->
 	<script src="js/game.js" type="text/javascript"></script>

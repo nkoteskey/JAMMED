@@ -11,7 +11,7 @@ class CutSceneBaronPectin extends StoryScene {
       musicVolume: 0.6,
       text:
         "Inside the Colossus, Jammy finds a wax seal stamped with a crown: the mark of BARON PECTIN, the marmalade magnate who has been canning the city's fruit into Zomberries! But the Baron has already fled north... toward the Berry Mountains.",
-      next: "EndCredits",
+      next: "CutSceneWorld2",
       stopMusicOnExit: true,
     });
   }

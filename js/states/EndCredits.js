@@ -222,12 +222,18 @@ class EndCredits extends Phaser.Scene {
       const name = slots.map((s) => letters[s]).join("");
       const rank = recordHighScore(name, score, run.hard ? "HARD" : "CLEAR");
       this.sound.play("powerUpSound", { volume: 0.8, rate: 1.2 });
-      items.push(
-        this.add
-          .bitmapText(cx, 236, "tempFont", "RANK #" + (rank + 1) + " ON THE BOARD", 8)
-          .setOrigin(0.5, 1)
-          .setTintFill(0xffd066)
-      );
+      const rankText = this.add
+        .bitmapText(cx, 236, "tempFont", "RANK #" + (rank + 1) + " ON THE BOARD", 8)
+        .setOrigin(0.5, 1)
+        .setTintFill(0xffd066);
+      items.push(rankText);
+      if (typeof leaderboardEnabled === "function" && leaderboardEnabled()) {
+        submitWorldScore({ name, score, stage: run.hard ? "HARD" : "CLEAR", hard: !!run.hard }).then((res) => {
+          if (!rankText.active) return;
+          if (res && res.rank) rankText.setText("WORLD RANK #" + res.rank + "  -  LOCAL #" + (rank + 1));
+          invalidateWorldScores();
+        });
+      }
       keys.forEach((k) => k.destroy());
       this.time.delayedCall(1400, () => {
         this.tweens.add({

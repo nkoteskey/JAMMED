@@ -22,7 +22,7 @@ var controls = {
 // Lives on the global `game` object; reset from the title screen.
 // ---------------------------------------------------------------------
 
-var STAGE_ORDER = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_S", "Stage1_4", "Stage1_4Boss"];
+var STAGE_ORDER = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_S", "Stage1_4", "Stage1_4Boss", "Stage2_1"];
 
 var STAGE_NAMES = {
   Level1: "LOS JAMGELES",
@@ -31,6 +31,7 @@ var STAGE_NAMES = {
   Stage1_S: "CLOUD NINE",
   Stage1_4: "THE JAM WORKS",
   Stage1_4Boss: "THE CANNING FLOOR",
+  Stage2_1: "THE BERRY MOUNTAINS",
 };
 
 var STAGE_LABELS = {
@@ -40,6 +41,7 @@ var STAGE_LABELS = {
   Stage1_S: "1-S",
   Stage1_4: "1-4",
   Stage1_4Boss: "1-5",
+  Stage2_1: "2-1",
 };
 
 function resetRunState() {

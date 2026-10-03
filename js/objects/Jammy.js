@@ -147,17 +147,24 @@ class Jammy {
     this.walkingLeft = left && !right;
     this.walkingRight = right && !left;
 
+    // Ice: the stage says whether the tile under Jammy's feet is
+    // slippery. On ice he accelerates and skids instead of stopping dead.
+    const onIce =
+      grounded && typeof scene.isIceAt === "function" && scene.isIceAt(this.sprite.x, body.bottom + 2);
+    this.onIce = onIce;
+
     // Skip the walk override while the Rocket Axe is firing so the
     // boost's horizontal impulse isn't clamped back down to walkSpeed.
     if (!this.rocketBoostActive) {
-      if (this.walkingLeft) {
-        body.setVelocityX(-this.walkSpeed);
-        this.facing = "left";
-      } else if (this.walkingRight) {
-        body.setVelocityX(this.walkSpeed);
-        this.facing = "right";
+      if (this.walkingLeft) this.facing = "left";
+      else if (this.walkingRight) this.facing = "right";
+      const target = this.walkingLeft ? -this.walkSpeed : this.walkingRight ? this.walkSpeed : 0;
+      if (onIce) {
+        const accel = target === 0 ? 0.03 : 0.07;
+        body.setVelocityX(body.velocity.x + (target - body.velocity.x) * accel);
+        if (Math.abs(body.velocity.x) < 2 && target === 0) body.setVelocityX(0);
       } else {
-        body.setVelocityX(0);
+        body.setVelocityX(target);
       }
     }
 
@@ -169,7 +176,9 @@ class Jammy {
     } else if (this.walkingLeft || this.walkingRight) {
       this.sprite.play("running-" + dir, true);
     } else if (!this.shootingPoseActive) {
-      this.sprite.play("resting-" + dir, true);
+      // Skidding on ice keeps the run frame until he actually stops
+      if (onIce && Math.abs(body.velocity.x) > 20) this.sprite.play("running-" + dir, true);
+      else this.sprite.play("resting-" + dir, true);
     }
   }
 

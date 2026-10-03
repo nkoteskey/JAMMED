@@ -209,11 +209,52 @@ class TitleScreen extends Phaser.Scene {
     const closeZone = this.add.zone(cx, 120, 300, 200).setInteractive();
     closeZone.on("pointerdown", () => this._setScores(false));
     this.scoresGroup.add(closeZone);
+
+    // World board (online), filled in asynchronously when configured
+    this.worldGroup = this.add.container(0, 0).setVisible(false).setDepth(20);
+    if (typeof leaderboardEnabled === "function" && leaderboardEnabled()) {
+      const wp = this.add.rectangle(cx, 120, 300, 200, 0x000000, 0.82).setStrokeStyle(2, 0x8ce070);
+      this.worldGroup.add(wp);
+      this.worldGroup.add(
+        this.add.bitmapText(cx, 30, "tempFont", "WORLD TOP JAMMERS", 14).setOrigin(0.5).setTintFill(0x8ce070)
+      );
+      const loading = this.add.bitmapText(cx, 120, "tempFont", "LOADING...", 9).setOrigin(0.5).setTintFill(0x8a7a92);
+      this.worldGroup.add(loading);
+      fetchWorldScores(10).then((rows) => {
+        if (!this.scene || !this.scene.isActive()) return;
+        loading.setText(rows.length ? "" : "NO SCORES YET - BE THE FIRST");
+        rows.forEach((r, i) => {
+          const y = 50 + i * 15;
+          const col = i === 0 ? 0xffd066 : 0xffffff;
+          this.worldGroup.add(
+            this.add.bitmapText(cx - 130, y, "tempFont", (i + 1 < 10 ? " " : "") + (i + 1) + ".", 9).setTintFill(col)
+          );
+          this.worldGroup.add(this.add.bitmapText(cx - 96, y, "tempFont", r.name, 9).setTintFill(col));
+          this.worldGroup.add(
+            this.add.bitmapText(cx + 40, y, "tempFont", String(r.score), 9).setOrigin(1, 0).setTintFill(col)
+          );
+          this.worldGroup.add(
+            this.add.bitmapText(cx + 60, y, "tempFont", (r.hard ? "HARD" : r.stage) || "", 9).setTintFill(0x8a7a92)
+          );
+        });
+      });
+      const wz = this.add.zone(cx, 120, 300, 200).setInteractive();
+      wz.on("pointerdown", () => this._setScores(false));
+      this.worldGroup.add(wz);
+    }
+    this.scoresPage = 0;
   }
 
   _setScores(open) {
     this.scoresOpen = open;
-    this.scoresGroup.setVisible(open);
+    const hasWorld = this.worldGroup && this.worldGroup.length > 0;
+    if (open && hasWorld) {
+      // Alternate local / world each time the board opens
+      this.scoresPage = (this.scoresPage + 1) % 2;
+    }
+    const showWorld = open && hasWorld && this.scoresPage === 1;
+    this.scoresGroup.setVisible(open && !showWorld);
+    if (this.worldGroup) this.worldGroup.setVisible(showWorld);
   }
 
   _openJukebox() {

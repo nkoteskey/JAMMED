@@ -29,6 +29,7 @@ On phones and tablets an on-screen joystick, JUMP and SHOOT buttons, a pause but
 * **Stage 1-S Cloud Nine** (secret): a sky run across drifting clouds, packed with Bread Tokens. No falling damage.
 * **Stage 1-4 The Jam Works**: the **Royal Bass** sits on the staircase plateau. Its quake wave rolls along the floor and pierces every enemy in a row, ideal for the jar sentries patrolling the factory.
 * **Stage 1-5 The Canning Floor**: the factory's master, the **Canning Colossus**, a two-phase boss. Crack the glass, then deal with what's inside. Afterwards the villain behind it all is revealed.
+* **World 2: The Berry Mountains**. **Stage 2-1** takes the fight into the snow: ice floors Jammy skids across, an icicle cave, Snowberry turrets lobbing snowballs, frostbitten Zomberries, and a frozen lake crossed on drifting ice floes. It ends at the Baron's lodge... to be continued.
 
 HP and seed ammo carry from stage to stage; dying restarts the current stage with full health.
 
@@ -36,12 +37,22 @@ HP and seed ammo carry from stage to stage; dying restarts the current stage wit
 
 * **Riff combo**: chain kills without pausing or taking a hit. x2 at 3 kills, x3 at 6, x4 "ENCORE" at 10.
 * **Bread Tokens** are tallied per stage on the Stage Clear card and in the run report at the end.
-* **Lost Jams**: one hidden vinyl record per stage (1-1, 1-3, 1-S, 1-4). They are saved permanently; find all four to unlock **JAMS PLAYER**, the sound-test jukebox on the title screen.
+* **Lost Jams**: one hidden vinyl record per stage (1-1, 1-3, 1-S, 1-4, 2-1). They are saved permanently; find all four to unlock **JAMS PLAYER**, the sound-test jukebox on the title screen.
 * **Run report and rank** (S to D) at the end: tokens, Lost Jams, deaths, time and whether you found the secret exit.
 * **High scores**: an arcade top-10 with initials entry, shown on the title screen in attract mode. Best stage times are kept too.
 * **Hard mode** unlocks after your first clear: three hearts, faster enemies, 1.5x score.
 
 Everything is saved in the browser (localStorage).
+
+## Online leaderboard (optional)
+
+The game ships with a local top-10. To add a world leaderboard, deploy the tiny API in `server/leaderboard-worker.js` (a Cloudflare Worker with one KV namespace; the file header has the five-step setup) and paste its URL into `index.html`:
+
+```html
+<script>window.JAMMED_LEADERBOARD_URL = "https://jammed-leaderboard.<you>.workers.dev";</script>
+```
+
+Scores entered on the credits screen are then uploaded, and the title screen's high-score board alternates between the local and world top-10.
 
 ## Running locally
 

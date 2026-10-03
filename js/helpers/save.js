@@ -12,12 +12,13 @@ const HIGH_SCORE_SLOTS = 10;
 
 // Every Lost Jam in the game, in the order they're shown on the title
 // screen. Finding them all unlocks the JAMS PLAYER jukebox.
-const LOST_JAM_IDS = ["Level1", "Stage1_3", "Stage1_S", "Stage1_4"];
+const LOST_JAM_IDS = ["Level1", "Stage1_3", "Stage1_S", "Stage1_4", "Stage2_1"];
 const LOST_JAM_NAMES = {
   Level1: "ROOFTOP RIFF",
   Stage1_3: "MESA MIRAGE",
   Stage1_S: "CLOUD NINE",
   Stage1_4: "FACTORY FUNK",
+  Stage2_1: "SNOWBOUND SOLO",
 };
 
 var _saveCache = null;

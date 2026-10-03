@@ -25,7 +25,7 @@ On phones and tablets an on-screen joystick, JUMP and SHOOT buttons, a pause but
 
 * **Stage 1-1 Los Jamgeles** and **1-2 The Theater** (the Watermelon boss): sonic blast from the Crimson V plus a plain double jump.
 * Beating the Watermelon earns the **Rocket Axe**. From then on the second jump fires the guitar's boosters for a long arc, and it stays with you for the rest of the game.
-* **Stage 1-3 Sunset Mesa**: the **Seedcaster** is found on the main path. Seed bombs blow Zomberries out of their bushes (Blubert's scan reveals which bushes are hiding one) and home onto whatever Blubert has locked. There is also a **secret exit** somewhere high above the mesa.
+* **Stage 1-3 Sunset Mesa**: a long tutorial stage that introduces one idea per section with a signpost: the Rocket Axe (a wide gap, then a mesa wall), the **Seedcaster** and the first bush, Blubert's scan among decoy bushes, the sky drones, the needle cactus, the bobbing fruit platforms and sand snappers, the pineapples, then a finale that mixes them. Seed bombs blow Zomberries out of their bushes (Blubert's scan reveals which bushes are hiding one) and home onto whatever Blubert has locked. There is also a **secret exit** somewhere high above the mesa.
 * **Stage 1-S Cloud Nine** (secret): a sky run across drifting clouds, packed with Bread Tokens. No falling damage.
 * **Stage 1-4 The Jam Works**: the **Royal Bass** sits on the staircase plateau. Its quake wave rolls along the floor and pierces every enemy in a row, ideal for the jar sentries patrolling the factory.
 * **Stage 1-5 The Canning Floor**: the factory's master, the **Canning Colossus**, a two-phase boss. Crack the glass, then deal with what's inside. Afterwards the villain behind it all is revealed.

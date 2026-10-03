@@ -1,3 +1,8 @@
+// Stage 1-3 — SUNSET MESA. Jammy's first stage with Blubert and the
+// Rocket Axe, so it is built like a tutorial world: each section
+// introduces one idea with a sign and a safe first encounter, then
+// mixes them at the end. Built in code (sections below), painted with
+// the desert tileset.
 class Stage1_3 extends Phaser.Scene {
   constructor() {
     super({ key: "Stage1_3" });
@@ -8,182 +13,50 @@ class Stage1_3 extends Phaser.Scene {
   }
 
   create() {
-    this.sound.stopAll();
     this._changing = false;
+    this.sound.stopAll();
     this.sound.play("Level1MusicLoop", { loop: true });
 
-    // Make sure the teardrop texture exists before the HUD tries to show it
     if (typeof SeedOfDestruction !== "undefined" && SeedOfDestruction.ensureTexture) {
       SeedOfDestruction.ensureTexture(this);
     }
-    // Deep sunset magenta behind everything (top sky band color)
     this.cameras.main.setBackgroundColor("#c84890");
 
-    this.map = this.make.tilemap({
-      key: "stage1_3",
-      tileWidth: 16,
-      tileHeight: 16,
-    });
-    const tileset = this.map.addTilesetImage("custom-city-tiles");
-
-    this.backgroundLayer = this.map.createLayer("BackgroundLayer", tileset);
-    this.groundLayer = this.map.createLayer("GroundLayer", tileset);
-    this.enemyStopBlocksLayer = this.map.createLayer("EnemyStopBlocks", tileset);
-    this.deathBlocksLayer = this.map.createLayer("DeathBlocksLayer", tileset);
-    this.sceneChangeLayer = this.map.createLayer("SceneChangeLayer", tileset);
-
-    // The Tiled ground row is collision-only; all visuals are painted
-    // fresh below (sky, skyline, desert tiles).
-    this.groundLayer.setAlpha(0);
+    this._buildLevel();
     this._paintSky();
     this._buildDesertTiles();
     this._scatterDesertDecor();
 
-    this.enemyStopBlocksLayer.setAlpha(0);
-    this.deathBlocksLayer.setAlpha(0);
-    this.sceneChangeLayer.setAlpha(0);
-
-    this.groundLayer.setCollisionByExclusion(-1);
-    this.deathBlocksLayer.setCollisionByExclusion(-1);
-    this.sceneChangeLayer.setCollisionByExclusion(-1);
-    this.enemyStopBlocksLayer.setCollisionByExclusion(-1);
-
     LevelCommon.createGroups(this);
 
-    // Tilemap-driven spawns
-    this.map.createFromObjects("PowerUpsLayer", {
-      name: "PowerUp",
-      key: "power-up",
-      classType: PowerUp,
-    });
-    this.map.createFromObjects("AntTokenLayer", {
-      key: "ant-token",
-      classType: AntToken,
-    });
-    this.map.createFromObjects("RaspberryLayer", {
-      name: "Raspberry",
-      key: "raspberry",
-      classType: Raspberry,
-    });
-    this.map.createFromObjects("BushZomberryLayer", {
-      name: "BushZomberry",
-      key: "raspberry",
-      classType: BushZomberry,
-    });
-    // HornedFruit are no longer spawned from the tilemap; each
-    // Rocket-Axe fruit-platform owns its own cluster (see _buildFruitPlatforms).
-    this.map.createFromObjects("WatermelonSnapperLayer", {
-      name: "WatermelonSnapper",
-      key: "watermelon-snapper",
-      classType: WatermelonSnapper,
-    });
-    // The Tiled objects sit at y=224 — under the sand, where a snapper
-    // can neither be seen nor reach Jammy. Seat them on the surface.
-    this.enemies.getChildren().forEach((e) => {
-      if (e instanceof WatermelonSnapper) {
-        e.setPosition(e.x, 170);
-        e.setDepth(5);
-      }
-    });
-
-    // Jammy
     this.jammy = new Jammy(60, 100);
     this.jammy.sprite.setDepth(100);
     this.children.bringToTop(this.jammy.sprite);
-
     this.cameras.main.startFollow(this.jammy.sprite);
-    // Extra 240px of vertical headroom so the camera follows Jammy up
-    // during a Rocket Axe boost instead of leaving him off the top edge.
-    this.cameras.main.setBounds(
-      0,
-      -240,
-      this.map.widthInPixels,
-      this.map.heightInPixels + 240
-    );
+    this.cameras.main.setBounds(0, -240, this.map.widthInPixels, this.map.heightInPixels + 240);
 
-    // Collisions
-    LevelCommon.wireCollisions(this, { onSceneChange: () => this.changeScene() });
-
-    // Decoy bushes — visually identical to BushZomberry bushes but empty.
-    // Mixed in so the player can't tell by sight alone; Blubert's eyes
-    // reveal the real ones.
-    this.decoyBushes = [
-      new Bush(this, 540, 176),
-      new Bush(this, 1360, 176),
-      new Bush(this, 1900, 176),
-      new Bush(this, 2280, 176),
-    ];
-
-    // A pair of pineapple grenades waddling the mesa floor
-    [1180, 2020].forEach((x) => new Pineapple(this, x, 160));
-
-    // Needle cactuses — goofy-eyed sentries that blast needles in
-    // every direction if Jammy lingers too close. Shoot them out or
-    // Rocket-Axe over the top; the last one guards the exit portal.
-    this.cactuses = [
-      new NeedleCactus(this, 460, 158),
-      new NeedleCactus(this, 1000, 158),
-      new NeedleCactus(this, 1700, 158),
-      new NeedleCactus(this, 2120, 158),
-      new NeedleCactus(this, 2430, 158),
-    ];
-
-    // Sky clouds — some pure decoys, some hiding blueberry drones that
-    // emerge and alternate between bomb-drops and dive-bombs.
-    this.decoyClouds = [
-      new Cloud(this, 320, 56),
-      new Cloud(this, 900, 48),
-      new Cloud(this, 1480, 60),
-      new Cloud(this, 2000, 52),
-      new Cloud(this, 2380, 58),
-    ];
-    // Blueberry-bearing clouds — these create their own cover cloud
-    this.cloudBlueberries = [
-      new CloudBlueberry(this, 760, 56),
-      new CloudBlueberry(this, 1640, 52),
-      new CloudBlueberry(this, 2240, 58),
-    ];
-    this.cloudBlueberries.forEach(b => this.enemies.add(b));
-
-    // The Seedcaster guitar — unlocks the seed weapon. Right on the
-    // main path before the first bush so nobody misses it.
-    new GuitarPickup(this, 240, 152, "desert-seedcaster");
-
-    // Seed-ammo pickups — scarce on purpose so the player budgets shots.
-    // One pre-first-bush, one mid-run, one late.
-    this.seedPickups = [
-      new SeedAmmoPickup(this, 300,  128),
-      new SeedAmmoPickup(this, 1260, 128),
-      new SeedAmmoPickup(this, 2340, 120),
-    ];
-
-    // Fruit-platforms — each solid platform bobs vertically and hosts
-    // multiple HornedFruit hanging at staggered vine lengths below it.
-    this.fruitPlatforms = this.physics.add.group({
-      allowGravity: false,
-      immovable: true,
+    LevelCommon.wireCollisions(this);
+    // Cactus needles
+    this.physics.add.overlap(this.jammy.sprite, this.enemyProjectiles, (js, p) => {
+      if (!this.jammy.alive || !p.active) return;
+      this.jammy.takeDamage(p.x);
+      p.destroy();
     });
+
+    this.fruitPlatforms = this.physics.add.group({ allowGravity: false, immovable: true });
     this.physics.add.collider(this.jammy.sprite, this.fruitPlatforms);
     this.hornedRigs = [];
-    this._buildFruitPlatforms();
 
-    // Blubert companion
+    this._populate();
+
     this.blubert = new Blubert(this, this.jammy);
-    // One revive per stage — the next pickup Jammy grabs after
-    // Blubert is disposed brings him back.
     this.blubertRevivesLeft = 1;
 
-    // The Tiled map has no scene-change tiles, so the level exit is a
-    // real portal object at the end of the run.
-    this._buildExitPortal();
-    this._buildSecretExit();
-    // Lost Jam: high above the first fruit platform — plank, then Rocket Axe
-    new LostRecord(this, 640, -14, "Stage1_3");
     this._showTitleCard();
     LevelCommon.registerStage(this);
     LevelCommon.unlockRocketAxe(this);
+    this._blubertBanner();
 
-    // Sync UI weapon indicator
     const ui = this.scene.get("UIScene");
     if (ui && ui.setWeapon) ui.setWeapon(this.jammy.currentWeapon);
   }
@@ -194,74 +67,219 @@ class Stage1_3 extends Phaser.Scene {
     this.enemies.getChildren().forEach((enemy) => {
       if (enemy.update) enemy.update();
     });
-    if (this.hornedRigs) this.hornedRigs.forEach(r => r.update());
+    if (this.hornedRigs) this.hornedRigs.forEach((r) => r.update());
   }
 
   tryReviveBlubert() {
     LevelCommon.tryReviveBlubert(this);
   }
 
-  _buildFruitPlatforms() {
-    // Each platform is a solid bar Jammy can land on, bobbing up/down,
-    // with several horned fruits hanging from its underside at varying
-    // vine lengths. fruits[].ox is horizontal offset from platform
-    // center; fruits[].len is the vine length at rest.
-    const platforms = [
-      { x: 640,  y: 74,  w: 74, amp: 20, period: 2400,
-        fruits: [{ox: -26, len: 32}, {ox: 0, len: 58}, {ox: 24, len: 40}] },
-      { x: 1480, y: 86,  w: 92, amp: 24, period: 2800,
-        fruits: [{ox: -32, len: 48}, {ox: -8, len: 28}, {ox: 18, len: 66}, {ox: 36, len: 36}] },
-      { x: 2200, y: 62,  w: 108, amp: 22, period: 2200,
-        fruits: [{ox: -40, len: 72}, {ox: -14, len: 42}, {ox: 12, len: 56}, {ox: 40, len: 28}] },
-    ];
-    platforms.forEach((cfg, pi) => this._buildFruitPlatform(cfg, pi));
+  // ------------------------------------------------------------------
+  // Layout. Columns are 16px; the floor's top row is 11 (y=176) unless a
+  // section raises it. Pits get quicksand at the bottom.
+  _buildLevel() {
+    const W = 352, H = 15;
+    this.SAND = 1; this.QUICK = 8;
+    const grid = () => Array.from({ length: H }, () => Array(W).fill(-1));
+    const ground = grid(), death = grid();
+    this.groundTop = Array(W).fill(null);
+    const floor = (c0, c1, top = 11) => {
+      for (let c = c0; c <= c1; c++) {
+        for (let r = top; r < H; r++) ground[r][c] = 1;
+        this.groundTop[c] = top;
+      }
+    };
+    const pit = (c0, c1) => {
+      for (let c = c0; c <= c1; c++) {
+        death[13][c] = 8;
+        death[14][c] = 8;
+        this.groundTop[c] = null;
+      }
+    };
+    // Walls at both ends
+    floor(0, 0, 0);
+    floor(W - 1, W - 1, 0);
+
+    // A: welcome strip
+    floor(1, 52);
+    // B: Rocket Axe — long gap, then a mesa wall
+    pit(53, 66);
+    floor(67, 78);
+    floor(79, 96, 5);
+    floor(97, 103, 8);
+    floor(104, 112);
+    // C: Seedcaster + bushes
+    floor(113, 115, 10); // pedestal
+    floor(116, 121);
+    floor(122, 123, 9); // low wall to lob over
+    floor(124, 170);
+    // D: sky drones
+    floor(171, 215);
+    // E: cactus
+    floor(216, 250);
+    // F: fruit platforms over pits, snappers between
+    floor(251, 256);
+    pit(257, 266);
+    floor(267, 272);
+    pit(273, 284);
+    floor(285, 290);
+    // G: pineapples + finale
+    floor(291, 350);
+
+    this.pitCols = [[53, 66], [257, 266], [273, 284]];
+
+    const mk = (data) => {
+      const map = this.make.tilemap({ data, tileWidth: 16, tileHeight: 16 });
+      const tiles = map.addTilesetImage("desert-tiles");
+      return { map, layer: map.createLayer(0, tiles, 0, 0) };
+    };
+    this._ensureDesertTileset();
+    const g = mk(ground);
+    this.map = g.map;
+    this.groundLayer = g.layer;
+    this.groundLayer.setAlpha(0); // collision only; visuals painted below
+    this.groundLayer.setCollision([1]);
+    const d = mk(death);
+    this.deathBlocksLayer = d.layer;
+    this.deathBlocksLayer.setDepth(1);
+    this.deathBlocksLayer.setCollision([8]);
+  }
+
+  // Sections, each a lesson. Signs are small wooden boards with text.
+  _populate() {
+    const X = (c) => c * 16 + 8;
+    const FLOOR = 160; // walking y for ground-level enemies
+
+    // --- A: welcome ---
+    [12, 14, 16].forEach((c) => new AntToken(this, X(c), 136));
+    new Raspberry(this, X(36), FLOOR);
+    this._sign(X(6), "SUNSET MESA", "HEAD EAST");
+
+    // --- B: Rocket Axe ---
+    this._sign(X(48), "BIG GAP AHEAD", "JUMP, THEN JUMP AGAIN");
+    [55, 58, 61, 64].forEach((c, i) => new AntToken(this, X(c), 120 - Math.sin((i + 1) / 5 * Math.PI) * 50));
+    this._sign(X(72), "UP AND OVER", "ROCKET OFF THE TOP OF A JUMP");
+    [82, 85, 88, 91, 94].forEach((c) => new AntToken(this, X(c), 56));
+    new Raspberry(this, X(90), 64);
+    new AntToken(this, X(100), 104);
+
+    // --- C: Seedcaster, then bushes one at a time ---
+    new GuitarPickup(this, X(114), 140, "desert-seedcaster");
+    new SeedAmmoPickup(this, X(118), 150);
+    this._sign(X(120), "SEEDS LOB IN AN ARC", "HOLD W TO LOB HIGHER");
+    new AntToken(this, X(122), 110);
+    new BushZomberry(this, X(132), 176);
+    this._sign(X(127), "EYES IN THE BUSH?", "BLUBERT SPOTS THEM - SEED IT");
+    new SeedAmmoPickup(this, X(140), 150);
+    // Three bushes: one hides a Zomberry, two are decoys
+    new Bush(this, X(147), 176);
+    new BushZomberry(this, X(154), 176);
+    new Bush(this, X(161), 176);
+    this._sign(X(143), "NOT EVERY BUSH BITES", "WATCH BLUBERT");
+    [150, 157].forEach((c) => new AntToken(this, X(c), 136));
+    new SeedAmmoPickup(this, X(167), 150);
+
+    // --- D: sky drones ---
+    this._sign(X(174), "WATCH THE SKY", "DRONES DIVE AND DROP BOMBS");
+    this.decoyClouds = [new Cloud(this, X(180), 50), new Cloud(this, X(204), 58)];
+    this.cloudBlueberries = [new CloudBlueberry(this, X(190), 56), new CloudBlueberry(this, X(210), 52)];
+    this.cloudBlueberries.forEach((b) => this.enemies.add(b));
+    [186, 196].forEach((c) => new AntToken(this, X(c), 128));
+    new Raspberry(this, X(208), FLOOR);
+
+    // --- E: needle cactus ---
+    this._sign(X(218), "CACTUS DISLIKES COMPANY", "DON'T LINGER - OR SHOOT IT");
+    this.cactuses = [new NeedleCactus(this, X(224), 158)];
+    new AntToken(this, X(230), 110);
+    this.cactuses.push(new NeedleCactus(this, X(238), 158), new NeedleCactus(this, X(246), 158));
+    new AntToken(this, X(242), 96);
+    const heal = new PowerUp(this, X(249), 150);
+    heal.setData("powerUpType", "heal");
+
+    // --- F: fruit platforms + snappers ---
+    this._sign(X(253), "FRUIT PLATFORMS BOB", "MIND THE THORNS BELOW");
+    this._buildFruitPlatform({ x: X(261), y: 86, w: 74, amp: 16, period: 2400,
+      fruits: [{ ox: -22, len: 30 }, { ox: 18, len: 42 }] }, 0);
+    new WatermelonSnapper(this, X(270), 170);
+    this._sign(X(268), "SNAPPERS SLEEP IN THE SAND", "", 176);
+    this._buildFruitPlatform({ x: X(276), y: 90, w: 74, amp: 20, period: 2800,
+      fruits: [{ ox: -24, len: 36 }, { ox: 0, len: 58 }, { ox: 24, len: 40 }] }, 1);
+    this._buildFruitPlatform({ x: X(282), y: 60, w: 60, amp: 18, period: 2200,
+      fruits: [{ ox: -14, len: 48 }, { ox: 16, len: 30 }] }, 2);
+    new WatermelonSnapper(this, X(288), 170);
+    // Lost Jam: high above the first fruit platform — plank, then Rocket Axe
+    new LostRecord(this, X(261), -14, "Stage1_3");
+
+    // --- G: pineapples and the finale ---
+    this._sign(X(292), "PINEAPPLES LIGHT UP CLOSE", "RUN, OR SHOOT FROM AFAR");
+    new Pineapple(this, X(297), FLOOR);
+    new Pineapple(this, X(304), FLOOR);
+    new SeedAmmoPickup(this, X(308), 150);
+    new BushZomberry(this, X(313), 176);
+    new Bush(this, X(318), 176);
+    this.cactuses.push(new NeedleCactus(this, X(323), 158));
+    new WatermelonSnapper(this, X(328), 170);
+    new CloudBlueberry(this, X(330), 54);
+    [311, 316, 321, 326].forEach((c) => new AntToken(this, X(c), 128));
+    // Final fruit platform with the secret exit high above it
+    this._buildFruitPlatform({ x: X(334), y: 62, w: 92, amp: 22, period: 2200,
+      fruits: [{ ox: -30, len: 60 }, { ox: 0, len: 36 }, { ox: 30, len: 50 }] }, 3);
+    this._buildSecretExit(X(334));
+    new AntToken(this, X(340), 136);
+    this._buildExitPortal(X(345), 158);
+  }
+
+  _sign(x, line1, line2, groundY) {
+    const gy = typeof groundY === "number" ? groundY : 176;
+    this.add.rectangle(x, gy - 10, 3, 20, 0x8c5a34).setDepth(3);
+    const w = Math.max(line1.length, (line2 || "").length) * 5 + 10;
+    this.add.rectangle(x, gy - 26, w, line2 ? 20 : 12, 0xd8a868).setStrokeStyle(1, 0x6e4527).setDepth(3);
+    this.add.bitmapText(x, gy - (line2 ? 30 : 26), "tempFont", line1, 6).setOrigin(0.5).setTintFill(0x3a2818).setDepth(4);
+    if (line2) this.add.bitmapText(x, gy - 22, "tempFont", line2, 6).setOrigin(0.5).setTintFill(0x6e4527).setDepth(4);
+  }
+
+  _blubertBanner() {
+    const run = getRunState();
+    if (!run || run.blubertBannerShown) return;
+    run.blubertBannerShown = true;
+    const t1 = this.add.bitmapText(213, 180, "tempFont", "BLUBERT JOINED THE BAND", 12)
+      .setOrigin(0.5).setScrollFactor(0).setDepth(300).setTintFill(0x8cc8ff).setAlpha(0);
+    const t2 = this.add.bitmapText(213, 196, "tempFont", "HE SCOUTS AHEAD AND SPOTS HIDDEN ZOMBERRIES", 8)
+      .setOrigin(0.5).setScrollFactor(0).setDepth(300).setTintFill(0xffffff).setAlpha(0);
+    this.tweens.add({ targets: [t1, t2], alpha: 1, delay: 7000, duration: 400 });
+    this.tweens.add({ targets: [t1, t2], alpha: 0, delay: 11000, duration: 600, onComplete: () => { t1.destroy(); t2.destroy(); } });
   }
 
   _buildFruitPlatform(cfg, index) {
     const { x, y, w, amp, period, fruits } = cfg;
-    // Solid wooden plank platform (pixel-art texture, tiled to width)
     this._ensurePlankTexture();
     const plat = this.add.tileSprite(x, y, w, 8, "wood-platform");
     plat.setDepth(54);
     this.physics.add.existing(plat);
     plat.body.setAllowGravity(false);
     plat.body.setImmovable(true);
-    // One-way platform: only the top face blocks. Jammy can jump up
-    // through from below and pass sideways; landing from above lands.
     plat.body.checkCollision.down = false;
     plat.body.checkCollision.left = false;
     plat.body.checkCollision.right = false;
     this.fruitPlatforms.add(plat);
 
-    // Vine graphics for the whole cluster
     const vineGfx = this.add.graphics();
     vineGfx.setDepth(53);
-
-    // Spawn the hanging fruits. HornedFruit constructor adds the sprite
-    // to scene/enemies; setPosition captures baseY for its sin-bob.
-    const hfs = fruits.map(f => {
+    const hfs = fruits.map((f) => {
       const hf = new HornedFruit(this);
       hf.setPosition(x + f.ox, y + f.len);
       hf.setDepth(53);
       return { hf, ox: f.ox, len: f.len };
     });
-
-    // Stagger phases between platforms so they don't all dip in sync
     const phase = index * 600;
     const startTime = this.time.now - phase;
     const baseY = y;
-
-    const rig = {
+    this.hornedRigs.push({
       update: () => {
         const t = (this.time.now - startTime) / period;
         const py = baseY + Math.sin(t * Math.PI * 2) * amp;
         plat.y = py;
-        // Refresh the body manually so the collider tracks the moved
-        // position (immovable bodies don't auto-sync from velocity).
-        if (plat.body && typeof plat.body.updateFromGameObject === "function") {
-          plat.body.updateFromGameObject();
-        }
-
+        if (plat.body && typeof plat.body.updateFromGameObject === "function") plat.body.updateFromGameObject();
         vineGfx.clear();
         for (const { hf, ox, len } of hfs) {
           if (!hf || !hf.scene) continue;
@@ -270,9 +288,6 @@ class Stage1_3 extends Phaser.Scene {
             hf.x = fx;
             hf.y = py + len;
             hf.baseY = hf.y;
-          }
-          // Only draw vine if fruit still hanging
-          if (!hf.dropped) {
             const topY = py + 3;
             const botY = hf.y - 6;
             vineGfx.lineStyle(2, 0x2f6a2a, 1);
@@ -280,30 +295,133 @@ class Stage1_3 extends Phaser.Scene {
             vineGfx.moveTo(fx, topY);
             vineGfx.lineTo(fx, botY);
             vineGfx.strokePath();
-            // Thorns
             vineGfx.fillStyle(0x2f6a2a, 1);
             const vineLen = botY - topY;
             const steps = Math.max(3, Math.floor(vineLen / 6));
             for (let s = 1; s < steps; s++) {
               const ty = topY + (vineLen * s) / steps;
               const side = s % 2 === 0 ? -1 : 1;
-              vineGfx.fillTriangle(
-                fx, ty,
-                fx + side * 4, ty - 2,
-                fx + side * 4, ty + 2
-              );
+              vineGfx.fillTriangle(fx, ty, fx + side * 4, ty - 2, fx + side * 4, ty + 2);
             }
           }
         }
       },
-    };
-    this.hornedRigs.push(rig);
+    });
   }
 
   // ------------------------------------------------------------------
-  // NES sunset sky: flat color bands pinned to the screen, a posterized
-  // sun with horizon cuts, the city skyline far below (this stage sits
-  // above the city of Level 1), and a soft cloud bank at the horizon.
+  // Desert tileset: 1-3 sand tops, 4-5 loose sand, 6-7 sandstone,
+  // 8 quicksand (the pit floor).
+  _ensureDesertTileset() {
+    if (this.textures.exists("desert-tiles")) return;
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+    const o = (i) => i * 16;
+    const SAND = 0xe8c878, SANDLT = 0xf8e0a0, SANDDK = 0xc89850, SANDMD = 0xe0bc70,
+      PEB = 0xa88858, PEBLT = 0xd8c098, STONE = 0xc87848, STONEDK = 0xb05c34, STONELT = 0xd88858;
+    const sandTop = (x, seed) => {
+      g.fillStyle(SAND, 1); g.fillRect(x, 0, 16, 16);
+      g.fillStyle(SANDLT, 1); g.fillRect(x, 0, 16, 2);
+      g.fillRect(x + ((seed * 5) % 9), 2, 4, 1); g.fillRect(x + ((seed * 11) % 11), 2, 2, 2);
+      g.fillStyle(SANDDK, 1);
+      g.fillRect(x + ((seed * 7) % 6), 5 + (seed % 3), 6, 1);
+      g.fillRect(x + 8 + ((seed * 3) % 5), 9 + ((seed * 2) % 3), 5, 1);
+      g.fillRect(x + ((seed * 13) % 8), 13, 4, 1);
+      g.fillStyle(SANDMD, 1);
+      g.fillRect(x + ((seed * 17) % 14), 7, 1, 1); g.fillRect(x + ((seed * 23) % 14), 11, 1, 1);
+    };
+    sandTop(o(1), 1); sandTop(o(2), 2);
+    g.fillStyle(PEB, 1); g.fillRect(o(2) + 10, 1, 4, 3);
+    g.fillStyle(PEBLT, 1); g.fillRect(o(2) + 11, 1, 2, 1);
+    sandTop(o(3), 3);
+    g.fillStyle(0xb89c50, 1); g.fillRect(o(3) + 3, 0, 1, 3); g.fillRect(o(3) + 5, 0, 1, 2); g.fillRect(o(3) + 7, 1, 1, 2);
+    const sandBody = (x, seed) => {
+      g.fillStyle(SANDMD, 1); g.fillRect(x, 0, 16, 16);
+      g.fillStyle(SANDDK, 1);
+      g.fillRect(x + ((seed * 7) % 7), 3 + (seed % 4), 5, 1); g.fillRect(x + 7 + ((seed * 5) % 6), 10 + (seed % 3), 5, 1);
+      g.fillStyle(SAND, 1); g.fillRect(x + ((seed * 11) % 12), 6, 2, 2); g.fillRect(x + ((seed * 13) % 12), 13, 2, 1);
+    };
+    sandBody(o(4), 1); sandBody(o(5), 4);
+    g.fillStyle(PEB, 1); g.fillRect(o(5) + 4, 7, 5, 4); g.fillRect(o(5) + 10, 9, 3, 3);
+    g.fillStyle(PEBLT, 1); g.fillRect(o(5) + 5, 8, 2, 1);
+    const stone = (x, seed) => {
+      g.fillStyle(STONE, 1); g.fillRect(x, 0, 16, 16);
+      g.fillStyle(STONEDK, 1); g.fillRect(x, 3 + (seed % 2), 16, 2); g.fillRect(x, 11 - (seed % 2), 16, 2);
+      g.fillStyle(STONELT, 1); g.fillRect(x, 0, 16, 1); g.fillRect(x + ((seed * 7) % 9), 7, 6, 1);
+    };
+    stone(o(6), 1); stone(o(7), 2);
+    g.fillStyle(0x8c4828, 1); g.fillRect(o(7) + 6, 5, 1, 3); g.fillRect(o(7) + 7, 8, 1, 3); g.fillRect(o(7) + 6, 11, 1, 2);
+    // 8: quicksand — darker, swirled
+    g.fillStyle(0xb8903c, 1); g.fillRect(o(8), 0, 16, 16);
+    g.fillStyle(0x9c7830, 1); g.fillRect(o(8) + 2, 3, 6, 2); g.fillRect(o(8) + 9, 9, 5, 2); g.fillRect(o(8) + 4, 12, 3, 1);
+    g.fillStyle(0xd0a850, 1); g.fillRect(o(8) + 10, 2, 3, 1); g.fillRect(o(8) + 1, 8, 4, 1);
+    g.generateTexture("desert-tiles", 9 * 16, 16);
+    g.destroy();
+  }
+
+  // Paint sand / stone over the invisible collision grid, following the
+  // terrain: the top solid tile of each column is a sand lip, the next
+  // is loose sand, everything below is sandstone.
+  _buildDesertTiles() {
+    const W = this.map.width, H = this.map.height;
+    const pick = (c, opts, salt) => opts[(c * 31 + salt * 17 + ((c * 13) >> 2)) % opts.length];
+    const data = [];
+    for (let r = 0; r < H; r++) {
+      const row = [];
+      for (let c = 0; c < W; c++) {
+        const top = this.groundTop[c];
+        if (top === null || r < top) row.push(-1);
+        else if (r === top) row.push(pick(c, [1, 1, 2, 1, 3, 1, 2, 1, 1, 3], 1));
+        else if (r === top + 1) row.push(pick(c, [4, 4, 5, 4, 4, 5, 4], 2));
+        else row.push(pick(c, [6, 6, 7, 6, 7, 6], r));
+      }
+      data.push(row);
+    }
+    const vmap = this.make.tilemap({ data, tileWidth: 16, tileHeight: 16 });
+    const ts = vmap.addTilesetImage("desert-tiles");
+    this.desertLayer = vmap.createLayer(0, ts, 0, 0);
+    this.desertLayer.setDepth(1);
+  }
+
+  _scatterDesertDecor() {
+    const mk = (key, w, h, draw) => {
+      if (this.textures.exists(key)) return;
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      draw(g);
+      g.generateTexture(key, w, h);
+      g.destroy();
+    };
+    mk("desert-dune", 42, 10, (g) => {
+      g.fillStyle(0xf0d490, 1); g.fillRect(8, 4, 26, 4); g.fillRect(2, 8, 38, 2);
+      g.fillStyle(0xf8e0a0, 1); g.fillRect(10, 4, 12, 2);
+      g.fillStyle(0xc89850, 1); g.fillRect(4, 9, 10, 1);
+    });
+    mk("desert-rocks", 18, 10, (g) => {
+      g.fillStyle(0x8c6a48, 1); g.fillRect(2, 4, 8, 6); g.fillRect(9, 6, 7, 4);
+      g.fillStyle(0xb08c60, 1); g.fillRect(3, 4, 4, 2); g.fillRect(10, 6, 3, 2);
+      g.fillStyle(0x6a4e34, 1); g.fillRect(2, 9, 14, 1);
+    });
+    mk("desert-skull", 16, 10, (g) => {
+      g.fillStyle(0xe8e0c8, 1); g.fillRect(4, 2, 8, 6); g.fillRect(0, 0, 4, 3); g.fillRect(12, 0, 4, 3); g.fillRect(6, 8, 4, 2);
+      g.fillStyle(0x3a2818, 1); g.fillRect(5, 4, 2, 2); g.fillRect(9, 4, 2, 2);
+    });
+    let x = 90, i = 0;
+    while (x < this.map.widthInPixels - 80) {
+      const c = Math.floor(x / 16);
+      const top = this.groundTop[c];
+      if (top !== null) {
+        const y = top * 16 - 4;
+        const kind = i % 3;
+        if (kind === 0) this.add.image(x, y, "desert-dune").setDepth(2);
+        else if (kind === 1) this.add.image(x, y, "desert-rocks").setDepth(2);
+        else this.add.image(x, y, "desert-dune").setDepth(2).setFlipX(true);
+      }
+      x += 210 + ((i * 73) % 160);
+      i++;
+    }
+    this.add.image(1234, 172, "desert-skull").setDepth(2);
+    this.add.image(4700, 172, "desert-skull").setDepth(2).setFlipX(true);
+  }
+
   _paintSky() {
     const bands = [
       [0, 70, 0xc84890],
@@ -327,8 +445,11 @@ class Stage1_3 extends Phaser.Scene {
       .setScrollFactor(0.12, 1)
       .setDepth(-37);
 
+    // Parallax layers must cover the whole (long) level
+    const limit = this.map.widthInPixels * 0.22 + 480;
+
     // Far skyline — a second, paler row of towers behind the near one
-    for (let x = 20; x < 980; x += 64) {
+    for (let x = 20; x < limit; x += 64) {
       const h = 24 + ((x * 5) % 20);
       this.add.rectangle(x, 176 - h / 2, 30, h, 0xc06090)
         .setScrollFactor(0.14, 1)
@@ -345,7 +466,9 @@ class Stage1_3 extends Phaser.Scene {
       [716, 40, 28], [750, 48, 26], [782, 32, 30], [818, 58, 38], [862, 42, 28],
       [896, 30, 26], [928, 46, 32],
     ];
-    bld.forEach(([x, h, w]) => {
+    const bldAll = [];
+    for (let off = 0; off < limit; off += 960) bld.forEach(([x, h, w]) => bldAll.push([x + off, h, w]));
+    bldAll.forEach(([x, h, w]) => {
       this.add.rectangle(x + w / 2, 176 - h / 2, w, h, 0xa04878)
         .setScrollFactor(0.2, 1)
         .setDepth(-35);
@@ -366,17 +489,13 @@ class Stage1_3 extends Phaser.Scene {
     });
 
     // Thin haze drifting just over the rooftops
-    for (let x = 0; x < 1000; x += 170) {
+    for (let x = 0; x < limit; x += 170) {
       const puffY = 164 + ((x / 170) % 3) * 4;
       this.add.ellipse(x + 40, puffY, 120, 10, 0xffc8d8, 0.35)
         .setScrollFactor(0.22, 1)
         .setDepth(-34);
     }
   }
-
-  // Dithered pixel sun, drawn as stepped 2px rows with a lighter core,
-  // dither flecks along the rim, and transparent stripe cuts across
-  // the lower half (the sky shows through the gaps).
   _ensureSunTexture() {
     if (this.textures.exists("mesa-sun")) return;
     const g = this.make.graphics({ x: 0, y: 0, add: false });
@@ -412,169 +531,6 @@ class Stage1_3 extends Phaser.Scene {
     g.generateTexture("mesa-sun", 64, 64);
     g.destroy();
   }
-
-  // Sandy desert strip rendered over the invisible collision floor:
-  // rippled sand lip on row 11, loose sand, then banded sandstone.
-  // Several variants per row, mixed by position hash, keep it from
-  // reading as a repeated single tile.
-  _buildDesertTiles() {
-    if (!this.textures.exists("desert-tiles")) {
-      const g = this.make.graphics({ x: 0, y: 0, add: false });
-      const o = (i) => i * 16;
-      const SAND = 0xe8c878, SANDLT = 0xf8e0a0, SANDDK = 0xc89850,
-            SANDMD = 0xe0bc70, PEB = 0xa88858, PEBLT = 0xd8c098,
-            STONE = 0xc87848, STONEDK = 0xb05c34, STONELT = 0xd88858;
-
-      const sandTop = (x, seed) => {
-        g.fillStyle(SAND, 1);
-        g.fillRect(x, 0, 16, 16);
-        // bright wind-blown lip with notches
-        g.fillStyle(SANDLT, 1);
-        g.fillRect(x, 0, 16, 2);
-        g.fillRect(x + ((seed * 5) % 9), 2, 4, 1);
-        g.fillRect(x + ((seed * 11) % 11), 2, 2, 2);
-        // ripple dashes at staggered heights
-        g.fillStyle(SANDDK, 1);
-        g.fillRect(x + ((seed * 7) % 6), 5 + (seed % 3), 6, 1);
-        g.fillRect(x + 8 + ((seed * 3) % 5), 9 + ((seed * 2) % 3), 5, 1);
-        g.fillRect(x + ((seed * 13) % 8), 13, 4, 1);
-        // speckles
-        g.fillStyle(SANDMD, 1);
-        g.fillRect(x + ((seed * 17) % 14), 7, 1, 1);
-        g.fillRect(x + ((seed * 23) % 14), 11, 1, 1);
-      };
-
-      // 1-3: sand surface variants
-      sandTop(o(1), 1);
-      sandTop(o(2), 2);
-      g.fillStyle(PEB, 1);            // half-buried pebbles on variant 2
-      g.fillRect(o(2) + 10, 1, 4, 3);
-      g.fillStyle(PEBLT, 1);
-      g.fillRect(o(2) + 11, 1, 2, 1);
-      sandTop(o(3), 3);
-      g.fillStyle(0xb89c50, 1);       // dry grass wisps on variant 3
-      g.fillRect(o(3) + 3, 0, 1, 3);
-      g.fillRect(o(3) + 5, 0, 1, 2);
-      g.fillRect(o(3) + 7, 1, 1, 2);
-
-      // 4-5: loose sand body
-      const sandBody = (x, seed) => {
-        g.fillStyle(SANDMD, 1);
-        g.fillRect(x, 0, 16, 16);
-        g.fillStyle(SANDDK, 1);
-        g.fillRect(x + ((seed * 7) % 7), 3 + (seed % 4), 5, 1);
-        g.fillRect(x + 7 + ((seed * 5) % 6), 10 + (seed % 3), 5, 1);
-        g.fillStyle(SAND, 1);
-        g.fillRect(x + ((seed * 11) % 12), 6, 2, 2);
-        g.fillRect(x + ((seed * 13) % 12), 13, 2, 1);
-      };
-      sandBody(o(4), 1);
-      sandBody(o(5), 4);
-      g.fillStyle(PEB, 1);            // pebble cluster on variant 5
-      g.fillRect(o(5) + 4, 7, 5, 4);
-      g.fillRect(o(5) + 10, 9, 3, 3);
-      g.fillStyle(PEBLT, 1);
-      g.fillRect(o(5) + 5, 8, 2, 1);
-
-      // 6-7: banded sandstone bedrock
-      const stone = (x, seed) => {
-        g.fillStyle(STONE, 1);
-        g.fillRect(x, 0, 16, 16);
-        g.fillStyle(STONEDK, 1);
-        g.fillRect(x, 3 + (seed % 2), 16, 2);
-        g.fillRect(x, 11 - (seed % 2), 16, 2);
-        g.fillStyle(STONELT, 1);
-        g.fillRect(x, 0, 16, 1);
-        g.fillRect(x + ((seed * 7) % 9), 7, 6, 1);
-      };
-      stone(o(6), 1);
-      stone(o(7), 2);
-      g.fillStyle(0x8c4828, 1);       // crack on variant 7
-      g.fillRect(o(7) + 6, 5, 1, 3);
-      g.fillRect(o(7) + 7, 8, 1, 3);
-      g.fillRect(o(7) + 6, 11, 1, 2);
-
-      g.generateTexture("desert-tiles", 8 * 16, 16);
-      g.destroy();
-    }
-
-    const W = this.map.width;
-    const pick = (c, opts, salt) => opts[(c * 31 + salt * 17 + ((c * 13) >> 2)) % opts.length];
-    const data = [];
-    for (let r = 0; r < this.map.height; r++) {
-      const row = [];
-      for (let c = 0; c < W; c++) {
-        if (r === 11) row.push(pick(c, [1, 1, 2, 1, 3, 1, 2, 1, 1, 3], 1));
-        else if (r === 12) row.push(pick(c, [4, 4, 5, 4, 4, 5, 4], 2));
-        else if (r > 12) row.push(pick(c, [6, 6, 7, 6, 7, 6], r));
-        else row.push(-1);
-      }
-      data.push(row);
-    }
-    const vmap = this.make.tilemap({ data, tileWidth: 16, tileHeight: 16 });
-    const ts = vmap.addTilesetImage("desert-tiles");
-    this.desertLayer = vmap.createLayer(0, ts, 0, 0);
-    this.desertLayer.setDepth(1);
-  }
-
-  // Surface dressing: low dune mounds, rock piles, and one bleached
-  // longhorn skull, spaced irregularly so the strip never tiles visibly.
-  _scatterDesertDecor() {
-    const g1 = this.make.graphics({ x: 0, y: 0, add: false });
-    if (!this.textures.exists("desert-dune")) {
-      g1.fillStyle(0xf0d490, 1);
-      g1.fillRect(8, 4, 26, 4);
-      g1.fillRect(2, 8, 38, 2);
-      g1.fillStyle(0xf8e0a0, 1);
-      g1.fillRect(10, 4, 12, 2);
-      g1.fillStyle(0xc89850, 1);
-      g1.fillRect(4, 9, 10, 1);
-      g1.generateTexture("desert-dune", 42, 10);
-    }
-    g1.destroy();
-
-    const g2 = this.make.graphics({ x: 0, y: 0, add: false });
-    if (!this.textures.exists("desert-rocks")) {
-      g2.fillStyle(0x8c6a48, 1);
-      g2.fillRect(2, 4, 8, 6);
-      g2.fillRect(9, 6, 7, 4);
-      g2.fillStyle(0xb08c60, 1);
-      g2.fillRect(3, 4, 4, 2);
-      g2.fillRect(10, 6, 3, 2);
-      g2.fillStyle(0x6a4e34, 1);
-      g2.fillRect(2, 9, 14, 1);
-      g2.generateTexture("desert-rocks", 18, 10);
-    }
-    g2.destroy();
-
-    const g3 = this.make.graphics({ x: 0, y: 0, add: false });
-    if (!this.textures.exists("desert-skull")) {
-      g3.fillStyle(0xe8e0c8, 1);
-      g3.fillRect(4, 2, 8, 6);
-      g3.fillRect(0, 0, 4, 3);  // horns
-      g3.fillRect(12, 0, 4, 3);
-      g3.fillRect(6, 8, 4, 2);  // snout
-      g3.fillStyle(0x3a2818, 1);
-      g3.fillRect(5, 4, 2, 2);  // sockets
-      g3.fillRect(9, 4, 2, 2);
-      g3.generateTexture("desert-skull", 16, 10);
-    }
-    g3.destroy();
-
-    // Irregular spacing via a stride that drifts each step
-    let x = 90;
-    let i = 0;
-    while (x < this.map.widthInPixels - 80) {
-      const kind = i % 3;
-      if (kind === 0) this.add.image(x, 172, "desert-dune").setDepth(2);
-      else if (kind === 1) this.add.image(x, 172, "desert-rocks").setDepth(2);
-      else this.add.image(x, 172, "desert-dune").setDepth(2).setFlipX(true);
-      x += 210 + ((i * 73) % 160);
-      i++;
-    }
-    this.add.image(1234, 172, "desert-skull").setDepth(2);
-  }
-
   _ensurePlankTexture() {
     if (this.textures.exists("wood-platform")) return;
     const g = this.make.graphics({ x: 0, y: 0, add: false });
@@ -595,44 +551,6 @@ class Stage1_3 extends Phaser.Scene {
     g.generateTexture("wood-platform", 16, 8);
     g.destroy();
   }
-
-  _buildExitPortal() {
-    const x = 2500, y = 158;
-    // Pulsing glow behind the swirl
-    const glow = this.add.circle(x, y, 22, 0xffb86b, 0.25);
-    glow.setDepth(49);
-    this.tweens.add({
-      targets: glow, scale: 1.3, alpha: 0.1,
-      duration: 700, yoyo: true, repeat: -1, ease: "Sine.easeInOut",
-    });
-
-    this.exitPortal = this.physics.add.sprite(x, y, "dev-portal", "portal1");
-    this.exitPortal.body.setAllowGravity(false);
-    this.exitPortal.body.setImmovable(true);
-    this.exitPortal.setScale(1.5);
-    this.exitPortal.setDepth(50);
-    this.exitPortal.setTint(0xffb86b);
-    this.exitPortal.play("dev-portal-swirl");
-    this.add.bitmapText(x, y - 34, "tempFont", "1-4", 8)
-      .setOrigin(0.5)
-      .setTintFill(0xffd9a0)
-      .setDepth(50);
-
-    this.physics.add.overlap(this.jammy.sprite, this.exitPortal, () =>
-      this.changeScene()
-    );
-  }
-
-  // Secret exit: a cloud high above the last fruit platform. A trail of
-  // tokens hints that there's something up there; the Rocket Axe gets
-  // you to it. Leads to the hidden bonus stage, Cloud Nine.
-  _buildSecretExit() {
-    const x = 2200;
-    [20, -14, -48].forEach((y) => new AntToken(this, x, y));
-    LevelCommon.addCloudPlatform(this, x, -88, 1);
-    LevelCommon.addSecretExit(this, x, -112, "Stage1_S", "1-S");
-  }
-
   _showTitleCard() {
     const t1 = this.add.bitmapText(213, 92, "tempFont", "STAGE 1-3", 16)
       .setOrigin(0.5).setScrollFactor(0).setDepth(300).setTintFill(0xffffff);
@@ -647,8 +565,28 @@ class Stage1_3 extends Phaser.Scene {
     });
   }
 
+  _buildSecretExit(x) {
+    [20, -14, -48].forEach((y) => new AntToken(this, x, y));
+    LevelCommon.addCloudPlatform(this, x, -88, 1);
+    LevelCommon.addSecretExit(this, x, -112, "Stage1_S", "1-S");
+  }
+
+  _buildExitPortal(x, y) {
+    const glow = this.add.circle(x, y, 22, 0xffb86b, 0.25);
+    glow.setDepth(49);
+    this.tweens.add({ targets: glow, scale: 1.3, alpha: 0.1, duration: 700, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    this.exitPortal = this.physics.add.sprite(x, y, "dev-portal", "portal1");
+    this.exitPortal.body.setAllowGravity(false);
+    this.exitPortal.body.setImmovable(true);
+    this.exitPortal.setScale(1.5);
+    this.exitPortal.setDepth(50);
+    this.exitPortal.setTint(0xffb86b);
+    this.exitPortal.play("dev-portal-swirl");
+    this.add.bitmapText(x, y - 34, "tempFont", "1-4", 8).setOrigin(0.5).setTintFill(0xffd9a0).setDepth(50);
+    this.physics.add.overlap(this.jammy.sprite, this.exitPortal, () => this.changeScene());
+  }
+
   changeScene() {
-    // Onward to the fortress stage — The Jam Works
     LevelCommon.finishStage(this, "Stage1_4");
   }
 }

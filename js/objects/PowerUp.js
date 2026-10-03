@@ -4,6 +4,7 @@ class PowerUp extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
     scene.collectibles.add(this);
+    this.body.setAllowGravity(true); // power-ups drop to the ground
     this.val = val;
     scene.physics.add.collider(this, scene.groundLayer);
     scene.physics.add.collider(this, scene.deathBlocksLayer, () =>

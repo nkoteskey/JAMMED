@@ -41,8 +41,17 @@ function awardScore(scn, score, x, y, opts = {}) {
 
 const LevelCommon = {
   createGroups(scn) {
+    // Scene instances survive restarts, so clear caches that point at
+    // objects from the previous run of this scene.
+    scn.cloudPlatforms = null;
+    scn.grindRails = null;
+    scn.blubert = null;
     scn.bullets = scn.physics.add.group();
-    scn.collectibles = scn.physics.add.group();
+    // Physics groups apply their defaults to every body added, which
+    // used to switch gravity back on for tokens and pickups placed in
+    // the air (they all sank to the floor). Collectibles float unless a
+    // class asks for gravity itself (PowerUp does).
+    scn.collectibles = scn.physics.add.group({ allowGravity: false });
     scn.enemies = scn.add.group();
     scn.enemyProjectiles = scn.physics.add.group();
   },

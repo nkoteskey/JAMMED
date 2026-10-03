@@ -15,7 +15,7 @@ class UIScene extends Phaser.Scene {
 
   create() {
     this.newScore = this.score;
-    this.gameplaySceneKeys = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_4"];
+    this.gameplaySceneKeys = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_S", "Stage1_4", "Stage1_4Boss"];
     this.currentWeapon = "sonic";
 
     // --- Score (top-left) ---
@@ -48,6 +48,17 @@ class UIScene extends Phaser.Scene {
     this.weaponAmmoText = this.add
       .bitmapText(374, 2, "tempFont", "", 8)
       .setTintFill(0xffffff);
+
+    // --- Riff combo (top centre) ---
+    this.combo = 0;
+    this.comboExpires = 0;
+    this.comboWindowMs = 4000;
+    this.comboText = this.add
+      .bitmapText(213, 4, "tempFont", "", 12)
+      .setOrigin(0.5, 0)
+      .setTintFill(0xffee88)
+      .setAlpha(0);
+    this.comboBar = this.add.rectangle(213, 20, 60, 3, 0xffee88).setOrigin(0.5, 0).setAlpha(0);
 
     // --- Keys: pause + guitar rack ---
     const kb = this.input.keyboard;
@@ -94,6 +105,63 @@ class UIScene extends Phaser.Scene {
       if (this.tokenText.text !== txt) this.tokenText.setText(txt);
     }
     if (this.gamepad) this.gamepad.update(jammy);
+
+    // Combo decay
+    if (this.combo > 0) {
+      const left = this.comboExpires - this.time.now;
+      if (left <= 0) {
+        this.resetCombo();
+      } else {
+        this.comboBar.width = 60 * (left / this.comboWindowMs);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Riff combo: chain kills without a pause (or a hit) to multiply
+  // score. x2 at 3 kills, x3 at 6, x4 "ENCORE" at 10.
+  // ---------------------------------------------------------------
+  comboMultiplier() {
+    if (this.combo >= 10) return 4;
+    if (this.combo >= 6) return 3;
+    if (this.combo >= 3) return 2;
+    return 1;
+  }
+
+  registerKill(score) {
+    const before = this.comboMultiplier();
+    this.combo += 1;
+    this.comboExpires = this.time.now + this.comboWindowMs;
+    const mult = this.comboMultiplier();
+    if (mult > before) {
+      this.sound.play("antTokenCollectSound", { rate: 0.9 + mult * 0.25, volume: 0.5 });
+    }
+    const label =
+      mult >= 4 ? "ENCORE! x4" : this.combo >= 2 ? "RIFF x" + this.combo + (mult > 1 ? "  (x" + mult + ")" : "") : "";
+    this.comboText.setText(label);
+    this.comboText.setTintFill(mult >= 4 ? 0xff6a9a : mult >= 3 ? 0xffb347 : 0xffee88);
+    this.comboBar.setFillStyle(mult >= 4 ? 0xff6a9a : mult >= 3 ? 0xffb347 : 0xffee88);
+    const vis = this.combo >= 2 ? 1 : 0;
+    this.comboText.setAlpha(vis);
+    this.comboBar.setAlpha(vis);
+    if (this.combo >= 2) {
+      this.comboText.setScale(1.4);
+      this.tweens.add({ targets: this.comboText, scaleX: 1, scaleY: 1, duration: 160 });
+    }
+    return score * mult;
+  }
+
+  // Combo broken by time or by taking a hit
+  resetCombo(byDamage = false) {
+    if (this.combo >= 3 && byDamage) {
+      this.sound.play("enemyHitSound", { rate: 0.5, volume: 0.3 });
+    }
+    this.combo = 0;
+    this.comboExpires = 0;
+    if (this.comboText) {
+      this.comboText.setAlpha(0);
+      this.comboBar.setAlpha(0);
+    }
   }
 
   // ---------------------------------------------------------------

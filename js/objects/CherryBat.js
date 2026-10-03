@@ -173,7 +173,7 @@ class CherryBat extends Phaser.Physics.Arcade.Sprite {
     if (this.dead) return;
     this.dead = true;
     if (this._swoopTween) { this._swoopTween.remove(); this._swoopTween = null; }
-    this.scene.scene.get("UIScene").setScore(this.score);
+    awardScore(this.scene, this.score, this.x, this.y);
     new EnemyDeath(this.scene, this.x, this.y);
     this.body.setEnable(false);
     this.destroy();

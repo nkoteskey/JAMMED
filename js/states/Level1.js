@@ -83,6 +83,10 @@ class Level1 extends Phaser.Scene {
 
     LevelCommon.wireCollisions(this, { onSceneChange: () => this.changeScene() });
 
+    // Lost Jam: tucked on the little ledge above the start — the classic
+    // "walk left first" secret.
+    new LostRecord(this, 40, 84, "Level1");
+
     // Blubert companion — follows Jammy, locks onto threats
     this.blubert = new Blubert(this, this.jammy);
     this.blubertRevivesLeft = 1;
@@ -92,6 +96,8 @@ class Level1 extends Phaser.Scene {
       LevelCommon.addDevPortal(this, 200, 168, "Stage1_3", "DEV->1-3");
       LevelCommon.addDevPortal(this, 84, 168, "Stage1_4", "DEV->1-4", 0xffb86b);
       LevelCommon.addDevPortal(this, 260, 168, "Level1BossFight", "DEV->BOSS", 0xff6b6b);
+      LevelCommon.addDevPortal(this, 320, 168, "Stage1_S", "DEV->1-S", 0x8ce070);
+      LevelCommon.addDevPortal(this, 380, 168, "Stage1_4Boss", "DEV->1-5", 0xff8fb3);
     }
 
     LevelCommon.registerStage(this);

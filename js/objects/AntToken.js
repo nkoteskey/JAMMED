@@ -14,7 +14,7 @@ class AntToken extends Phaser.Physics.Arcade.Sprite {
     }
 
     effect() {
-        scene.scene.get('UIScene').setScore(this.score);
+        awardScore(scene, this.score, this.x, this.y, { combo: false });
         scene.sound.play("antTokenCollectSound");
         this.body.setEnable(false);
         this.stop();

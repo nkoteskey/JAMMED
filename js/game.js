@@ -23,7 +23,11 @@ window.addEventListener("DOMContentLoaded", function () {
       Level1BossFight,
       CutSceneWatermelonDefeated,
       Stage1_3,
+      Stage1_S,
       Stage1_4,
+      Stage1_4Boss,
+      CutSceneBaronPectin,
+      Jukebox,
       EndCredits,
     ],
     physics: {

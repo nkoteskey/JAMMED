@@ -105,6 +105,10 @@ class Stage1_4 extends Phaser.Scene {
       p.val = 2;
     });
 
+    // Lost Jam: hovering over the second jam vat, a Rocket Axe hop from
+    // the crossing girder — fall short and it's a jam bath.
+    new LostRecord(this, 1808, 64, "Stage1_4");
+
     // The Royal Bass guitar waits atop the staircase plateau —
     // ground-quake wave that pierces a whole row of enemies.
     new GuitarPickup(this, 1764, 102, "royal-bass");
@@ -523,6 +527,7 @@ class Stage1_4 extends Phaser.Scene {
   }
 
   changeScene() {
-    LevelCommon.finishStage(this, "EndCredits");
+    // Through the door to the canning floor — and the factory's master
+    LevelCommon.finishStage(this, "Stage1_4Boss");
   }
 }

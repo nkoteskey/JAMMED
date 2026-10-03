@@ -8,8 +8,8 @@ class Raspberry extends Phaser.Physics.Arcade.Sprite {
 
     // Basic character properties
     this.hp = 3;
-    this.runningSpeed = 70;
-    this.walkSpeed = 30;
+    this.runningSpeed = 70 * enemySpeedScale();
+    this.walkSpeed = 30 * enemySpeedScale();
     this.roaming = true;
     this.facing = -1;
     this.takingDamage = false;
@@ -225,7 +225,7 @@ class Raspberry extends Phaser.Physics.Arcade.Sprite {
     if (this.dead) return;
     this.dead = true;
     this.attacking = false;
-    this.scene.scene.get("UIScene").setScore(this.score);
+    awardScore(this.scene, this.score, this.x, this.y);
     this.body.setAllowGravity(false);
     this.body.setEnable(false);
     this.clearTint();

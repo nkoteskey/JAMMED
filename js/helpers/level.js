@@ -10,6 +10,35 @@
 //   LevelCommon.registerStage(this, tokenTotal);
 // and when the exit is reached:
 //   LevelCommon.finishStage(this, "NextSceneKey");
+// Score award with a floating "+NNN" popup and the Riff combo. Every
+// enemy kill goes through here; set opts.combo=false for pickups.
+function awardScore(scn, score, x, y, opts = {}) {
+  const ui = scn.scene.get("UIScene");
+  let final = score;
+  const run = getRunState();
+  if (run && run.hard) final = Math.round(final * 1.5);
+  if (ui && ui.registerKill && opts.combo !== false) {
+    final = ui.registerKill(final);
+  }
+  if (ui && ui.setScore) ui.setScore(final);
+  if (typeof x === "number" && typeof y === "number") {
+    const pop = scn.add
+      .bitmapText(x, y - 10, "tempFont", "+" + final, 8)
+      .setOrigin(0.5)
+      .setDepth(380)
+      .setTintFill(opts.combo === false ? 0xffffff : 0xffee88);
+    scn.tweens.add({
+      targets: pop,
+      y: y - 34,
+      alpha: 0,
+      duration: 700,
+      ease: "Quad.easeOut",
+      onComplete: () => pop.destroy(),
+    });
+  }
+  return final;
+}
+
 const LevelCommon = {
   createGroups(scn) {
     scn.bullets = scn.physics.add.group();
@@ -71,7 +100,68 @@ const LevelCommon = {
         .getChildren()
         .filter((c) => c.gameName === "AntToken").length;
     }
+    // Stage timer (for best times) and a fresh combo
+    scn.stageStartTime = scn.time.now;
+    const ui = scn.scene.get("UIScene");
+    if (ui && ui.resetCombo) ui.resetCombo();
     scn.cameras.main.fadeIn(400, 0, 0, 0);
+  },
+
+  // A one-way floating platform drawn with the pixel-cloud art.
+  // Jammy lands on it from above and passes through from below.
+  addCloudPlatform(scn, x, y, variant = 1) {
+    if (typeof Cloud !== "undefined") Cloud.ensureTextures(scn);
+    const img = scn.physics.add.image(x, y, "pixel-cloud-" + variant);
+    img.setDepth(54);
+    img.body.setAllowGravity(false);
+    img.body.setImmovable(true);
+    img.body.setSize(img.width - 8, 10);
+    img.body.setOffset(4, 4);
+    img.body.checkCollision.down = false;
+    img.body.checkCollision.left = false;
+    img.body.checkCollision.right = false;
+    if (!scn.cloudPlatforms) {
+      scn.cloudPlatforms = scn.physics.add.group({ allowGravity: false, immovable: true });
+      scn.physics.add.collider(scn.jammy.sprite, scn.cloudPlatforms);
+    }
+    scn.cloudPlatforms.add(img);
+    img.body.setAllowGravity(false);
+    img.body.setImmovable(true);
+    return img;
+  },
+
+  // Secret exit portal: a second way out of a stage, Super-Mario-World
+  // style. Green swirl so it reads as "different" from the normal exit.
+  addSecretExit(scn, x, y, target, label = "???") {
+    const glow = scn.add.circle(x, y, 20, 0x8ce070, 0.25).setDepth(49);
+    scn.tweens.add({
+      targets: glow,
+      scale: 1.3,
+      alpha: 0.1,
+      duration: 600,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+    const portal = scn.physics.add.sprite(x, y, "dev-portal", "portal1");
+    portal.body.setAllowGravity(false);
+    portal.body.setImmovable(true);
+    portal.setDepth(50);
+    portal.setTint(0x8ce070);
+    portal.play("dev-portal-swirl");
+    scn.add
+      .bitmapText(x, y - 24, "tempFont", label, 8)
+      .setOrigin(0.5)
+      .setTintFill(0xc8ffb0)
+      .setDepth(50);
+    scn.physics.add.overlap(scn.jammy.sprite, portal, () => {
+      if (scn._changing) return;
+      const run = getRunState();
+      if (run) run.secretExits = (run.secretExits || 0) + 1;
+      scn.sound.play("powerUpSound", { rate: 1.4, volume: 0.8 });
+      LevelCommon.finishStage(scn, target, { secret: true });
+    });
+    return portal;
   },
 
   // Blubert revive — the next pickup after Blubert goes down brings him
@@ -106,14 +196,19 @@ const LevelCommon = {
 
     const run = getRunState();
     const key = scn.sys.settings.key;
+    const elapsed = typeof scn.stageStartTime === "number" ? scn.time.now - scn.stageStartTime : 0;
+    let newBest = false;
     if (run) {
       run.hp = Math.max(1, jammy.hp);
       run.seedAmmo = jammy.seedAmmo;
       if (!run.stagesCleared.includes(key)) run.stagesCleared.push(key);
+      run.stageTimes = run.stageTimes || {};
+      run.stageTimes[key] = elapsed;
+      if (elapsed > 0 && typeof recordBestTime === "function") newBest = recordBestTime(key, elapsed);
     }
 
     const showCard = opts.card !== false;
-    const holdMs = showCard ? 2600 : 300;
+    const holdMs = showCard ? 3000 : 300;
 
     if (showCard) {
       const got = run ? run.tokens[key] || 0 : 0;
@@ -121,7 +216,7 @@ const LevelCommon = {
       const cx = scn.cameras.main.width / 2;
       const items = [];
       const bg = scn.add
-        .rectangle(cx, 118, 220, 86, 0x000000, 0.7)
+        .rectangle(cx, 118, 220, 100, 0x000000, 0.7)
         .setScrollFactor(0)
         .setDepth(500);
       bg.setStrokeStyle(2, 0xffd877, 1);
@@ -153,6 +248,32 @@ const LevelCommon = {
           .setDepth(501)
           .setTintFill(got >= total && total > 0 ? 0x8ce070 : 0xffffff)
       );
+      if (elapsed > 0 && typeof formatTime === "function") {
+        items.push(
+          scn.add
+            .bitmapText(
+              cx,
+              156,
+              "tempFont",
+              "TIME " + formatTime(elapsed) + (newBest ? "  NEW BEST!" : ""),
+              8
+            )
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(501)
+            .setTintFill(newBest ? 0xffd877 : 0xc0b0c8)
+        );
+      }
+      if (opts.secret) {
+        items.push(
+          scn.add
+            .bitmapText(cx, 76, "tempFont", "SECRET EXIT!", 10)
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(501)
+            .setTintFill(0x8ce070)
+        );
+      }
       items.forEach((it) => it.setAlpha(0));
       scn.tweens.add({ targets: items, alpha: 1, duration: 300 });
       scn.sound.play("powerUpSound", { volume: 0.8 });

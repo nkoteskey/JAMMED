@@ -212,7 +212,7 @@ class JarSentry extends Phaser.Physics.Arcade.Sprite {
   die() {
     if (this.dead) return;
     this.dead = true;
-    this.scene.scene.get("UIScene").setScore(this.score);
+    awardScore(this.scene, this.score, this.x, this.y);
     new EnemyDeath(this.scene, this.x, this.y);
     this.body.setEnable(false);
     this.destroy();

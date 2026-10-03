@@ -249,7 +249,7 @@ class NeedleCactus extends Phaser.Physics.Arcade.Sprite {
   die() {
     if (this.dead) return;
     this.dead = true;
-    this.scene.scene.get("UIScene").setScore(this.score);
+    awardScore(this.scene, this.score, this.x, this.y);
     new EnemyDeath(this.scene, this.x, this.y);
     if (this.leftPupil) this.leftPupil.destroy();
     if (this.rightPupil) this.rightPupil.destroy();

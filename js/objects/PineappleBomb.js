@@ -192,7 +192,7 @@ class Pineapple extends Phaser.Physics.Arcade.Sprite {
     this.dead = true;
     this.alive = false;
     this.launchFragments();
-    this.scene.scene.get("UIScene").setScore(this.score);
+    awardScore(this.scene, this.score, this.x, this.y);
     this.scene.sound.stopByKey("pineappleBombFuseSound");
     this.scene.sound.play("shortExplosion", { volume: 0.7 });
     this.scene.cameras.main.shake(100, 0.004);

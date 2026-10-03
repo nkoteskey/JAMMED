@@ -4,7 +4,7 @@ class Blueberry extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y) {
     super(scene, x, y, "blueberry");
     this.hp = 1;
-    this.roamSpeed = 60;
+    this.roamSpeed = 60 * enemySpeedScale();
     this.facing = -1;
     this.takingDamage = false;
     this.invincible = false;
@@ -158,7 +158,7 @@ class Blueberry extends Phaser.Physics.Arcade.Sprite {
   die() {
     if (this.dead) return;
     this.dead = true;
-    this.scene.scene.get("UIScene").setScore(this.score);
+    awardScore(this.scene, this.score, this.x, this.y);
     this.body.setEnable(false);
     this.body.setVelocity(0, 0);
     this.roamTimer.destroy();

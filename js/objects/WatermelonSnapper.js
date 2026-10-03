@@ -82,7 +82,7 @@ class WatermelonSnapper extends Phaser.Physics.Arcade.Sprite {
   die() {
     this.dead = true;
     this.scene.sound.play("enemyDeathSound");
-    this.scene.scene.get("UIScene").setScore(this.score);
+    awardScore(this.scene, this.score, this.x, this.y);
     this.body.setEnable(false);
     this.scene.tweens.add({
       targets: this, alpha: 0, duration: 400,

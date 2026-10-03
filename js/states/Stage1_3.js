@@ -173,6 +173,9 @@ class Stage1_3 extends Phaser.Scene {
     // The Tiled map has no scene-change tiles, so the level exit is a
     // real portal object at the end of the run.
     this._buildExitPortal();
+    this._buildSecretExit();
+    // Lost Jam: high above the first fruit platform — plank, then Rocket Axe
+    new LostRecord(this, 640, -14, "Stage1_3");
     this._showTitleCard();
     LevelCommon.registerStage(this);
     LevelCommon.unlockRocketAxe(this);
@@ -615,6 +618,16 @@ class Stage1_3 extends Phaser.Scene {
     this.physics.add.overlap(this.jammy.sprite, this.exitPortal, () =>
       this.changeScene()
     );
+  }
+
+  // Secret exit: a cloud high above the last fruit platform. A trail of
+  // tokens hints that there's something up there; the Rocket Axe gets
+  // you to it. Leads to the hidden bonus stage, Cloud Nine.
+  _buildSecretExit() {
+    const x = 2200;
+    [20, -14, -48].forEach((y) => new AntToken(this, x, y));
+    LevelCommon.addCloudPlatform(this, x, -88, 1);
+    LevelCommon.addSecretExit(this, x, -112, "Stage1_S", "1-S");
   }
 
   _showTitleCard() {

@@ -83,7 +83,7 @@ class HornedFruit extends Phaser.Physics.Arcade.Sprite {
     if (this.dead) return;
     this.dead = true;
     this.scene.sound.play("enemyDeathSound");
-    this.scene.scene.get("UIScene").setScore(this.score);
+    awardScore(this.scene, this.score, this.x, this.y);
     this.body.setEnable(false);
     this.scene.tweens.add({
       targets: this, alpha: 0, duration: 250,

@@ -22,13 +22,24 @@ var controls = {
 // Lives on the global `game` object; reset from the title screen.
 // ---------------------------------------------------------------------
 
-var STAGE_ORDER = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_4"];
+var STAGE_ORDER = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_S", "Stage1_4", "Stage1_4Boss"];
 
 var STAGE_NAMES = {
   Level1: "LOS JAMGELES",
   Level1BossFight: "THE THEATER",
   Stage1_3: "SUNSET MESA",
+  Stage1_S: "CLOUD NINE",
   Stage1_4: "THE JAM WORKS",
+  Stage1_4Boss: "THE CANNING FLOOR",
+};
+
+var STAGE_LABELS = {
+  Level1: "1-1",
+  Level1BossFight: "1-2",
+  Stage1_3: "1-3",
+  Stage1_S: "1-S",
+  Stage1_4: "1-4",
+  Stage1_4Boss: "1-5",
 };
 
 function resetRunState() {
@@ -43,6 +54,11 @@ function resetRunState() {
     tokens: {}, // stageKey -> collected
     tokenTotals: {}, // stageKey -> available
     stagesCleared: [],
+    stageTimes: {},
+    deaths: 0,
+    secretExits: 0,
+    hard: false,
+    startTime: 0,
   };
   // Guitar collection restarts with the Crimson V on a fresh run
   game.guitarCollection = { owned: ["crimson-v"], equipped: "crimson-v" };
@@ -88,6 +104,12 @@ function anyKeyDown(keys) {
 // Register the same handler on every key in a list.
 function onKeys(keys, event, handler, ctx) {
   keys.forEach((k) => k.on(event, handler, ctx));
+}
+
+// Enemy speed multiplier for the current run (hard mode is quicker).
+function enemySpeedScale() {
+  const run = typeof getRunState === "function" ? getRunState() : null;
+  return run && run.hard ? 1.25 : 1;
 }
 
 // True when the game is running on a touch screen (phone / tablet).

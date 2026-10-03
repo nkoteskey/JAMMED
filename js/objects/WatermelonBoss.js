@@ -297,7 +297,7 @@ if(this.alive){
     this.alive = false;
     this.invincible = true;
 
-    scene.scene.get("UIScene").setScore(this.score);
+    awardScore(this.scene, this.score, this.x, this.y);
 
 //check for any timers and remove them
 

@@ -24,11 +24,24 @@ On phones and tablets an on-screen joystick, JUMP and SHOOT buttons, a pause but
 ## Progression
 
 * **Stage 1-1 Los Jamgeles** and **1-2 The Theater** (the Watermelon boss): sonic blast from the Crimson V plus a plain double jump.
-* Beating the Watermelon earns the **Rocket Axe** — from then on the second jump fires the guitar's boosters for a long arc, and it stays with you for the rest of the game.
-* **Stage 1-3 Sunset Mesa**: the **Seedcaster** is found on the main path. Seed bombs blow Zomberries out of their bushes (Blubert's scan reveals which bushes are hiding one) and home onto whatever Blubert has locked.
-* **Stage 1-4 The Jam Works**: the **Royal Bass** sits on the staircase plateau. Its quake wave rolls along the floor and pierces every enemy in a row — ideal for the jar sentries patrolling the factory.
+* Beating the Watermelon earns the **Rocket Axe**. From then on the second jump fires the guitar's boosters for a long arc, and it stays with you for the rest of the game.
+* **Stage 1-3 Sunset Mesa**: the **Seedcaster** is found on the main path. Seed bombs blow Zomberries out of their bushes (Blubert's scan reveals which bushes are hiding one) and home onto whatever Blubert has locked. There is also a **secret exit** somewhere high above the mesa.
+* **Stage 1-S Cloud Nine** (secret): a sky run across drifting clouds, packed with Bread Tokens. No falling damage.
+* **Stage 1-4 The Jam Works**: the **Royal Bass** sits on the staircase plateau. Its quake wave rolls along the floor and pierces every enemy in a row, ideal for the jar sentries patrolling the factory.
+* **Stage 1-5 The Canning Floor**: the factory's master, the **Canning Colossus**, a two-phase boss. Crack the glass, then deal with what's inside. Afterwards the villain behind it all is revealed.
 
-HP and seed ammo carry from stage to stage; dying restarts the current stage with full health. Bread Tokens are tallied per stage on the Stage Clear card and in the end credits.
+HP and seed ammo carry from stage to stage; dying restarts the current stage with full health.
+
+## Score, combos and secrets
+
+* **Riff combo**: chain kills without pausing or taking a hit. x2 at 3 kills, x3 at 6, x4 "ENCORE" at 10.
+* **Bread Tokens** are tallied per stage on the Stage Clear card and in the run report at the end.
+* **Lost Jams**: one hidden vinyl record per stage (1-1, 1-3, 1-S, 1-4). They are saved permanently; find all four to unlock **JAMS PLAYER**, the sound-test jukebox on the title screen.
+* **Run report and rank** (S to D) at the end: tokens, Lost Jams, deaths, time and whether you found the secret exit.
+* **High scores**: an arcade top-10 with initials entry, shown on the title screen in attract mode. Best stage times are kept too.
+* **Hard mode** unlocks after your first clear: three hearts, faster enemies, 1.5x score.
+
+Everything is saved in the browser (localStorage).
 
 ## Running locally
 

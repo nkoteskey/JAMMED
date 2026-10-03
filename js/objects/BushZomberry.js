@@ -10,8 +10,8 @@ class BushZomberry extends Raspberry {
 
     // Zomberries match Jammy's walkSpeed 125 when chasing, so failing
     // to clear a bush before it emerges genuinely threatens him.
-    this.walkSpeed = 90;
-    this.runningSpeed = 125;
+    this.walkSpeed = 90 * enemySpeedScale();
+    this.runningSpeed = 125 * enemySpeedScale();
 
     this.setVisible(false);
     this.body.setEnable(false);

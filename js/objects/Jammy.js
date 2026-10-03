@@ -3,7 +3,8 @@ class Jammy {
     const run = getRunState();
 
     this.bulletLimit = 3;
-    this.maxHP = 5;
+    // Hard mode: three hearts instead of five
+    this.maxHP = run && run.hard ? 3 : 5;
     this.hp = Phaser.Math.Clamp(hp || (run ? run.hp : this.maxHP) || this.maxHP, 1, this.maxHP);
     this.walkSpeed = 125;
     this.invincible = false;
@@ -406,6 +407,8 @@ class Jammy {
     }
 
     this._endRocketBoost();
+    const uiHit = scene.scene.get("UIScene");
+    if (uiHit && uiHit.resetCombo) uiHit.resetCombo(true);
     this.takingDamage = true;
     this.controlsEnabled = false;
     this.invincible = true;
@@ -481,7 +484,10 @@ class Jammy {
 
     // Dying means a fresh start for the stage: full health
     const run = getRunState();
-    if (run) run.hp = this.maxHP;
+    if (run) {
+      run.hp = this.maxHP;
+      run.deaths = (run.deaths || 0) + 1;
+    }
 
     // Lie down and stop interacting with things
     this.sprite.body.setVelocity(0, 0);

@@ -26,7 +26,7 @@ class Stage2_1 extends Phaser.Scene {
     this.jammy = new Jammy(60, 150);
     this.jammy.sprite.setDepth(100);
     this.children.bringToTop(this.jammy.sprite);
-    this.cameras.main.startFollow(this.jammy.sprite);
+    this.cameras.main.startFollow(this.jammy.sprite, true);
     this.cameras.main.setBounds(0, -240, this.map.widthInPixels, this.map.heightInPixels + 240);
 
     LevelCommon.wireCollisions(this, { onSceneChange: () => this.changeScene() });

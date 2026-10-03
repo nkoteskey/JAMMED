@@ -130,5 +130,30 @@ function installPixelFont(scene, key) {
     spacing: { x: 0, y: 0 },
     lineSpacing: 1,
   });
+  // RetroFont records the glyph width as the font size, which made
+  // fontSize 8 render at 1.33x. Use the cell height so 8 = 1x, 16 = 2x.
+  font.data.size = CH;
   scene.cache.bitmapFont.add(key, font);
 }
+
+// The font only looks right at whole multiples of its 8px native size:
+// 1.25x or 1.5x nearest-neighbour scaling gives uneven strokes. Snap
+// every BitmapText size (10 -> 8, 12 -> 16, 36 -> 40...) at creation
+// and whenever it changes, so no call site has to remember.
+(function snapBitmapTextSizes() {
+  const BT = Phaser.GameObjects.BitmapText;
+  if (!BT || BT._sizeSnapInstalled) return;
+  BT._sizeSnapInstalled = true;
+  const NATIVE = 8;
+  const snap = (s) =>
+    typeof s === "number" && s > 0 ? Math.max(NATIVE, Math.round(s / NATIVE) * NATIVE) : s;
+  const origSetFontSize = BT.prototype.setFontSize;
+  BT.prototype.setFontSize = function (s) {
+    return origSetFontSize.call(this, snap(s));
+  };
+  const Factory = Phaser.GameObjects.GameObjectFactory.prototype;
+  const origFactory = Factory.bitmapText;
+  Factory.bitmapText = function (x, y, font, text, size, align) {
+    return origFactory.call(this, x, y, font, text, snap(size), align);
+  };
+})();

@@ -32,7 +32,7 @@ class Stage1_3 extends Phaser.Scene {
     this.jammy = new Jammy(60, 100);
     this.jammy.sprite.setDepth(100);
     this.children.bringToTop(this.jammy.sprite);
-    this.cameras.main.startFollow(this.jammy.sprite);
+    this.cameras.main.startFollow(this.jammy.sprite, true);
     this.cameras.main.setBounds(0, -240, this.map.widthInPixels, this.map.heightInPixels + 240);
 
     LevelCommon.wireCollisions(this);
@@ -152,37 +152,33 @@ class Stage1_3 extends Phaser.Scene {
     const FLOOR = 160; // walking y for ground-level enemies
 
     // --- A: welcome ---
+    // One signpost names the stage; everything after is taught by the
+    // layout itself (each new idea is staged as its own small challenge).
     [12, 15].forEach((c) => new AntToken(this, X(c), 136));
     new Raspberry(this, X(36), FLOOR);
     this._sign(X(6), "SUNSET MESA", "HEAD EAST");
 
     // --- B: Rocket Axe ---
-    this._sign(X(48), "BIG GAP AHEAD", "JUMP, THEN JUMP AGAIN");
     // Tokens trace the flight path of a running jump followed straight
     // away by the Rocket Axe, so a fast run collects them all.
     const edge = 53 * 16;
     [[40, 126], [100, 34], [160, -24], [220, -45], [280, 60]].forEach(([dx, y]) => new AntToken(this, edge + dx, y));
-    this._sign(X(72), "UP AND OVER", "ROCKET OFF THE TOP OF A JUMP");
     [84, 90, 96].forEach((c) => new AntToken(this, X(c), 56));
     new Raspberry(this, X(90), 64);
 
     // --- C: Seedcaster, then bushes one at a time ---
     new GuitarPickup(this, X(114), 140, "desert-seedcaster");
     new SeedAmmoPickup(this, X(116), 150);
-    this._sign(X(122), "SEEDS LOB IN AN ARC", "HOLD W TO LOB HIGHER");
     new BushZomberry(this, X(132), 176);
-    this._sign(X(127), "EYES IN THE BUSH?", "BLUBERT SPOTS THEM - SEED IT");
     new SeedAmmoPickup(this, X(138), 150);
     // Three bushes: one hides a Zomberry, two are decoys
     new Bush(this, X(147), 176);
     new BushZomberry(this, X(154), 176);
     new Bush(this, X(161), 176);
-    this._sign(X(144), "NOT EVERY BUSH BITES", "WATCH BLUBERT");
     new AntToken(this, X(157), 136);
     new SeedAmmoPickup(this, X(167), 150);
 
     // --- D: sky drones ---
-    this._sign(X(174), "WATCH THE SKY", "DRONES DIVE AND DROP BOMBS");
     this.decoyClouds = [new Cloud(this, X(180), 50), new Cloud(this, X(204), 58)];
     this.cloudBlueberries = [new CloudBlueberry(this, X(190), 56), new CloudBlueberry(this, X(210), 52)];
     this.cloudBlueberries.forEach((b) => this.enemies.add(b));
@@ -190,7 +186,6 @@ class Stage1_3 extends Phaser.Scene {
     new Raspberry(this, X(208), FLOOR);
 
     // --- E: needle cactus ---
-    this._sign(X(218), "CACTUS DISLIKES COMPANY", "DON'T LINGER - OR SHOOT IT");
     this.cactuses = [new NeedleCactus(this, X(224), 158)];
     this.cactuses.push(new NeedleCactus(this, X(238), 158), new NeedleCactus(this, X(246), 158));
     new AntToken(this, X(242), 96);
@@ -198,11 +193,9 @@ class Stage1_3 extends Phaser.Scene {
     heal.setData("powerUpType", "heal");
 
     // --- F: fruit platforms + snappers ---
-    this._sign(X(256), "FRUIT PLATFORMS BOB", "MIND THE THORNS BELOW");
     this._buildFruitPlatform({ x: X(261), y: 86, w: 74, amp: 16, period: 2400,
       fruits: [{ ox: -22, len: 30 }, { ox: 18, len: 42 }] }, 0);
     new WatermelonSnapper(this, X(270), 170);
-    this._sign(X(268), "SNAPPERS SLEEP IN THE SAND", "", 176);
     this._buildFruitPlatform({ x: X(276), y: 90, w: 74, amp: 20, period: 2800,
       fruits: [{ ox: -24, len: 36 }, { ox: 0, len: 58 }, { ox: 24, len: 40 }] }, 1);
     this._buildFruitPlatform({ x: X(282), y: 60, w: 60, amp: 18, period: 2200,
@@ -212,7 +205,6 @@ class Stage1_3 extends Phaser.Scene {
     new LostRecord(this, X(261), -14, "Stage1_3");
 
     // --- G: pineapples and the finale ---
-    this._sign(X(292), "PINEAPPLES LIGHT UP CLOSE", "SHRAPNEL CAN LIGHT OTHERS");
     new Pineapple(this, X(297), FLOOR);
     new Pineapple(this, X(304), 112); // on the ledge: the blast just misses it
     new SeedAmmoPickup(this, X(308), 150);
@@ -573,9 +565,18 @@ class Stage1_3 extends Phaser.Scene {
   }
 
   _buildSecretExit(x) {
-    [20, -14, -48].forEach((y) => new AntToken(this, x, y));
-    LevelCommon.addCloudPlatform(this, x, -88, 1);
-    LevelCommon.addSecretExit(this, x, -112, "Stage1_S", "1-S");
+    // A zig-zag of hard clouds above the last fruit platform: rocket
+    // LEFT off the platform onto the low cloud, then rocket RIGHT onto
+    // the high cloud, which carries the portal. The Rocket Axe always
+    // launches sideways, so a straight-up portal was visible but not
+    // reachable. Tokens trace each hop.
+    const a = { x: x - 170, y: -40 };
+    const b = { x: x + 10, y: -136 };
+    LevelCommon.addCloudPlatform(this, a.x, a.y, 1);
+    LevelCommon.addCloudPlatform(this, b.x, b.y, 1);
+    [[x - 70, -6], [x - 120, -48], [a.x + 50, -110], [b.x - 60, -150]]
+      .forEach(([tx, ty]) => new AntToken(this, tx, ty));
+    LevelCommon.addSecretExit(this, b.x, b.y - 24, "Stage1_S", "1-S");
   }
 
   _buildExitPortal(x, y) {

@@ -49,16 +49,16 @@ class UIScene extends Phaser.Scene {
       .bitmapText(374, 2, "tempFont", "", 8)
       .setTintFill(0xffffff);
 
-    // --- Riff combo (top centre) ---
+    // --- Riff combo (top, right of the score so the two never overlap) ---
     this.combo = 0;
     this.comboExpires = 0;
     this.comboWindowMs = 4000;
     this.comboText = this.add
-      .bitmapText(213, 4, "tempFont", "", 12)
+      .bitmapText(262, 6, "tempFont", "", 8)
       .setOrigin(0.5, 0)
       .setTintFill(0xffee88)
       .setAlpha(0);
-    this.comboBar = this.add.rectangle(213, 20, 60, 3, 0xffee88).setOrigin(0.5, 0).setAlpha(0);
+    this.comboBar = this.add.rectangle(262, 16, 60, 3, 0xffee88).setOrigin(0.5, 0).setAlpha(0);
 
     // --- Keys: pause + guitar rack ---
     const kb = this.input.keyboard;

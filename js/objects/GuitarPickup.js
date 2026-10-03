@@ -77,9 +77,9 @@ class GuitarPickup extends Phaser.Physics.Arcade.Sprite {
     }
 
     // Banner
-    const t1 = scene.add.bitmapText(213, 78, "tempFont", "NEW GUITAR!", 14)
+    const t1 = scene.add.bitmapText(213, 78, "tempFont", "NEW ATTACHMENT!", 14)
       .setOrigin(0.5).setScrollFactor(0).setDepth(400).setTintFill(0xffd877);
-    const t2 = scene.add.bitmapText(213, 98, "tempFont", cat.name, 12)
+    const t2 = scene.add.bitmapText(213, 98, "tempFont", cat.name + " - " + cat.attachment, 12)
       .setOrigin(0.5).setScrollFactor(0).setDepth(400).setTintFill(cat.labelColor);
     const t3 = scene.add.bitmapText(213, 116, "tempFont", "C TO SWAP - G FOR RACK", 8)
       .setOrigin(0.5).setScrollFactor(0).setDepth(400).setTintFill(0xffffff);

@@ -37,7 +37,7 @@ class Stage1_4 extends Phaser.Scene {
     this.jammy.sprite.setDepth(100);
     this.children.bringToTop(this.jammy.sprite);
 
-    this.cameras.main.startFollow(this.jammy.sprite);
+    this.cameras.main.startFollow(this.jammy.sprite, true);
     // Interior stage — ceiling and floor both on screen, no vertical pan
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, 240);
 

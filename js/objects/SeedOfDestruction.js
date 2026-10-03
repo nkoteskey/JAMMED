@@ -11,7 +11,15 @@ class SeedOfDestruction extends Phaser.Physics.Arcade.Sprite {
 
     this.damage = 3;
     this.blastRadius = 52;
-    this.selfDamageRadius = 32;
+    // Jammy and Blubert are caught by most of the blast: lobbing a seed
+    // at something standing next to you costs a heart and knocks
+    // Blubert's lock-on out for a few seconds.
+    this.selfDamageRadius = 44;
+    this.stunRadius = 52;
+    // Lock-on: Blubert's tracked target first, otherwise the nearest
+    // visible enemy near Jammy. The seed curves toward it in flight.
+    this.lockRange = 150;
+    this.target = this._pickTarget(x, y);
     this.fuseMs = 1800;
     this.exploded = false;
 
@@ -94,6 +102,36 @@ class SeedOfDestruction extends Phaser.Physics.Arcade.Sprite {
     g.destroy();
   }
 
+  _pickTarget(x, y) {
+    const scn = this.scene;
+    const blu = scn.blubert;
+    if (blu && !blu.stunned && blu.trackedEnemy && blu.trackedEnemy.active && !blu.trackedEnemy.dead) {
+      return blu.trackedEnemy;
+    }
+    if (!scn.enemies) return null;
+    let best = null, bestD = this.lockRange;
+    for (const e of scn.enemies.getChildren()) {
+      if (!e || e.dead || !e.active || e.hidden || !e.body) continue;
+      const d = Phaser.Math.Distance.Between(x, y, e.x, e.y);
+      if (d < bestD) { bestD = d; best = e; }
+    }
+    if (best) this._flashLock(best);
+    return best;
+  }
+
+  // Quick yellow bracket on the enemy the seed locked onto
+  _flashLock(e) {
+    const g = this.scene.add.graphics().setDepth(71);
+    g.lineStyle(1, 0xffe066, 1);
+    g.strokeRect(-11, -11, 22, 22);
+    g.setPosition(e.x, e.y);
+    this.scene.tweens.add({
+      targets: g, scaleX: 0.6, scaleY: 0.6, alpha: 0, duration: 320,
+      onUpdate: () => { if (e.active) g.setPosition(e.x, e.y); },
+      onComplete: () => g.destroy(),
+    });
+  }
+
   preUpdate(time, delta) {
     super.preUpdate(time, delta);
     if (this.exploded || !this.body) return;
@@ -113,15 +151,15 @@ class SeedOfDestruction extends Phaser.Physics.Arcade.Sprite {
     if (vx !== 0 || vy !== 0) {
       this.rotation = Math.atan2(vy, vx);
     }
-    // Soft homing toward whatever Blubert is currently tracking.
+    // Soft homing toward the locked target (Blubert's mark, or the
+    // nearest enemy that was close to Jammy when the seed was fired).
     // Aims at a small lead-ahead of the target's velocity so moving
     // drones don't slip past the seed, and adds extra upward thrust
     // when the target is above the seed to counteract gravity (900
     // downward) — otherwise seeds tend to fall under drones they're
     // supposedly homing onto.
-    const blu = this.scene.blubert;
-    if (blu && blu.trackedEnemy && blu.trackedEnemy.active && !blu.trackedEnemy.dead) {
-      const e = blu.trackedEnemy;
+    const e = this.target;
+    if (e && e.active && !e.dead && e.scene) {
       const tvx = (e.body && e.body.velocity && e.body.velocity.x) || 0;
       const tvy = (e.body && e.body.velocity && e.body.velocity.y) || 0;
       const tx = e.x + tvx * 0.15;
@@ -167,11 +205,11 @@ class SeedOfDestruction extends Phaser.Physics.Arcade.Sprite {
       if (dj <= this.selfDamageRadius) jammy.takeDamage();
     }
 
-    // Stun Blubert if in range
+    // Blubert caught in the blast loses his lock-on for a few seconds
     const blu = this.scene.blubert;
     if (blu && blu.sprite && !blu.stunned) {
       const db = Phaser.Math.Distance.Between(this.x, this.y, blu.sprite.x, blu.sprite.y);
-      if (db <= this.selfDamageRadius) blu.stun();
+      if (db <= this.stunRadius) blu.stun();
     }
 
     this._spawnFieryBlast(this.x, this.y);

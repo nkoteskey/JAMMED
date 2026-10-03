@@ -78,7 +78,7 @@ class Level1 extends Phaser.Scene {
 
     // Make the camera follow Jammy — with vertical headroom so the
     // Rocket Axe boost stays in frame.
-    this.cameras.main.startFollow(this.jammy.sprite);
+    this.cameras.main.startFollow(this.jammy.sprite, true);
     this.cameras.main.setBounds(0, -240, this.map.widthInPixels, this.map.heightInPixels + 240);
 
     LevelCommon.wireCollisions(this, { onSceneChange: () => this.changeScene() });

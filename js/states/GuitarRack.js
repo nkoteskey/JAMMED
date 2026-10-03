@@ -103,7 +103,7 @@ class GuitarRack extends Phaser.Scene {
     const s = this.slots[this.cursor];
     if (s.owned) {
       const cat = GUITAR_CATALOG[s.id];
-      this.descText1.setText(cat.desc[0]);
+      this.descText1.setText(cat.attachment + ": " + cat.desc[0]);
       this.descText2.setText(cat.desc[1]);
     } else {
       this.descText1.setText("NOT FOUND YET");

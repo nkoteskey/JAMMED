@@ -9,6 +9,11 @@ window.addEventListener("DOMContentLoaded", function () {
     // Nearest-neighbour scaling so the pixel art stays crisp at any
     // window size instead of being smeared by bilinear filtering.
     pixelArt: true,
+    // Snap every draw to whole pixels. Without this, text drawn at
+    // native size lands on half-pixel offsets (fractional camera
+    // scroll, odd line heights) and nearest-neighbour sampling drops
+    // glyph rows.
+    roundPixels: true,
     scene: [
       Boot,
       Preload,

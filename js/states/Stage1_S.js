@@ -28,7 +28,7 @@ class Stage1_S extends Phaser.Scene {
     // Jammy starts on a big cloud at the left
     this.jammy = new Jammy(80, 330);
     this.jammy.sprite.setDepth(100);
-    this.cameras.main.startFollow(this.jammy.sprite);
+    this.cameras.main.startFollow(this.jammy.sprite, true);
     this.cameras.main.setBounds(0, -120, this.worldW, this.worldH + 120);
 
     // No tile layers here, so wire the generic bits by hand

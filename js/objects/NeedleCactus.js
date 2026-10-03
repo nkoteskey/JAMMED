@@ -1,6 +1,6 @@
-// Goofy-eyed desert cactus. Harmless-looking — until Jammy loiters in
-// its personal space too long, at which point it puffs up and blasts
-// needles in every direction. Its googly pupils lazily track Jammy so
+// Goofy-eyed desert cactus. Harmless-looking — until Jammy gets within
+// about half a screen, at which point it puffs up and blasts needles in
+// every direction, plus one aimed straight at Jammy. Its googly pupils lazily track Jammy so
 // the player can tell it's watching. Killable with any weapon (3 HP);
 // touching it hurts too, so hop it with the Rocket Axe or shoot it out.
 class NeedleCactus extends Phaser.Physics.Arcade.Sprite {
@@ -112,8 +112,10 @@ class NeedleCactus extends Phaser.Physics.Arcade.Sprite {
     this.hp = 3;
     this.dead = false;
     this.state = "idle"; // idle -> puff -> cooldown -> idle
-    this.proximityRange = 96;
-    this.fuseMs = 650;
+    // Sees you from well outside needle range: a runner at full speed
+    // still gets the puff-up warning before the needles fly.
+    this.proximityRange = 170;
+    this.fuseMs = 280;
     this._closeSince = 0;
     this._nextIdleSwap = 0;
     this._idleFrame = false;
@@ -196,6 +198,11 @@ class NeedleCactus extends Phaser.Physics.Arcade.Sprite {
       if (Math.abs(ang - Math.PI / 2) < 0.3) continue;
       this._fireNeedle(ang);
     }
+    // ...plus one aimed straight at Jammy so standing still isn't safe
+    const j = this.scene.jammy;
+    if (j && j.alive && j.sprite) {
+      this._fireNeedle(Math.atan2(j.sprite.y - 6 - (this.y - 4), j.sprite.x - this.x));
+    }
     if (this.scene.cache.audio.exists("laserSound")) {
       this.scene.sound.play("laserSound", { volume: 0.35, rate: 2.4 });
     }
@@ -209,7 +216,7 @@ class NeedleCactus extends Phaser.Physics.Arcade.Sprite {
   }
 
   _fireNeedle(ang) {
-    const speed = 170;
+    const speed = 210;
     const n = this.scene.physics.add.sprite(
       this.x + Math.cos(ang) * 10,
       this.y - 4 + Math.sin(ang) * 10,
@@ -231,7 +238,7 @@ class NeedleCactus extends Phaser.Physics.Arcade.Sprite {
     if (this.scene.groundLayer) {
       this.scene.physics.add.collider(n, this.scene.groundLayer, () => n.destroy());
     }
-    this.scene.time.delayedCall(1300, () => {
+    this.scene.time.delayedCall(1700, () => {
       if (jOverlap) jOverlap.destroy();
       if (n.active) n.destroy();
     });

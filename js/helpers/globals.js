@@ -27,7 +27,7 @@ var controls = {
 // Lives on the global `game` object; reset from the title screen.
 // ---------------------------------------------------------------------
 
-var STAGE_ORDER = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_S", "Stage1_4", "Stage1_4Boss", "Stage2_1"];
+var STAGE_ORDER = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_S", "Stage1_4", "Stage1_4Boss", "Stage2_1", "Stage2_2", "Stage2_3"];
 
 var STAGE_NAMES = {
   Level1: "LOS JAMGELES",
@@ -37,6 +37,8 @@ var STAGE_NAMES = {
   Stage1_4: "THE JAM WORKS",
   Stage1_4Boss: "THE CANNING FLOOR",
   Stage2_1: "THE BERRY MOUNTAINS",
+  Stage2_2: "FROSTBITE FALLS",
+  Stage2_3: "THE PRESERVE MINES",
 };
 
 var STAGE_LABELS = {
@@ -47,6 +49,8 @@ var STAGE_LABELS = {
   Stage1_4: "1-4",
   Stage1_4Boss: "1-5",
   Stage2_1: "2-1",
+  Stage2_2: "2-2",
+  Stage2_3: "2-3",
 };
 
 function resetRunState() {
@@ -58,8 +62,10 @@ function resetRunState() {
     // Axe (and the other guitars) are found from Stage 1-3 onward.
     rocketAxe: false,
     rocketAxeBannerShown: false,
-    tokens: {}, // stageKey -> collected
-    tokenTotals: {}, // stageKey -> available
+    tokens: {}, // stageKey -> ant tokens collected
+    tokenTotals: {}, // stageKey -> ant tokens available
+    bread: {}, // stageKey -> bread tokens collected
+    breadTotals: {}, // stageKey -> bread tokens available
     stagesCleared: [],
     stageTimes: {},
     deaths: 0,
@@ -82,6 +88,21 @@ function getRunState() {
 
 // Total bread tokens collected / available across every stage so far
 function getTokenTally() {
+  const run = getRunState();
+  let got = 0,
+    total = 0;
+  if (!run) return { got, total };
+  const totals = run.breadTotals || {};
+  const have = run.bread || {};
+  Object.keys(totals).forEach((k) => {
+    total += totals[k] || 0;
+    got += Math.min(have[k] || 0, totals[k] || 0);
+  });
+  return { got, total };
+}
+
+// Ant tokens (the common pickups) collected across the run
+function getAntTally() {
   const run = getRunState();
   let got = 0,
     total = 0;

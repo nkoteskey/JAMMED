@@ -15,7 +15,7 @@ class UIScene extends Phaser.Scene {
 
   create() {
     this.newScore = this.score;
-    this.gameplaySceneKeys = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_S", "Stage1_4", "Stage1_4Boss", "Stage2_1"];
+    this.gameplaySceneKeys = ["Level1", "Level1BossFight", "Stage1_3", "Stage1_S", "Stage1_4", "Stage1_4Boss", "Stage2_1", "Stage2_2", "Stage2_3"];
     this.currentWeapon = "sonic";
 
     // --- Score (top-left) ---
@@ -32,10 +32,15 @@ class UIScene extends Phaser.Scene {
     this._shownHp = -1;
     this._shownMaxHp = -1;
 
-    // --- Bread tokens (next to the lifebar) ---
+    // --- Ant tokens and bread tokens (next to the lifebar) ---
     this.tokenIcon = this.add.image(112, 30, "ant-token-hud");
     this.tokenText = this.add
       .bitmapText(122, 30, "tempFont", "x0", 10)
+      .setOrigin(0, 0.5)
+      .setTintFill(0xffffff);
+    this.breadIcon = this.add.image(162, 30, "bread-token-hud");
+    this.breadText = this.add
+      .bitmapText(172, 30, "tempFont", "0/3", 10)
       .setOrigin(0, 0.5)
       .setTintFill(0xffffff);
 
@@ -112,6 +117,13 @@ class UIScene extends Phaser.Scene {
       const n = run && run.tokens ? run.tokens[key] || 0 : 0;
       const txt = "x" + n;
       if (this.tokenText.text !== txt) this.tokenText.setText(txt);
+      const b = run && run.bread ? run.bread[key] || 0 : 0;
+      const bt = run && run.breadTotals ? run.breadTotals[key] || 0 : 0;
+      const btxt = b + "/" + bt;
+      if (this.breadText.text !== btxt) {
+        this.breadText.setText(btxt);
+        this.breadText.setTintFill(bt > 0 && b >= bt ? 0x8ce070 : 0xffffff);
+      }
       this._refreshAxe(jammy);
       this._refreshFrost(jammy);
     }

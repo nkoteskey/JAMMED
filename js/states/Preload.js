@@ -85,6 +85,13 @@ class Preload extends Phaser.Scene {
       "assets/img/sprites/ant-token/ant-token.json"
     );
     this.load.atlas(
+      "bread-token",
+      "assets/img/sprites/bread-token/bread-token.png",
+      "assets/img/sprites/bread-token/bread-token.json"
+    );
+    this.load.image("bread-token-hud", "assets/img/sprites/bread-token/hud/bread-token-hud.png");
+    this.load.image("bread-token-outline-hud", "assets/img/sprites/bread-token/hud/bread-token-outline-hud.png");
+    this.load.atlas(
       "raspberry",
       "assets/img/sprites/raspberry/raspberry.png",
       "assets/img/sprites/raspberry/raspberry.json"
@@ -302,6 +309,12 @@ class Preload extends Phaser.Scene {
       repeat: 3,
     });
 
+    scene.anims.create({
+      key: "bread-token-shimmer",
+      frames: [1, 2, 3, 4, 5].map((i) => ({ key: "bread-token", frame: "shimmer" + i })),
+      frameRate: 6,
+      repeat: -1,
+    });
     scene.anims.create({
       key: "ant-token-spin",
       frames: [

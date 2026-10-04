@@ -95,10 +95,12 @@ class Stage1_4 extends Phaser.Scene {
 
     // Bread tokens: one here and there, never a pile
     [
-      [150, 172], [448, 140], [760, 140], [944, 124], [1040, 124],
-      [1296, 172], [1520, 172], [1800, 124], [2080, 138], [2240, 138],
+      [150, 172], [448, 140], [760, 140], [1040, 124],
+      [1296, 172], [1520, 172], [1800, 124], [2080, 138],
       [2600, 172], [2976, 140], [3290, 172],
     ].forEach(([x, y]) => new AntToken(this, x, y));
+    // Bread: over the first press row, above the belts, and past the pineapple line
+    [[1296, 108], [2140, 90], [3120, 96]].forEach(([x, y]) => new BreadToken(this, x, y));
 
     [[530, 150], [1180, 150], [1944, 150], [2400, 150]].forEach(
       ([x, y]) => new SeedAmmoPickup(this, x, y)

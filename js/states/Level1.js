@@ -99,7 +99,12 @@ class Level1 extends Phaser.Scene {
       LevelCommon.addDevPortal(this, 320, 168, "Stage1_S", "DEV->1-S", 0x8ce070);
       LevelCommon.addDevPortal(this, 380, 168, "Stage1_4Boss", "DEV->1-5", 0xff8fb3);
       LevelCommon.addDevPortal(this, 440, 168, "Stage2_1", "DEV->2-1", 0x9ad8ff);
+      LevelCommon.addDevPortal(this, 500, 168, "Stage2_2", "DEV->2-2", 0xd8f4ff);
+      LevelCommon.addDevPortal(this, 560, 168, "Stage2_3", "DEV->2-3", 0xc8a0ff);
     }
+
+    // Bread tokens: above the pineapple perches, each a jump off the path
+    [[2544, 52], [3520, 36], [4400, 4]].forEach(([x, y]) => new BreadToken(this, x, y));
 
     LevelCommon.registerStage(this);
     this._showTitleCard();

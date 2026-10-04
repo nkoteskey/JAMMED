@@ -36,7 +36,8 @@ class EndCredits extends Phaser.Scene {
       { topLine: "Music Composer / Sound Engineer", bottomLine: "Jim Kulakowski" },
       { topLine: "Artist", bottomLine: "Jim Kulakowski" },
       { topLine: "Storyboard Art", bottomLine: "Nicholas Koteskey" },
-      { topLine: "Baron Pectin will return in", bottomLine: "WORLD 2: THE BERRY MOUNTAINS" },
+      { topLine: "Starring", bottomLine: "Jammy, Blubert, the Watermelon,\nthe Canning Colossus, the Abominable Blueberry,\nCount Currant and Baron Pectin" },
+      { topLine: "Baron Pectin will return in", bottomLine: "WORLD 3: THE GLASS ORCHARD" },
       { topLine: "Coming soon from the JAMS crew", bottomLine: "SUPER JAMMED - A 16-BIT SEQUEL" },
     ];
 
@@ -80,6 +81,7 @@ class EndCredits extends Phaser.Scene {
     const cx = this.cameras.main.centerX;
     const run = getRunState() || {};
     const tally = getTokenTally();
+    const ants = typeof getAntTally === "function" ? getAntTally() : { got: 0, total: 0 };
     const score = this._score();
     const deaths = run.deaths || 0;
     const totalMs = run.startTime ? Date.now() - run.startTime : 0;
@@ -95,6 +97,7 @@ class EndCredits extends Phaser.Scene {
     const frac = tally.total > 0 ? tally.got / tally.total : 0;
     const rows = [
       ["BREAD TOKENS", tally.got + " / " + tally.total, frac >= 1 ? 0x8ce070 : 0xffffff],
+      ["ANT TOKENS", ants.got + " / " + ants.total, ants.total > 0 && ants.got >= ants.total ? 0x8ce070 : 0xffffff],
       ["LOST JAMS", jamsThisRun + " / " + LOST_JAM_IDS.length, jamsThisRun >= LOST_JAM_IDS.length ? 0x8ce070 : 0xffffff],
       ["DEATHS", String(deaths), deaths === 0 ? 0x8ce070 : 0xffffff],
       ["TIME", formatTime(totalMs), 0xffffff],

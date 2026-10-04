@@ -224,12 +224,17 @@ class Jammy {
       grounded && typeof scene.isIceAt === "function" && scene.isIceAt(this.sprite.x, body.bottom + 2);
     this.onIce = onIce;
 
+    // Facing always follows the stick, even mid-boost, so a shot fired
+    // after turning around in the air goes where Jammy looks.
+    if (this.walkingLeft) this.facing = "left";
+    else if (this.walkingRight) this.facing = "right";
+    if (this.rocketBoostActive) this.sprite.setFlipX(this.facing === "left");
     // Skip the walk override while the Rocket Axe is firing so the
     // boost's horizontal impulse isn't clamped back down to walkSpeed.
     if (!this.rocketBoostActive) {
-      if (this.walkingLeft) this.facing = "left";
-      else if (this.walkingRight) this.facing = "right";
-      const target = this.walkingLeft ? -this.walkSpeed : this.walkingRight ? this.walkSpeed : 0;
+      // Wind (set by the stage's WindZones each frame) rides on top
+      const wind = this.windPush || 0;
+      const target = (this.walkingLeft ? -this.walkSpeed : this.walkingRight ? this.walkSpeed : 0) + wind;
       if (onIce) {
         const accel = target === 0 ? 0.03 : 0.07;
         body.setVelocityX(body.velocity.x + (target - body.velocity.x) * accel);

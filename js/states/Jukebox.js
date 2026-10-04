@@ -18,14 +18,15 @@ class Jukebox extends Phaser.Scene {
       { key: "Level1MusicLoop", name: "SURF'S UP", sub: "LOS JAMGELES / SUNSET MESA" },
       { key: "BossBattle", name: "BOSS BATTLE", sub: "THE THEATER / THE JAM WORKS" },
       { key: "CloudWaltz", name: "CLOUD WALTZ", sub: "CLOUD NINE" },
-      { key: "Frostbite", name: "FROSTBITE", sub: "THE BERRY MOUNTAINS" },
+      { key: "Frostbite", name: "FROSTBITE", sub: "THE BERRY MOUNTAINS / FROSTBITE FALLS" },
+      { key: "DeepPreserve", name: "DEEP PRESERVE", sub: "THE PRESERVE MINES" },
     ].filter((t) => this.cache.audio.exists(t.key));
     this.selected = 0;
     this.current = null;
 
     this.add.bitmapText(cx, 16, "tempFont", "JAMS PLAYER", 18).setOrigin(0.5, 0).setTintFill(0xff6a9a);
     this.add
-      .bitmapText(cx, 38, "tempFont", "EVERY LOST JAM FOUND - ENJOY THE SET", 8)
+      .bitmapText(cx, 36, "tempFont", "EVERY LOST JAM FOUND - ENJOY THE SET", 8)
       .setOrigin(0.5, 0)
       .setTintFill(0xffd066);
 
@@ -44,7 +45,7 @@ class Jukebox extends Phaser.Scene {
 
     // Track list (five rows fit between the header and the hint)
     this.rows = this.tracks.map((t, i) => {
-      const y = 60 + i * 30;
+      const y = 54 + i * 26;
       const name = this.add.bitmapText(196, y, "tempFont", t.name, 12).setTintFill(0xffffff);
       const sub = this.add.bitmapText(196, y + 14, "tempFont", t.sub, 8).setTintFill(0x8a7a92);
       const cursor = this.add.bitmapText(184, y, "tempFont", ">", 12).setTintFill(0xffd066);

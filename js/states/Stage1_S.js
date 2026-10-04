@@ -48,6 +48,13 @@ class Stage1_S extends Phaser.Scene {
     this._buildTokens();
     this._buildDrones();
 
+    // Bread: three clouds along the route, a hop above each
+    const nC = this.route.clouds.length;
+    [0.3, 0.55, 0.8].forEach((f) => {
+      const c = this.route.clouds[Math.min(nC - 1, Math.floor(nC * f))];
+      new BreadToken(this, c.x, c.y - 64);
+    });
+
     // Lost Jam on the summit cloud
     const summit = this.route.clouds[this.route.summitIndex];
     new LostRecord(this, summit.x, summit.y - 60, "Stage1_S");

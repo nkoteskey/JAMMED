@@ -155,7 +155,7 @@ class Stage1_3 extends Phaser.Scene {
     // --- A: welcome ---
     // One signpost names the stage; everything after is taught by the
     // layout itself (each new idea is staged as its own small challenge).
-    [12, 15].forEach((c) => new AntToken(this, X(c), 136));
+    new AntToken(this, X(13), 136);
     new Raspberry(this, X(36), FLOOR);
     this._sign(X(6), "SUNSET MESA", "HEAD EAST");
 
@@ -163,8 +163,10 @@ class Stage1_3 extends Phaser.Scene {
     // Tokens trace the flight path of a running jump followed straight
     // away by the Rocket Axe, so a fast run collects them all.
     const edge = 53 * 16;
-    [[40, 126], [100, 34], [160, -24], [220, -45], [280, 60]].forEach(([dx, y]) => new AntToken(this, edge + dx, y));
-    [84, 90, 96].forEach((c) => new AntToken(this, X(c), 56));
+    [[40, 126], [100, 34], [160, -24], [220, -45]].forEach(([dx, y]) => new AntToken(this, edge + dx, y));
+    [84, 96].forEach((c) => new AntToken(this, X(c), 56));
+    // Bread: tucked at the back of the mesa top, a hop above the tokens
+    new BreadToken(this, X(102), 30);
     new Raspberry(this, X(90), 64);
 
     // --- C: Seedcaster, then bushes one at a time ---
@@ -190,6 +192,8 @@ class Stage1_3 extends Phaser.Scene {
     this.cactuses = [new NeedleCactus(this, X(224), 158)];
     this.cactuses.push(new NeedleCactus(this, X(238), 158), new NeedleCactus(this, X(246), 158));
     new AntToken(this, X(242), 96);
+    // Bread: high between the needle cactuses, where standing still is risky
+    new BreadToken(this, X(232), 84);
     const heal = new PowerUp(this, X(249), 150);
     heal.setData("powerUpType", "heal");
 
@@ -210,6 +214,8 @@ class Stage1_3 extends Phaser.Scene {
       fruits: [{ ox: -14, len: 50 }, { ox: 16, len: 36 }] }, 2);
     [270, 274].forEach((c) => new AntToken(this, X(c), 46));
     [277, 281].forEach((c) => new AntToken(this, X(c), 14));
+    // Bread: above the highest plank
+    new BreadToken(this, X(284), -10);
     new WatermelonSnapper(this, X(286), 204);
 
     // --- G: pineapples and the finale ---

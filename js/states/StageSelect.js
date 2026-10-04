@@ -19,6 +19,8 @@ class StageSelect extends Phaser.Scene {
       { key: "Stage1_4", label: "1-4  THE JAM WORKS", grants: { rocket: true, guitars: ["desert-seedcaster"] } },
       { key: "Stage1_4Boss", label: "1-5  THE CANNING FLOOR (COLOSSUS)", grants: { rocket: true, guitars: ["desert-seedcaster", "royal-bass"] } },
       { key: "Stage2_1", label: "2-1  THE BERRY MOUNTAINS", grants: { rocket: true, guitars: ["desert-seedcaster", "royal-bass"] } },
+      { key: "Stage2_2", label: "2-2  FROSTBITE FALLS", grants: { rocket: true, guitars: ["desert-seedcaster", "royal-bass", "glacier-slide"] } },
+      { key: "Stage2_3", label: "2-3  THE PRESERVE MINES (COUNT CURRANT)", grants: { rocket: true, guitars: ["desert-seedcaster", "royal-bass", "glacier-slide"] } },
       { key: "EndCredits", label: "ENDING / CREDITS", grants: { rocket: true, guitars: ["desert-seedcaster", "royal-bass", "glacier-slide"] } },
     ];
     this.selected = 0;
@@ -28,7 +30,7 @@ class StageSelect extends Phaser.Scene {
       .setOrigin(0.5, 0).setTintFill(0x8a7a92);
 
     this.rows = this.entries.map((e, i) => {
-      const y = 56 + i * 18;
+      const y = 50 + i * 16;
       const t = this.add.bitmapText(cx - 120, y, "tempFont", e.label, 10).setTintFill(0xffffff);
       const cursor = this.add.bitmapText(cx - 134, y, "tempFont", ">", 10).setTintFill(0xffd066);
       const zone = this.add.zone(cx, y + 5, 300, 16).setInteractive({ useHandCursor: true });

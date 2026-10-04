@@ -45,6 +45,10 @@ const LevelCommon = {
     // objects from the previous run of this scene.
     scn.cloudPlatforms = null;
     scn.grindRails = null;
+    scn.crumbleLedges = null;
+    scn.windZones = null;
+    scn.geysers = null;
+    scn.lanternMask = null;
     scn.blubert = null;
     // The death fade-out leaves the camera's overlay black until a fade-in
     // runs. Start it here, first thing, so a stage never comes back from
@@ -111,6 +115,9 @@ const LevelCommon = {
     const key = scn.sys.settings.key;
     if (!run) return;
     run.tokens[key] = 0;
+    run.bread = run.bread || {};
+    run.breadTotals = run.breadTotals || {};
+    run.bread[key] = 0;
     if (typeof tokenTotal === "number") {
       run.tokenTotals[key] = tokenTotal;
     } else if (scn.collectibles) {
@@ -118,6 +125,9 @@ const LevelCommon = {
         .getChildren()
         .filter((c) => c.gameName === "AntToken").length;
     }
+    run.breadTotals[key] = scn.collectibles
+      ? scn.collectibles.getChildren().filter((c) => c.gameName === "BreadToken").length
+      : 0;
     // Stage timer (for best times) and a fresh combo
     scn.stageStartTime = scn.time.now;
     const ui = scn.scene.get("UIScene");
@@ -268,8 +278,10 @@ const LevelCommon = {
     const holdMs = showCard ? 3000 : 300;
 
     if (showCard) {
-      const got = run ? run.tokens[key] || 0 : 0;
-      const total = run ? run.tokenTotals[key] || 0 : 0;
+      const got = run && run.bread ? run.bread[key] || 0 : 0;
+      const total = run && run.breadTotals ? run.breadTotals[key] || 0 : 0;
+      const ants = run ? run.tokens[key] || 0 : 0;
+      const antTotal = run ? run.tokenTotals[key] || 0 : 0;
       const cx = scn.cameras.main.width / 2;
       const items = [];
       const bg = scn.add
@@ -294,16 +306,24 @@ const LevelCommon = {
           .setDepth(501)
           .setTintFill(0xffffff)
       );
-      items.push(
-        scn.add.image(cx - 26, 140, "ant-token-hud").setScrollFactor(0).setDepth(501)
-      );
+      // Bread tokens (the rare ones) on the left, ant tokens on the right
+      items.push(scn.add.image(cx - 96, 140, "bread-token-hud").setScrollFactor(0).setDepth(501));
       items.push(
         scn.add
-          .bitmapText(cx - 14, 140, "tempFont", "x " + got + " / " + total, 12)
+          .bitmapText(cx - 86, 140, "tempFont", "x " + got + " / " + total, 10)
           .setOrigin(0, 0.5)
           .setScrollFactor(0)
           .setDepth(501)
           .setTintFill(got >= total && total > 0 ? 0x8ce070 : 0xffffff)
+      );
+      items.push(scn.add.image(cx + 6, 140, "ant-token-hud").setScrollFactor(0).setDepth(501));
+      items.push(
+        scn.add
+          .bitmapText(cx + 16, 140, "tempFont", "x " + ants + " / " + antTotal, 10)
+          .setOrigin(0, 0.5)
+          .setScrollFactor(0)
+          .setDepth(501)
+          .setTintFill(ants >= antTotal && antTotal > 0 ? 0x8ce070 : 0xffffff)
       );
       if (elapsed > 0 && typeof formatTime === "function") {
         items.push(

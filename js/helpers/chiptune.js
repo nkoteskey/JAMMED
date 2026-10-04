@@ -67,6 +67,36 @@ const CHIPTUNE_SONGS = {
       "B4:1 D5:1 G5:1 B5:1 | A5:2 G5:2 | E5:.5 F5:.5 G#5:.5 B5:.5 E6:1 B5:1 | G#5:1 B5:1 E5:2 |",
     arpeggioBars: [[17, 32]],
   },
+
+  // "Deep Preserve": the Preserve Mines. A slower, heavier 4/4 in D
+  // minor: the walking bass is the drill, the lead creeps and then runs.
+  DeepPreserve: {
+    bpm: 118,
+    beatsPerBar: 4,
+    sampleRate: 22050,
+    drive: true,
+    gain: 1,
+    chords: [
+      ["D2", "min"], ["D2", "min"], ["A#2", "maj"], ["A#2", "maj"],
+      ["G2", "min"], ["G2", "min"], ["A2", "maj"], ["A2", "maj"],
+      ["D2", "min"], ["D2", "min"], ["A#2", "maj"], ["A#2", "maj"],
+      ["G2", "min"], ["A2", "maj"], ["D2", "min"], ["D2", "min"],
+      ["F2", "maj"], ["F2", "maj"], ["C3", "maj"], ["C3", "maj"],
+      ["G2", "min"], ["G2", "min"], ["D2", "min"], ["D2", "min"],
+      ["A#2", "maj"], ["A#2", "maj"], ["A2", "maj"], ["A2", "maj"],
+      ["G2", "min"], ["A2", "maj"], ["D2", "min"], ["D2", "min"],
+    ],
+    melody:
+      "D5:1 F5:1 A5:1 F5:1 | D5:2 C5:2 | A#4:1 D5:1 F5:1 D5:1 | A#4:3 r:1 |" +
+      "G4:1 A#4:1 D5:1 A#4:1 | G4:2 A4:2 | C#5:1 E5:1 A5:1 E5:1 | C#5:4 |" +
+      "D5:1 F5:1 A5:1 D6:1 | C6:2 A5:2 | A#5:1 A5:1 G5:1 F5:1 | D5:3 r:1 |" +
+      "G5:1 F5:1 E5:1 D5:1 | C#5:2 E5:2 | D5:1 C#5:1 D5:1 E5:1 | D5:4 |" +
+      "F5:.5 G5:.5 A5:.5 G5:.5 F5:1 C5:1 | A5:2 G5:2 | E5:.5 F5:.5 G5:.5 F5:.5 E5:1 C5:1 | G5:3 r:1 |" +
+      "G5:.5 A5:.5 A#5:.5 A5:.5 G5:1 D5:1 | A#5:2 A5:2 | F5:.5 G5:.5 A5:.5 G5:.5 F5:1 D5:1 | A5:4 |" +
+      "A#5:1 A5:1 G5:1 F5:1 | D5:2 F5:2 | C#5:1 E5:1 A5:1 C#6:1 | A5:3 r:1 |" +
+      "G5:1 A#5:1 D6:1 A#5:1 | A5:.5 G5:.5 F5:.5 E5:.5 D5:1 C#5:1 | D5:1 F5:1 A5:1 D6:1 | D6:2 A5:2 |",
+    arpeggioBars: [[17, 32]],
+  },
 };
 
 const CHIPTUNE = {

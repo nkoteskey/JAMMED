@@ -1,7 +1,8 @@
 // Stage 2-1 — THE BERRY MOUNTAINS. World 2 opens in the snow: ice
 // floors Jammy skids across, icicle caves, Snowberry turrets on the
 // ledges, frostbitten Zomberries, and a frozen lake crossed on
-// drifting ice floes. Everything drawn at runtime.
+// drifting ice floes. Everything drawn at runtime; the tileset, sky and
+// hazards are shared with the other mountain stages (helpers/mountain.js).
 class Stage2_1 extends Phaser.Scene {
   constructor() {
     super({ key: "Stage2_1" });
@@ -20,9 +21,8 @@ class Stage2_1 extends Phaser.Scene {
     // from the others needs a thaw, and sonic waves freeze solid.
     this.coldStage = true;
 
-    this._buildTilesetTexture();
     this._buildLevel();
-    this._paintBackground();
+    MountainTiles.paintNightSky(this);
 
     LevelCommon.createGroups(this);
 
@@ -53,7 +53,7 @@ class Stage2_1 extends Phaser.Scene {
     this.blubertRevivesLeft = 1;
 
     this._buildExit();
-    this._snowfall();
+    MountainTiles.snowfall(this);
     this._showTitleCard();
     LevelCommon.registerStage(this);
     LevelCommon.unlockRocketAxe(this);
@@ -77,95 +77,16 @@ class Stage2_1 extends Phaser.Scene {
 
   // Jammy asks this every frame: is the tile under his feet ice?
   isIceAt(x, y) {
-    const t = this.groundLayer.getTileAtWorldXY(x, y);
-    return !!(t && t.index === this.ICE);
+    return MountainTiles.isIceAt(this, x, y);
   }
 
   // ------------------------------------------------------------------
-  _buildTilesetTexture() {
-    if (this.textures.exists("mountain-tiles")) return;
-    const g = this.make.graphics({ x: 0, y: 0, add: false });
-    const o = (i) => i * 16;
-    // 1 snow top
-    g.fillStyle(0xe8f4ff, 1);
-    g.fillRect(o(1), 0, 16, 16);
-    g.fillStyle(0xffffff, 1);
-    g.fillRect(o(1), 0, 16, 4);
-    g.fillRect(o(1) + 3, 4, 4, 1);
-    g.fillRect(o(1) + 10, 5, 3, 1);
-    g.fillStyle(0xc8dcf0, 1);
-    g.fillRect(o(1) + 6, 10, 5, 1);
-    g.fillRect(o(1) + 1, 13, 3, 1);
-    // 2 packed snow / rock body
-    g.fillStyle(0x4a5a80, 1);
-    g.fillRect(o(2), 0, 16, 16);
-    g.fillStyle(0x5a6c96, 1);
-    g.fillRect(o(2) + 2, 3, 6, 5);
-    g.fillRect(o(2) + 9, 9, 5, 4);
-    g.fillStyle(0x384668, 1);
-    g.fillRect(o(2), 15, 16, 1);
-    g.fillRect(o(2) + 8, 2, 1, 6);
-    // 3 ice (slippery) — glassy blue with shine
-    g.fillStyle(0x8ed8f8, 1);
-    g.fillRect(o(3), 0, 16, 16);
-    g.fillStyle(0xd8f4ff, 1);
-    g.fillRect(o(3), 0, 16, 2);
-    g.fillRect(o(3) + 2, 4, 6, 1);
-    g.fillRect(o(3) + 10, 8, 4, 1);
-    g.fillStyle(0x5ab0e0, 1);
-    g.fillRect(o(3) + 4, 11, 8, 1);
-    g.fillRect(o(3), 14, 16, 2);
-    // 4 cave rock (dark)
-    g.fillStyle(0x2a3450, 1);
-    g.fillRect(o(4), 0, 16, 16);
-    g.fillStyle(0x384668, 1);
-    g.fillRect(o(4) + 1, 2, 7, 6);
-    g.fillRect(o(4) + 9, 8, 6, 5);
-    g.fillStyle(0x1c2438, 1);
-    g.fillRect(o(4), 15, 16, 1);
-    // 5 frozen lake surface (death — thin ice)
-    g.fillStyle(0x3a6ab0, 1);
-    g.fillRect(o(5), 0, 16, 16);
-    g.fillStyle(0x8ed8f8, 0.7);
-    g.fillRect(o(5), 0, 16, 3);
-    g.fillRect(o(5) + 3, 6, 5, 1);
-    g.fillRect(o(5) + 10, 10, 4, 1);
-    // 6 deep water
-    g.fillStyle(0x24488a, 1);
-    g.fillRect(o(6), 0, 16, 16);
-    g.fillStyle(0x3a6ab0, 1);
-    g.fillRect(o(6) + 4, 5, 4, 2);
-    g.fillRect(o(6) + 11, 11, 3, 2);
-    // 7 lodge wood
-    g.fillStyle(0x6a4a30, 1);
-    g.fillRect(o(7), 0, 16, 16);
-    g.fillStyle(0x8c6440, 1);
-    g.fillRect(o(7), 1, 16, 6);
-    g.fillRect(o(7), 9, 16, 6);
-    g.fillStyle(0x4a3220, 1);
-    g.fillRect(o(7), 7, 16, 2);
-    g.fillRect(o(7), 15, 16, 1);
-    g.generateTexture("mountain-tiles", 8 * 16, 16);
-    g.destroy();
-  }
-
   _buildLevel() {
     const W = 210, H = 15;
-    const E = -1, SNOW = 1, ROCK = 2, ICE = 3, CAVE = 4, LAKE = 5, DEEP = 6, WOOD = 7;
-    this.ICE = ICE;
-    const grid = () => Array.from({ length: H }, () => Array(W).fill(E));
-    const ground = grid(), death = grid(), stops = grid(), change = grid();
-    const fill = (g, c0, r0, c1, r1, t) => {
-      for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) if (c >= 0 && c < W) g[r][c] = t;
-    };
-    const floor = (c0, c1, top = 12) => {
-      fill(ground, c0, top, c1, top, SNOW);
-      fill(ground, c0, top + 1, c1, 14, ROCK);
-    };
-    const ice = (c0, c1, top = 12) => {
-      fill(ground, c0, top, c1, top, ICE);
-      fill(ground, c0, top + 1, c1, 14, ROCK);
-    };
+    const T = MountainTiles;
+    const { E, SNOW, ROCK, ICE, CAVE, LAKE, DEEP, WOOD } = T;
+    const g = T.grids(W, H);
+    const { ground, death, stops, change, fill, floor, ice } = g;
 
     // Walls
     fill(ground, 0, 0, 0, 14, ROCK);
@@ -240,28 +161,7 @@ class Stage2_1 extends Phaser.Scene {
     [44, 71, 110, 151].forEach((c) => (stops[11][c] = ROCK));
     [57, 63].forEach((c) => (stops[9][c] = ROCK));
 
-    // Deterministic snow sparkle: swap a few snow tops for ice-free tops (none) — keep simple
-    const mk = (data) => {
-      const map = this.make.tilemap({ data, tileWidth: 16, tileHeight: 16 });
-      const tiles = map.addTilesetImage("mountain-tiles");
-      return { map, layer: map.createLayer(0, tiles, 0, 0) };
-    };
-    const g = mk(ground);
-    this.map = g.map;
-    this.groundLayer = g.layer;
-    this.groundLayer.setCollision([SNOW, ROCK, ICE, CAVE, WOOD]);
-    const d = mk(death);
-    this.deathBlocksLayer = d.layer;
-    this.deathBlocksLayer.setDepth(3);
-    this.deathBlocksLayer.setCollision([LAKE, DEEP]);
-    const s = mk(stops);
-    this.enemyStopBlocksLayer = s.layer;
-    this.enemyStopBlocksLayer.setAlpha(0);
-    this.enemyStopBlocksLayer.setCollision([ROCK]);
-    const c = mk(change);
-    this.sceneChangeLayer = c.layer;
-    this.sceneChangeLayer.setAlpha(0);
-    this.sceneChangeLayer.setCollision([ROCK]);
+    T.makeLayers(this, g);
   }
 
   // Ice floes drifting on the lake: one-way platforms on a slow loop
@@ -379,78 +279,26 @@ class Stage2_1 extends Phaser.Scene {
     // Grind rails: one shortcut over the lake (Rocket Axe up to it), one
     // down the final climb toward the lodge.
     LevelCommon.addGrindRail(this, 1776, 2400, 96, 1);
-    [1840, 1920, 2000, 2080, 2160, 2240, 2320].forEach((x) => new AntToken(this, x, 80));
+    [1840, 1960, 2080, 2200, 2320].forEach((x) => new AntToken(this, x, 80));
     LevelCommon.addGrindRail(this, 2600, 2880, 130, 1);
 
     [
-      [250, 150], [280, 150], [310, 150],
+      [250, 150], [310, 150],
       [560, 110], [590, 110],
-      [930, 120], [960, 120], [990, 120],
-      [1250, 120], [1300, 120], [1350, 120],
+      [930, 120], [990, 120],
+      [1250, 120], [1350, 120],
       [1420, 46], [1460, 46], [1500, 46],
       [1860, 160], [2110, 140], [2300, 160],
       [2000, 120], [2220, 104],
-      [2700, 150], [2740, 150], [2780, 150],
+      [2700, 150], [2780, 150],
       [3060, 120], [3100, 120],
     ].forEach(([x, y]) => new AntToken(this, x, y));
+    // Bread: the far end of the Lost Jam shelf, the mid-lake rock, the lodge roof
+    [[1640, 50], [2000, 112], [3264, 44]].forEach(([x, y]) => new BreadToken(this, x, y));
     [[700, 140], [2050, 110]].forEach(([x, y]) => new SeedAmmoPickup(this, x, y));
     const p = new PowerUp(this, 1700, 150);
     p.setData("powerUpType", "heal");
     p.val = 2;
-  }
-
-  _paintBackground() {
-    const w = this.map.widthInPixels;
-    // Night sky bands + stars
-    [
-      [-240, 40, 0x0c1430],
-      [40, 110, 0x1a2a5a],
-      [110, 170, 0x2a4078],
-      [170, 240, 0x3a5a98],
-    ].forEach(([y0, y1, c]) => {
-      this.add.rectangle(213, (y0 + y1) / 2, 426, y1 - y0, c).setScrollFactor(0).setDepth(-40);
-    });
-    for (let i = 0; i < 40; i++) {
-      const x = (i * 97) % 426, y = (i * 53) % 100;
-      this.add.rectangle(x, y, 1, 1, 0xffffff, 0.8).setScrollFactor(0).setDepth(-39);
-    }
-    // Moon
-    this.add.circle(340, 46, 18, 0xeef4ff).setScrollFactor(0.05, 1).setDepth(-38);
-    this.add.circle(346, 42, 15, 0x1a2a5a).setScrollFactor(0.05, 1).setDepth(-38);
-    // Far peaks
-    for (let x = -100; x < w + 400; x += 160) {
-      const h = 70 + ((x / 160) % 3) * 30;
-      this.add.triangle(x, 180, 0, 0, 90, -h, 180, 0, 0x2a3860).setScrollFactor(0.15, 1).setDepth(-36);
-      this.add.triangle(x + 62, 180 - h + 2, 0, 0, 28, -22, 56, 0, 0xe8f4ff).setScrollFactor(0.15, 1).setDepth(-35);
-    }
-    // Near pines
-    for (let x = 20; x < w + 300; x += 90) {
-      const h = 40 + ((x / 90) % 4) * 10;
-      const t = this.add.triangle(x, 192, 0, 0, 14, -h, 28, 0, 0x16304a).setScrollFactor(0.4, 1).setDepth(-30);
-      this.add.triangle(x, 192 - h * 0.45, 0, 0, 14, -h * 0.6, 28, 0, 0x1e4060).setScrollFactor(0.4, 1).setDepth(-30);
-      this.add.rectangle(x + 14, 190, 4, 8, 0x3a2818).setScrollFactor(0.4, 1).setDepth(-30);
-    }
-  }
-
-  _snowfall() {
-    this.time.addEvent({
-      delay: 120,
-      loop: true,
-      callback: () => {
-        const cam = this.cameras.main;
-        const f = this.add
-          .rectangle(cam.scrollX + Phaser.Math.Between(0, 426), cam.scrollY - 4, 2, 2, 0xffffff, 0.8)
-          .setDepth(150);
-        this.tweens.add({
-          targets: f,
-          y: f.y + 260,
-          x: f.x + Phaser.Math.Between(-30, 30),
-          alpha: 0.2,
-          duration: 2600 + Math.random() * 1200,
-          onComplete: () => f.destroy(),
-        });
-      },
-    });
   }
 
   _buildExit() {
@@ -498,6 +346,6 @@ class Stage2_1 extends Phaser.Scene {
   }
 
   changeScene() {
-    LevelCommon.finishStage(this, "CutSceneToBeContinued");
+    LevelCommon.finishStage(this, "CutSceneLodge");
   }
 }

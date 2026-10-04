@@ -37,6 +37,17 @@ jobs:
             ./ _site/
           touch _site/.nojekyll
 
+      - name: Stamp script URLs with the commit
+        # Browsers cache each script separately, so after a deploy a visitor
+        # could get a new index.html with old scripts (or the reverse) and
+        # see half an update: missing stages, a jukebox row that never
+        # renders. A per-commit query string makes every deploy fetch a
+        # matching set.
+        run: |
+          V="${GITHUB_SHA::10}"
+          sed -i -E "s#(src=\"(js|includes)/[^\"?]+\.js)\"#\1?v=$V\"#g" _site/index.html
+          grep -c "?v=$V" _site/index.html
+
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:

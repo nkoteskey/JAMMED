@@ -38,10 +38,9 @@ class EchoNote extends Phaser.Physics.Arcade.Sprite {
     // Down-and-forward unless aiming up, in which case up-and-forward
     this.body.setVelocity(dir * 240, aimUp ? -300 : 120);
 
-    const layers = [scn.groundLayer, scn.enemyStopBlocksLayer].filter(Boolean);
-    layers.forEach((layer) => {
-      scn.physics.add.collider(this, layer, () => this._bounce());
-    });
+    // Bounces off real ground only: the enemy stop blocks are invisible
+    // fences at pit lips and cave mouths, and a note must sail past them.
+    if (scn.groundLayer) scn.physics.add.collider(this, scn.groundLayer, () => this._bounce());
     this._life = scn.time.delayedCall(2600, () => this.fade());
     scn.sound.play("laserSound", { volume: 0.7, rate: 1.35 });
   }

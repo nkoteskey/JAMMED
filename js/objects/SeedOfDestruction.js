@@ -26,13 +26,10 @@ class SeedOfDestruction extends Phaser.Physics.Arcade.Sprite {
     this.setOrigin(0.5, 0.5);
 
     this.fuseTimer = scn.time.delayedCall(this.fuseMs, () => this.explode());
-    // Explode on any solid tilemap contact — ground, walls, death blocks, etc.
-    const blockingLayers = [
-      scn.groundLayer,
-      scn.enemyStopBlocksLayer,
-      scn.deathBlocksLayer,
-      scn.sceneChangeLayer,
-    ].filter(Boolean);
+    // Explode on real scenery only: ground, walls and the jam/lake
+    // surfaces. The enemy fences and exit tiles are invisible, and a
+    // seed bursting on thin air at a pit lip looked like a bug.
+    const blockingLayers = [scn.groundLayer, scn.deathBlocksLayer].filter(Boolean);
     for (const layer of blockingLayers) {
       scn.physics.add.collider(this, layer, () => this.explode());
     }

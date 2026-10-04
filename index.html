@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Jammed</title>
+	<link rel="icon" type="image/png" href="assets/img/sprites/jammy/shooting/shooting-right1.png">
+	<meta name="description" content="Jammed - an 8-bit platformer">
+	<meta name="author" content="Jim Kulakowski">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+	<style>
+		html, body {
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			height: 100%;
+			background: #000;
+			overflow: hidden;
+			/* Stop the page from scrolling / zooming on touch devices */
+			touch-action: none;
+			-webkit-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: transparent;
+		}
+		#game {
+			width: 100%;
+			height: 100%;
+		}
+		#game canvas {
+			display: block;
+			/* Crisp pixel scaling in every browser */
+			image-rendering: pixelated;
+			image-rendering: crisp-edges;
+		}
+	</style>
+
+	<!-- Online leaderboard: set to your deployed server/leaderboard-worker.js URL
+	     (see server/ and README). Leave empty for local-only high scores. -->
+	<script>window.JAMMED_LEADERBOARD_URL = "";</script>
+
+	<!-- JS Libraries -->
+	<script type="text/javascript" src="includes/phaser-core/3.87.0/phaser.min.js?v=e6369de554"></script>
+
+	<!-- Helpers (loaded first so scenes and objects can use them) -->
+	<script type="text/javascript" src="js/helpers/globals.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/helpers/save.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/helpers/pixelfont.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/helpers/chiptune.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/helpers/leaderboard.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/helpers/guitars.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/helpers/shader.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/helpers/level.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/helpers/mountain.js?v=e6369de554"></script>
+
+	<!-- States -->
+	<script type="text/javascript" src="js/states/Boot.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/Preload.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/TitleScreen.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/StoryScene.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/CutScene1_1.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/CutScene1_2.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/CutScene1_3.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/Level1.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/Level1BossFight.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/Stage1_3.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/Stage1_4.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/Stage1_S.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/Stage1_4Boss.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/CutSceneBaronPectin.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/Jukebox.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/StageSelect.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/WorldTwoScenes.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/Stage2_1.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/Stage2_2.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/Stage2_3.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/CutSceneWatermelonDefeated.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/EndCredits.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/PauseScene.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/GuitarRack.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/states/UI.js?v=e6369de554"></script>
+
+	<!-- Actor classes -->
+	<script type="text/javascript" src="js/objects/Jammy.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/AudioWave.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/Raspberry.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/Bush.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/BushZomberry.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/Blueberry.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/Cloud.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/CloudBlueberry.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/Blubert.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/HornedFruit.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/WatermelonSnapper.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/JamBubble.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/RecordPress.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/CherryBat.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/JarSentry.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/ConveyorBelt.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/NeedleCactus.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/SeedOfDestruction.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/BassWave.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/GuitarPickup.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/SeedAmmoPickup.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/BlueberryBomb.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/PineappleBomb.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/BurningFragment.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/EnemyDeath.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/WatermelonBoss.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/WatermelonSeed.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/PowerUp.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/virtualGamepad.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/AntToken.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/BreadToken.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/LostRecord.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/CanningColossus.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/MountainEnemies.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/YetiBerry.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/CountCurrant.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/EchoNote.js?v=e6369de554"></script>
+	<script type="text/javascript" src="js/objects/HeartContainer.js?v=e6369de554"></script>
+
+	<!-- Game JS -->
+	<script src="js/game.js?v=e6369de554" type="text/javascript"></script>
+</head>
+<body>
+	<div id="game"></div>
+</body>
+</html>

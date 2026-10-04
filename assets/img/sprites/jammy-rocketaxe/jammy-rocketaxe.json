@@ -1,0 +1,98 @@
+{
+  "frames": [
+    {
+      "filename": "rocketaxe-right1",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "filename": "rocketaxe-right2",
+      "frame": {
+        "x": 40,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "filename": "rocketaxe-right3",
+      "frame": {
+        "x": 80,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 42
+      }
+    },
+    {
+      "filename": "rocketaxe-right4",
+      "frame": {
+        "x": 120,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 42
+      }
+    }
+  ],
+  "meta": {
+    "app": "hand-generated",
+    "version": "1.0",
+    "image": "jammy-rocketaxe.png",
+    "size": {
+      "w": 160,
+      "h": 42
+    },
+    "scale": 1
+  }
+}
